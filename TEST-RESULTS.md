@@ -12,3 +12,11 @@ Môi trường: Linux, Node.js, Chromium headless `/usr/bin/chromium`; frontend 
 ## Chưa kiểm chứng / giới hạn
 
 Chưa kiểm thử thiết bị vật lý iOS/Android, tải nhiều người, latency/loss cao, độ ổn định chạy hàng ngày, backend WSS công khai hoặc Docker image chạy thực. Không có cache/PWA để đảm bảo chơi hoàn toàn mất Internet. Chưa có map thật chứa nước/cầu/warp; fixtures chỉ chứng minh quy tắc va chạm, không thay thế QA trực quan trên map tương lai. Chưa có bộ phát cutout thật; interface và factory tách rời đã được TypeScript kiểm tra, chưa thử asset bundle tương lai. Mob chưa có pathfinding. Dự đoán và ack mới là MVP; cần đo và cải thiện dưới mạng xấu.
+
+## Bản sửa chuyển động / khôi phục Offline
+
+Tái hiện trường hợp nhân vật chết, lưu HP=0, vào lại thì cả nhân vật lẫn quái đều đứng yên vì player vẫn chết và mob không có mục tiêu. Đây là thiếu sót khôi phục phiên/UI, không phải lỗi cần tắt va chạm map.
+
+- `node tests/movement-regression.cjs`: PASS trên dist mới. Seed bản lưu HP=0, vào Offline có 100 HP, giữ số quái đã hạ; WASD và joystick làm tọa độ thật thay đổi; AI quái thay đổi tọa độ khi đuổi; menu dừng thời gian mô phỏng; chết mới trong phiên hiện bảng hồi sinh, bấm hồi sinh rồi joystick di chuyển được. Không có pageerror.
+- Kiểm tra bản Sites cũ trực tiếp qua quyền service access: phiên mới vẫn di chuyển và quái đuổi được; sau chết, HP=0 làm player dừng và quái về nhà đứng yên.
+- Không xóa khóa lưu người chơi/Studio hoặc đổi va chạm map.

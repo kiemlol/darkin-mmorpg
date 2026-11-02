@@ -3,7 +3,21 @@ export interface GameSession {id:string;status:string;snapshot:Snapshot;input(i:
 const SAVE='darkin-frontier-mvp:offline:v1';
 export class LocalGameSession implements GameSession{
  id='local';status='Offline';world:World;snapshot:Snapshot;acc=0;saveTime=0;
- constructor(p:any,name:string){this.world=new World(p);const a=this.world.join(this.id,name);try{const s=JSON.parse(localStorage.getItem(SAVE)||'null');if(s?.map===p.id&&Number.isFinite(s.x)&&Number.isFinite(s.y)){const h=this.world.findSpawn(s.x,s.y);Object.assign(a,h,{hp:Math.max(0,Math.min(100,Number(s.hp)||0)),kills:Math.max(0,Number(s.kills)||0)})}}catch{}this.snapshot=this.world.snapshot()}
+ constructor(p:any,name:string){
+  this.world=new World(p);const a=this.world.join(this.id,name);
+  try{
+   const s=JSON.parse(localStorage.getItem(SAVE)||'null');
+   if(s?.map===p.id){
+    if(Number.isSafeInteger(s.kills)&&s.kills>=0)a.kills=s.kills;
+    // A new offline session must be playable even if the previous tab saved a death.
+    // Live deaths still require the explicit respawn action below.
+    if(Number.isFinite(s.hp)&&s.hp>0&&Number.isFinite(s.x)&&Number.isFinite(s.y)){
+     Object.assign(a,this.world.findSpawn(s.x,s.y),{hp:Math.min(a.maxHp,s.hp)});
+    }
+   }
+  }catch{}
+  this.snapshot=this.world.snapshot();
+ }
  input(i:Intent){this.world.input(this.id,i)} update(dt:number){this.acc+=Math.min(dt,.25);while(this.acc>=.05){this.world.step();this.acc-=.05}this.snapshot=this.world.snapshot();this.saveTime+=dt;if(this.saveTime>2){this.save();this.saveTime=0}}
  save(){const a=this.world.actors.get(this.id)!;try{localStorage.setItem(SAVE,JSON.stringify({map:this.world.p.id,x:a.x,y:a.y,hp:a.hp,kills:a.kills}))}catch{}}
  respawn(){this.world.respawn(this.id)}destroy(){this.save()} static reset(){localStorage.removeItem(SAVE)}
