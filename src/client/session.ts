@@ -1,5 +1,5 @@
 import {World,movement,validIntent,type Intent,type Snapshot,type Actor} from '../shared/world';
-export interface GameSession {id:string;status:string;snapshot:Snapshot;input(i:Intent):void;update(dt:number):void;respawn():void;destroy():void}
+export interface GameSession {id:string;status:string;snapshot:Snapshot;input(i:Intent):void;update(dt:number):void;respawn():void;setAppearance(id:string):void;destroy():void}
 const SAVE='darkin-frontier-mvp:offline:v1';
 export class LocalGameSession implements GameSession{
  id='local';status='Offline';world:World;snapshot:Snapshot;acc=0;saveTime=0;
@@ -20,6 +20,7 @@ export class LocalGameSession implements GameSession{
  }
  input(i:Intent){this.world.input(this.id,i)} update(dt:number){this.acc+=Math.min(dt,.25);while(this.acc>=.05){this.world.step();this.acc-=.05}this.snapshot=this.world.snapshot();this.saveTime+=dt;if(this.saveTime>2){this.save();this.saveTime=0}}
  save(){const a=this.world.actors.get(this.id)!;try{localStorage.setItem(SAVE,JSON.stringify({map:this.world.p.id,x:a.x,y:a.y,hp:a.hp,kills:a.kills}))}catch{}}
+ setAppearance(id:string){this.world.setAppearance(this.id,id)}
  respawn(){this.world.respawn(this.id)}destroy(){this.save()} static reset(){localStorage.removeItem(SAVE)}
 }
 export class NetworkGameSession implements GameSession{
@@ -28,5 +29,6 @@ export class NetworkGameSession implements GameSession{
  input(i:Intent){if(this.socket.readyState!==1||!this.id||!validIntent(i))return;this.socket.send(JSON.stringify({type:'input',input:i}));this.pending.push(i);if(this.pending.length>20)this.pending.shift();if(this.predicted)movement(this.p,this.predicted,i,.05)}
  update(){if(this.socket.readyState===1&&performance.now()-this.lastReceived>5000){this.status='Server không phản hồi — bấm Thử lại';this.socket.close()}}
  renderActors(){const t=Math.min(1,(performance.now()-this.received)/100);return this.snapshot.actors.map(a=>{if(a.id===this.id&&this.predicted)return{...a,x:this.predicted.x,y:this.predicted.y,dir:this.predicted.dir};const prev=this.previous?.actors.find(b=>b.id===a.id);return prev?{...a,x:prev.x+(a.x-prev.x)*t,y:prev.y+(a.y-prev.y)*t}:a})}
+ setAppearance(id:string){if(this.socket.readyState===1)this.socket.send(JSON.stringify({type:'appearance',appearanceId:id}))}
  respawn(){if(this.socket.readyState===1)this.socket.send(JSON.stringify({type:'respawn'}))}destroy(){this.closed=true;this.socket.onclose=null;this.socket.onmessage=null;this.socket.close();this.pending=[]}
 }
