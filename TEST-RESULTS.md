@@ -31,3 +31,17 @@ Tái hiện trường hợp nhân vật chết, lưu HP=0, vào lại thì cả 
 - `node tests/offline-no-backend.cjs`: PASS khi Node game server tắt, chỉ file tĩnh dist tại 4173; có cutout thật, zero WebSocket, blur dừng di chuyển, đổi phiên.
 
 Giới hạn vẫn giữ: backend Online chưa công khai; Online đã thử ở local. Chưa có cutout mob, hurt/death clip, nhân vật tám hướng, thiết bị vật lý hoặc tải lớn. Traveler không có wing/glasses/hat, module và kiểm tra dữ liệu được giữ nhưng chưa QA trực quan phụ kiện thật đó.
+
+## Sửa rung chuyển động — 2026-11-03
+
+Nguyên nhân được tái hiện trên dist: actor hiển thị trực tiếp vị trí tick 20Hz (đứng 2 khung hình rồi nhảy 7.75px khi đi), trong khi camera chạy mỗi frame. Screen-space foot giật lùi ở các frame giữa tick; đây là pipeline chung từ trước cutout. Camera lerp tới sample cuối frame còn làm độ trễ phụ thuộc thời lượng frame.
+
+Bản sửa giữ mô phỏng/va chạm/combat 20Hz, thêm presentation riêng: nội suy Offline giữa hai tick; Online nội suy đoạn prediction, replay ack + offset hiệu chỉnh độc lập camera; remote dùng buffer theo server time thay vì reset nội suy mỗi lần nhận packet. Respawn/teleport không nội suy xuyên map; mẫu không đứng được bị loại. Mỗi frame Canvas xóa ở hệ pixel gốc rồi áp DPR một lần, không giữ vệt ảnh frame cũ. Camera tích phân chính xác mục tiêu tuyến tính, không giấu bước nhảy bằng tăng lerp. Interpolation thêm tối đa một tick 50ms vào vị trí hiển thị; kết quả gameplay vẫn tại tick thật.
+
+- Trace Chromium trước sửa: sau warmup, 29 frames có 16 frame chân giật lùi; screen delta -4.38 đến +4.76px khi chỉ giữ đi xuống.
+- Trace dist sau sửa: 26 frames, 0 giật lùi, 0 dừng giữa tick; screen delta khoảng 0 đến +0.075px. Online local trace 26 frames cũng 0 giật lùi, delta tối đa khoảng .058px. Đây là các lượt đo ngắn trên Chromium headless, không phải cam kết FPS/độ trễ cho mọi máy.
+- `npm test`: 15/15 PASS. Thêm chuyển động render liên tục tại 30/60/144 FPS, camera với dt biến thiên, hiệu chỉnh prediction không nhảy tọa độ, buffer snapshot không tua lùi, collision/stop/respawn, prediction không phát lặp đoạn cuối khi mất input/socket.
+- `node tests/jitter-browser.cjs` và `node tests/jitter-browser.cjs online`: PASS kiểm tra chân/camera từng RAF, một lần clear và một lần vẽ nhãn player mỗi frame.
+- `node tests/browser.cjs`: PASS hai client, điều khiển mobile/pinch/resize, đóng phiên. `node tests/cutout-browser.cjs`: PASS bốn clip và hai player cutout. `node tests/movement-regression.cjs`: PASS khôi phục HP0, mob đuổi, menu pause và hồi sinh.
+
+Chưa đo trên thiết bị vật lý, màn hình VRR hoặc mạng Internet có mất gói/latency cao kéo dài. Online công khai vẫn chưa triển khai.
