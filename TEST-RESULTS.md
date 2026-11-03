@@ -45,3 +45,16 @@ Bản sửa giữ mô phỏng/va chạm/combat 20Hz, thêm presentation riêng: 
 - `node tests/browser.cjs`: PASS hai client, điều khiển mobile/pinch/resize, đóng phiên. `node tests/cutout-browser.cjs`: PASS bốn clip và hai player cutout. `node tests/movement-regression.cjs`: PASS khôi phục HP0, mob đuổi, menu pause và hồi sinh.
 
 Chưa đo trên thiết bị vật lý, màn hình VRR hoặc mạng Internet có mất gói/latency cao kéo dài. Online công khai vẫn chưa triển khai.
+
+## Tỷ lệ nhân vật, xác quái và mép map — 2026-11-03
+
+Scale Traveler đổi .6 → .69 (+15%), giữ rig và radius 12. Xác quái mờ dần, tự bị loại khỏi snapshot sau 1.5 giây; mob nội bộ vẫn chờ hồi sinh sau 8 giây tại điểm hợp lệ. Cả LocalGameSession và server dùng cùng quy tắc này, không cần thao tác hồi sinh player.
+
+Camera dừng trong terrain 0..cols*cell, 0..rows*cell; minimum zoom tăng tự động nếu viewport lớn hơn nền. Giới hạn di chuyển an toàn ở mép (trái/phải 44, trên 144, dưới 24 world units) giữ hình nhân vật trong terrain; map JSON và collision footprint gốc không bị sửa.
+
+- `npm test`: 20/20 PASS, thêm corpse expiry với player sống/chết chưa hồi sinh, mob respawn, camera mọi mép/zoom ở mobile/desktop/4K và di chuyển dọc biên.
+- `node tests/edges-browser.cjs`: PASS trên dist, 390×844 @3x và 844×390. Kiểm tra transform Canvas thực ở bốn góc viewport, cả bốn mép map, scale .69 và giới hạn thu nhỏ. Có screenshot tests/edge-*.png.
+- `node tests/corpse-online.cjs`: PASS hai WebSocket client thật đánh quái bằng input; observer thấy xác biến mất rồi mob trở lại sau 8 giây, không gửi player respawn/reset.
+- `node tests/cutout-browser.cjs` và `node tests/jitter-browser.cjs`: PASS, bốn animation, hai player thật và hồi quy rung chuyển động.
+
+Mobile đã kiểm thử bằng Chromium cảm ứng giả lập; chưa kiểm thử trực tiếp Safari trên iPhone trong ảnh người dùng.

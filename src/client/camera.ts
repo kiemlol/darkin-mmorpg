@@ -13,5 +13,6 @@ export class Camera2D{
   this.y+=(this.target.y-this.y)*(1-decay)+(y-this.target.y)*ramp;
   this.target={x,y};
  }
- viewport(w:number,h:number,zoom:number,b:Bounds){return{x:Math.max(b.x0,Math.min(b.x1-w/zoom,this.x-w/zoom*.5)),y:Math.max(b.y0,Math.min(b.y1-h/zoom,this.y-h/zoom*.57))}}
+ fitZoom(zoom:number,w:number,h:number,b:Bounds){return Math.max(zoom,w/(b.x1-b.x0),h/(b.y1-b.y0))}
+ viewport(w:number,h:number,zoom:number,b:Bounds){const z=this.fitZoom(zoom,w,h,b);return{x:Math.max(b.x0,Math.min(b.x1-w/z,this.x-w/z*.5)),y:Math.max(b.y0,Math.min(b.y1-h/z,this.y-h/z*.57))}}
 }

@@ -29,8 +29,8 @@ Map này: 24×16 ô 128px, 111 vật thể, 3 roads Bézier, night lighting, kh�
 - `src/client/session.ts`: GameSession, LocalGameSession, NetworkGameSession. Dự đoán movement local, replay input chưa ack; `presentation.ts` nội suy Offline và prediction giữa tick 20Hz ở tốc độ render, bù sai lệch server riêng và buffer remote 100ms theo server time. Camera theo cùng tọa độ hiển thị và tích phân theo thời gian frame. Không dùng save Offline cho Online. Offline save key riêng `darkin-frontier-mvp:offline:v1`, lưu vị trí/HP/số quái đã hạ; bản lưu đã chết được khôi phục tại spawn với đầy HP khi vào phiên Offline mới. Chết trong phiên hiện tại có bảng hồi sinh rõ ràng. Offline tạm dừng mô phỏng khi mở menu hoặc ứng dụng vào nền; không lưu toàn bộ mob world.
 - `src/client/visual.ts`: interface load/update/playAnimation/draw/destroy. `cutout-visual.ts` đã triển khai bộ phát thật; catalog ánh xạ action → clip ID độc lập tên file. Gameplay/input/camera/network không biết hình vẽ placeholder.
 - `src/client/input.ts`: bàn phím, joystick pointer capture, release/cancel/lost capture, pinch tách vùng joystick; blur/background gửi dừng.
-- `src/client/map.ts` và `camera.ts`: tải danh mục/map, bounds gồm ảnh vật thể, camera follow độc lập networking.
-- `src/client/main.ts`: vòng RAF duy nhất, DPR một lần, camera mượt độc lập nội suy remote, zoom .35–2, bounds gồm vật thể nhô ngoài mép, UI và damage numbers. Chuyển phiên hủy input listeners/socket/visuals.
+- `src/client/map.ts` và `camera.ts`: tải danh mục/map, camera theo nhân vật và giới hạn trong nền terrain để không lộ phần ngoài map.
+- `src/client/main.ts`: vòng RAF duy nhất, DPR một lần, camera mượt độc lập nội suy remote, zoom có mức tối thiểu theo kích thước màn hình để luôn phủ kín nền map, UI và damage numbers. Chuyển phiên hủy input listeners/socket/visuals.
 
 ## Phạm vi và giới hạn
 

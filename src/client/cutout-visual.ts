@@ -28,5 +28,5 @@ export class CutoutCharacterVisual implements CharacterVisual{
   c.save();const y=a.y-160*this.loaded.appearance.scale-10;c.textAlign='center';c.font='600 12px system-ui';c.strokeStyle='#12201d';c.lineWidth=3;c.strokeText(a.name,a.x,y);c.fillStyle=a.color;c.fillText(a.name,a.x,y);c.fillStyle='#101923';c.fillRect(a.x-23,y+6,46,5);c.fillStyle='#a5ca9c';c.fillRect(a.x-22,y+7,44*a.hp/a.maxHp,3);c.restore();
  }
  destroy(){this.disposed=true;this.generation++;this.player?.dispose();this.player=null;this.loaded=null;this.fallback.destroy()}
- debug(){return{type:'cutout',appearance:this.loaded?.appearance.id,clip:this.player?.name,time:this.player?.time,attachmentTime:this.player?.attachmentTime,face:this.player?.face,foot:this.actor?{x:this.actor.x,y:this.actor.y}:null}}
+ debug(){return{type:'cutout',appearance:this.loaded?.appearance.id,scale:this.loaded?.appearance.scale,clip:this.player?.name,time:this.player?.time,attachmentTime:this.player?.attachmentTime,face:this.player?.face,foot:this.actor?{x:this.actor.x,y:this.actor.y}:null}}
 }
