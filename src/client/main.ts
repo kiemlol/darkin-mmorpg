@@ -7,6 +7,8 @@ import { PlaceholderCharacterVisual, type CharacterVisual } from './visual';
 import { CutoutCharacterVisual } from './cutout-visual';
 import { assets, assetWarning } from './assets';
 import {EquipmentUI} from './equipment-ui';
+import {MinimapHUD} from './map-hud';
+import {clockHour} from '../shared/map-state';
 import type { Intent } from '../shared/world';
 const $ = (id: string) => document.getElementById(id)!;
 const canvas = $('game') as HTMLCanvasElement, c = canvas.getContext('2d')!;
@@ -15,16 +17,18 @@ let currentIntent: Omit<Intent, 'seq'> = { dx: 0, dy: 0, run: false, attack: fal
 const camera = new Camera2D();
 let ready = false;
 const equipmentUI=new EquipmentUI(()=>session);
+const mapHUD=new MinimapHUD(()=>{input?.clear();stop()});
+let sceneHour=-1;
 function setZoom(f: number) { zoom = camera.fitZoom(Math.max(.35, Math.min(2, zoom * f)), innerWidth, innerHeight, bounds); $('zoom-label').textContent = Math.round(zoom * 100) + '%'; }
 $('plus').onclick = () => setZoom(1.15);
 $('minus').onclick = () => setZoom(1 / 1.15);
 function stop() { currentIntent = { dx: 0, dy: 0, run: false, attack: false }; session?.input({ ...currentIntent, seq: ++seq }, false); }
-function cleanup() { equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
+function cleanup() { mapHUD.close();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
     v.destroy(); visuals.clear(); acc = 0; seq = 0; currentIntent = { dx: 0, dy: 0, run: false, attack: false }; }
 async function start(m: string) { if (!ready)
     return; cleanup(); mode = m; try {
     const name = ($('name') as HTMLInputElement).value.trim() || 'Lữ khách';
-    session = m === 'offline' ? new LocalGameSession(player.project, name) : new NetworkGameSession(player.project, name, ($('server') as HTMLInputElement).value.trim());
+    session = m === 'offline' ? new LocalGameSession(player.sourceProject||player.project, name) : new NetworkGameSession(player.sourceProject||player.project, name, ($('server') as HTMLInputElement).value.trim());
     camera.reset(player.project.spawn.x, player.project.spawn.y);
     input = new Input(canvas, setZoom, stop);
     $('lobby').hidden = true;
@@ -51,7 +55,7 @@ $('menu').onclick = () => { if (session) {
 } };
 $('resume').onclick = () => dialog.close();
 $('exit').onclick = () => { dialog.close(); cleanup(); document.body.classList.remove('playing'); $('lobby').hidden = false; $('hud').hidden = true; $('controls').hidden = true; };
-$('reset').onclick = () => { dialog.close(); cleanup(); LocalGameSession.reset(); start('offline'); };
+$('reset').onclick = () => { dialog.close(); cleanup(); LocalGameSession.reset(($('name') as HTMLInputElement).value.trim()||'Lữ khách'); start('offline'); };
 try {
     const loaded = await loadMap();
     try {
@@ -84,7 +88,7 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
     $('zoom-label').textContent = Math.round(zoom * 100) + '%';
     let actors = session?.renderActors() || [];
     if (session) {
-        if (!dialog.open && !document.hidden)
+        if (!dialog.open && !mapHUD.panel.open && !document.hidden)
             currentIntent = input!.sample();
         else
             currentIntent = { dx: 0, dy: 0, run: false, attack: false };
@@ -126,7 +130,8 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
             v.destroy();
             visuals.delete(id);
         }
-    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: actors.find(a => a.id === session?.id) || { x: camera.x, y: camera.y }, actors, drawActor: (ctx: CanvasRenderingContext2D, a: any) => visuals.get(a.id)?.draw(ctx) } as any);
+    if(session){const hour=Math.floor(clockHour(session.clock())*12)/12;if(hour!==sceneHour){sceneHour=hour;player.project.lighting={...player.project.lighting,mode:'time',hour}}}
+    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: actors.find(a => a.id === session?.id) || { x: camera.x, y: camera.y }, actors, drawActor: (ctx: CanvasRenderingContext2D,a:any) => visuals.get(a.id)?.draw(ctx) } as any);
     if (session) {
         c.save();
         c.scale(zoom, zoom);
@@ -144,7 +149,8 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
         }
         c.restore();
     }
+    const me=actors.find(a=>a.id===session?.id)||null,visual=me?visuals.get(me.id):null;mapHUD.update(player,session,me,dt,visual instanceof CutoutCharacterVisual?()=>visual.portrait():undefined);
 } requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
 // Read-only diagnostics for acceptance tests; no gameplay authority.
-Object.defineProperty(window, 'darkinDebug', { get: () => ({ input: input?.sample(), mode, status: session?.status, id: session?.id, snapshot: session?.snapshot, zoom, camera: { x: camera.x, y: camera.y }, map: player?.project.id, visuals: [...visuals.entries()].map(([id, v]) => ({ id, ...(v instanceof CutoutCharacterVisual ? v.debug() : { type: 'placeholder' }) })) }) });
+Object.defineProperty(window, 'darkinDebug', { get: () => ({ mapUI:mapHUD.debug(),exploration:session?.exploration?{scope:session.exploration.scope,count:session.exploration.count(),version:session.exploration.version,seen:Array.from(session.exploration.seen)}:null,characterId:session?.characterId,input: input?.sample(), mode, status: session?.status, id: session?.id, snapshot: session?.snapshot, zoom, camera: { x: camera.x, y: camera.y }, map: player?.project.id, visuals: [...visuals.entries()].map(([id, v]) => ({ id, ...(v instanceof CutoutCharacterVisual ? v.debug() : { type: 'placeholder' }) })) }) });
