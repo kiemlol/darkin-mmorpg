@@ -14,6 +14,7 @@ if (b.format !== 'darkin-map-bundle-v1')
 const world = new World(b.project);
 const persistence=await GuestStore.open(resolve(process.env.GAME_STATE_FILE||'data/world-state-v1.json'));
 if(persistence.clockSeconds!==null)world.clockBaseSeconds=persistence.clockSeconds;
+if(persistence.dirty)await persistence.flush(world.clockBaseSeconds);
 const revision=mapRevision(b.project);
 const server = createServer(async (req, res) => { try {
     const path = decodeURIComponent(new URL(req.url || '/', 'http://local').pathname);
@@ -26,7 +27,7 @@ const server = createServer(async (req, res) => { try {
     if (!f.startsWith(root + '/'))
         throw Error('path');
     const file = await readFile(f);
-    res.setHeader('Content-Type', ({ '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.mjs': 'text/javascript', '.css': 'text/css', '.png':'image/png', '.webp':'image/webp', '.svg':'image/svg+xml' } as any)[extname(f)] || 'application/octet-stream');
+    res.setHeader('Content-Type', ({ '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.mjs': 'text/javascript', '.css': 'text/css', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.svg':'image/svg+xml' } as any)[extname(f)] || 'application/octet-stream');
     res.end(file);
 }
 catch {
@@ -58,9 +59,9 @@ wss.on('connection', ws => { ws.on('error', () => { }); if (peers.size >= 64) {
         if (typeof m.name !== 'string' || !m.name.trim() || m.name.length > 24)
             throw Error('Tên 1–24 ký tự');
         const name=m.name.replace(/[<>\x00-\x1f]/g,'').slice(0,24),identity=persistence.identify(m.resumeToken,name,id=>world.actors.has(id));q.id=identity.guest.id;q.guest=identity.guest;
-        const actor=world.join(q.id,name);q.exploration=persistence.exploration(q.guest,b.project);q.exploration.visit(actor.x,actor.y,world.time,actor.teleportSeq);persistence.capture(q.guest,q.exploration);
+        const actor=world.join(q.id,name);world.setRealm(q.id,q.guest);q.exploration=persistence.exploration(q.guest,b.project);q.exploration.visit(actor.x,actor.y,world.time,actor.teleportSeq);persistence.capture(q.guest,q.exploration);
         q.joined = true;
-        ws.send(JSON.stringify({ type: 'welcome', id: q.id,characterId:q.id,resumeToken:identity.resumeToken,worldId:WORLD_ID,mapRevision:revision, map: b.project.id,exploration:q.exploration.record() }));q.sentVersion=q.exploration.version;
+        ws.send(JSON.stringify({ type: 'welcome',profileWarnings:identity.warnings, id: q.id,characterId:q.id,resumeToken:identity.resumeToken,worldId:WORLD_ID,mapRevision:revision, map: b.project.id,exploration:q.exploration.record() }));q.sentVersion=q.exploration.version;
     }
     else if (q.joined && m.type === 'input') {
         if (!validIntent(m.input))
@@ -82,7 +83,7 @@ catch (e) {
     ws.send(JSON.stringify({ type: 'error', message: String(e) }));
 } }); ws.on('close', () => { if(q.joined){if(q.exploration)persistence.capture(q.guest,q.exploration);world.leave(q.id)} peers.delete(ws); }); });
 let ticks = 0;
-setInterval(() => { world.step(.05);for(const q of peers.values()){const a=world.actors.get(q.id);if(q.joined&&a&&q.exploration&&q.exploration.visit(a.x,a.y,world.time,a.teleportSeq))persistence.capture(q.guest,q.exploration)} if (++ticks % 2 === 0) {
+setInterval(() => { world.step(.05);for(const q of peers.values()){const a=world.actors.get(q.id);if(q.joined&&a){persistence.captureCharacter(q.guest,a);if(q.exploration&&q.exploration.visit(a.x,a.y,world.time,a.teleportSeq))persistence.capture(q.guest,q.exploration)}} if (++ticks % 2 === 0) {
     const s = JSON.stringify({ type: 'snapshot', ...world.snapshot() });
     for (const [ws, q] of peers)
         if (q.joined && ws.readyState === 1) {

@@ -8,6 +8,7 @@ import { CutoutCharacterVisual } from './cutout-visual';
 import { assets, assetWarning } from './assets';
 import {EquipmentUI} from './equipment-ui';
 import {MinimapHUD} from './map-hud';
+import {PlayerHUD} from './player-hud';
 import {clockHour} from '../shared/map-state';
 import type { Intent } from '../shared/world';
 const $ = (id: string) => document.getElementById(id)!;
@@ -18,12 +19,13 @@ const camera = new Camera2D();
 let ready = false;
 const equipmentUI=new EquipmentUI(()=>session);
 const mapHUD=new MinimapHUD(()=>{input?.clear();stop()});
+const playerHUD=new PlayerHUD(mapHUD.root);
 let sceneHour=-1;
 function setZoom(f: number) { zoom = camera.fitZoom(Math.max(.35, Math.min(2, zoom * f)), innerWidth, innerHeight, bounds); $('zoom-label').textContent = Math.round(zoom * 100) + '%'; }
 $('plus').onclick = () => setZoom(1.15);
 $('minus').onclick = () => setZoom(1 / 1.15);
 function stop() { currentIntent = { dx: 0, dy: 0, run: false, attack: false }; session?.input({ ...currentIntent, seq: ++seq }, false); }
-function cleanup() { mapHUD.close();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
+function cleanup() { mapHUD.close();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
     v.destroy(); visuals.clear(); acc = 0; seq = 0; currentIntent = { dx: 0, dy: 0, run: false, attack: false }; }
 async function start(m: string) { if (!ready)
     return; cleanup(); mode = m; try {
@@ -103,15 +105,13 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
         const me = actors.find(a => a.id === session!.id);
         if (me) {
             camera.follow(me.x, me.y, dt);
-            $('player-name').textContent = me.name;
-            $('hp-bar').style.width = me.hp + '%';
-            $('hp-text').textContent = `${me.hp} / ${me.maxHp} HP`;
             $('respawn').hidden = me.hp > 0;
             $('death-screen').hidden = me.hp > 0;
             document.body.classList.toggle('is-dead', me.hp <= 0);
             $('stats').textContent = `${me.kills} quái hạ gục${mode === 'online' ? ' · ' + actors.filter(a => a.kind === 'player').length + ' người chơi' : ''}`;
         }
         $('status').textContent = session.status;
+        const notice=$('profile-notice');notice.hidden=!session.dataWarnings?.length;notice.textContent=session.dataWarnings?.join(' ')||'';
         $('retry').hidden = mode !== 'online' || session.status === 'Online' || session.status === 'Đang kết nối…';
     }
     const { x, y } = camera.viewport(w, h, zoom, bounds);
@@ -149,8 +149,8 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
         }
         c.restore();
     }
-    const me=actors.find(a=>a.id===session?.id)||null,visual=me?visuals.get(me.id):null;mapHUD.update(player,session,me,dt,visual instanceof CutoutCharacterVisual?()=>visual.portrait():undefined);
+    const me=actors.find(a=>a.id===session?.id)||null,visual=me?visuals.get(me.id):null,portrait=visual instanceof CutoutCharacterVisual?()=>visual.portrait():undefined;playerHUD.update(me,!!session,portrait);mapHUD.update(player,session,me,dt,portrait);
 } requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
 // Read-only diagnostics for acceptance tests; no gameplay authority.
-Object.defineProperty(window, 'darkinDebug', { get: () => ({ mapUI:mapHUD.debug(),exploration:session?.exploration?{scope:session.exploration.scope,count:session.exploration.count(),version:session.exploration.version,seen:Array.from(session.exploration.seen)}:null,characterId:session?.characterId,input: input?.sample(), mode, status: session?.status, id: session?.id, snapshot: session?.snapshot, zoom, camera: { x: camera.x, y: camera.y }, map: player?.project.id, visuals: [...visuals.entries()].map(([id, v]) => ({ id, ...(v instanceof CutoutCharacterVisual ? v.debug() : { type: 'placeholder' }) })) }) });
+Object.defineProperty(window, 'darkinDebug', { get: () => ({ playerUI:playerHUD.debug(),mapUI:mapHUD.debug(),exploration:session?.exploration?{scope:session.exploration.scope,count:session.exploration.count(),version:session.exploration.version,seen:Array.from(session.exploration.seen)}:null,characterId:session?.characterId,input: input?.sample(), mode, status: session?.status, id: session?.id, snapshot: session?.snapshot, zoom, camera: { x: camera.x, y: camera.y }, map: player?.project.id, visuals: [...visuals.entries()].map(([id, v]) => ({ id, ...(v instanceof CutoutCharacterVisual ? v.debug() : { type: 'placeholder' }) })) }) });

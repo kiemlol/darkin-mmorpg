@@ -3,11 +3,13 @@ import type { CosmeticCommand } from '../shared/equipment';
 import { createExploration, offlineCharacter, loadExploration, saveExploration, EXPLORE_PREFIX } from './map-session';
 import { type ExplorationStore, type ClockState, CLOCK_RATE, initialClock, scopeKey, WORLD_ID, mapRevision } from '../shared/map-state';
 import { World, movement, validIntent, type Intent, type Snapshot, type Actor } from '../shared/world';
+import {normalizeRealm,validRealmState} from '../shared/realms';
 export interface GameSession {
     id: string;
     characterId: string;
     exploration: ExplorationStore | null;
     status: string;
+    dataWarnings?:string[];
     snapshot: Snapshot;
     clock(): ClockState;
     input(i: Intent, tick?: boolean): void;
@@ -22,6 +24,7 @@ const SAVE = 'darkin-frontier-mvp:offline:v1';
 export class LocalGameSession implements GameSession {
     id = 'local';
     status = 'Offline';
+    dataWarnings:string[]=[];
     world: World;
     snapshot: Snapshot;
     previous: Snapshot;
@@ -36,8 +39,10 @@ export class LocalGameSession implements GameSession {
         loadExploration(this.exploration);
         this.world = new World(p);
         const a = this.world.join(this.id, name);
+        let migrate=false;
         try {
             const s = JSON.parse(localStorage.getItem(SAVE + ':' + this.characterId) || (name === 'Lữ khách' ? localStorage.getItem(SAVE) : null) || 'null');
+            const profile=normalizeRealm(s);this.world.setRealm(this.id,profile.state);this.dataWarnings=profile.warnings;migrate=!!s&&(s.version!==2||profile.migrated);
             if (s?.map === p.id) {
                 if (Number.isFinite(s.clockSeconds))
                     this.world.clockBaseSeconds = s.clockSeconds;
@@ -54,6 +59,7 @@ export class LocalGameSession implements GameSession {
         this.snapshot = this.world.snapshot();
         this.previous = this.snapshot;
         this.exploration.visit(a.x, a.y, this.world.time, a.teleportSeq);
+        if(migrate)this.save();
         if (typeof window !== 'undefined') {
             window.addEventListener('pagehide', () => this.save(), {signal:this.lifetime.signal});
             document.addEventListener('visibilitychange', () => {if(document.hidden)this.save()}, {signal:this.lifetime.signal});
@@ -74,7 +80,7 @@ export class LocalGameSession implements GameSession {
     clock() { return { gameSeconds: this.world.clockBaseSeconds + (this.world.time + this.acc) * CLOCK_RATE, rate: CLOCK_RATE }; }
     renderActors() { return interpolateSnapshot(this.world.p, this.previous, this.snapshot, this.acc / STEP); }
     save() { const a = this.world.actors.get(this.id)!; saveExploration(this.exploration); try {
-        localStorage.setItem(SAVE + ':' + this.characterId, JSON.stringify({ version: 1, characterId: this.characterId, map: this.world.p.id, x: a.x, y: a.y, hp: a.hp, kills: a.kills, clockSeconds: this.clock().gameSeconds }));
+        localStorage.setItem(SAVE + ':' + this.characterId, JSON.stringify({ version: 2, characterId: this.characterId, realmId:a.realmId,realmStageId:a.realmStageId,map: this.world.p.id, x: a.x, y: a.y, hp: a.hp, kills: a.kills, clockSeconds: this.clock().gameSeconds }));
     }
     catch { } }
     setAppearance(id: string) { this.world.setAppearance(this.id, id); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; }
@@ -91,6 +97,7 @@ export class LocalGameSession implements GameSession {
 export class NetworkGameSession implements GameSession {
     id = '';
     status = 'Đang kết nối…';
+    dataWarnings:string[]=[];
     snapshot: Snapshot = { time: 0, actors: [], events: [] };
     socket: WebSocket;
     pending: {
@@ -119,6 +126,7 @@ export class NetworkGameSession implements GameSession {
                 return;
             }
             this.id = m.id;
+            this.dataWarnings=Array.isArray(m.profileWarnings)?m.profileWarnings.filter((v:unknown)=>typeof v==='string').slice(0,4):[];
             if(!m.characterId||!m.worldId||m.mapRevision!==mapRevision(p)){this.status='Server cần cập nhật map/khám phá';this.socket.close();return}
             this.characterId=m.characterId;this.resumeToken=m.resumeToken;this.exploration=createExploration(p,m.characterId,m.worldId,m.mapRevision);this.exploration.restore(m.exploration);
             try{sessionStorage.setItem(this.tokenKey,m.resumeToken);if(!localStorage.getItem(this.tokenKey))localStorage.setItem(this.tokenKey,m.resumeToken)}catch{}
@@ -128,6 +136,7 @@ export class NetworkGameSession implements GameSession {
             this.status = m.message;
         if(m.type==='exploration'&&this.exploration)this.exploration.restore(m.record);
         if (m.type === 'snapshot') {
+            if(!Array.isArray(m.actors)||m.actors.some((a:any)=>a.kind==='player'&&!validRealmState(a))){this.status='Dữ liệu cảnh giới server không hợp lệ';return}
             this.previous = this.snapshot;
             this.snapshot = m;
             this.clockElapsed=0;

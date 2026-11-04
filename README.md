@@ -4,6 +4,8 @@ Game riêng, không thay đổi Studio. Nhân vật hiện dùng parts từ bund
 
 ## Chơi và chạy
 
+HUD người chơi mới ở trái, cụm map/clock đã thu nhỏ bên phải; xem [HUD-REALMS.md](HUD-REALMS.md) về tài nguyên, registry/migration cảnh giới và kiểm thử. Nhân vật mới Người phàm, ẩn bậc nhỏ; chưa có MP hoặc cơ chế đột phá.
+
 - Frontend Sites: chọn **Chơi Offline**. Không cần backend game; lần tải đầu cần Internet. Không có service worker hoặc cam kết chơi khi mất Internet.
 - Bấm minimap/đồng hồ góc phải hoặc **M** để mở bản đồ: kéo/pinch/cuộn, **+/−**, **Về vị trí tôi**, **Toàn map**, đóng bằng **M/Escape/Đóng**. Khám phá tiếp tục khi panel đóng, vùng đã đi vẫn sáng.
 - Online: mở **Thiết lập kết nối Online**, nhập `wss://your-host/ws`, rồi chọn **Chơi Online**. Chưa triển khai backend công khai. Không tự chuyển Offline khi kết nối lỗi. Server cấp guest token để khôi phục danh tính và vùng khám phá sau reload/kết nối lại; chưa lưu đầy đủ vị trí/HP/thế giới như tài khoản hoàn chỉnh.

@@ -1,6 +1,7 @@
 import { gameCatalog, allowedAppearance } from './catalog';
 import {defaultEquipment,changeEquipment,resolveInventory,type EquipmentState,type CosmeticCommand} from './equipment';
 import {CLOCK_RATE,initialClock,type ClockState} from './map-state';
+import {DEFAULT_REALM,validRealmState,type RealmState} from './realms';
 import { validateMap, canWalk as mapCanWalk, moveActor } from '../../public/game-data/maps/map-runtime.mjs';
 export { moveActor };
 // Keep full character artwork inside terrain when the camera reaches a hard map edge.
@@ -14,7 +15,7 @@ export type Intent = {
     run: boolean;
     attack: boolean;
 };
-export type Actor = EquipmentState & {
+export type Actor = EquipmentState & RealmState & {
     teleportSeq:number;
     equipmentWarnings: string[];
     corpseOpacity?: number;
@@ -81,7 +82,9 @@ export class World {
     make(id: string, name: string, kind: Actor['kind'], h: {
         x: number;
         y: number;
-    }): Actor { return { teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
+    }): Actor { return { ...DEFAULT_REALM,teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
+    // Internal simulation operation only. There is deliberately no client message/API for this.
+    setRealm(id:string,state:RealmState){if(!validRealmState(state))throw Error('Cảnh giới/bậc không hợp lệ');const a=this.actors.get(id);if(a?.kind==='player'){a.realmId=state.realmId;a.realmStageId=state.realmStageId}}
     setAppearance(id: string, appearanceId: string) { if (!allowedAppearance(appearanceId))
         throw Error('Ngoại hình không được phép'); const a = this.actors.get(id); if (a?.kind === 'player')
         {const next=defaultEquipment(appearanceId);next.accessories=structuredClone(a.accessories);Object.assign(a,next,{appearanceId,equipmentWarnings:resolveInventory(next).warnings});} }
