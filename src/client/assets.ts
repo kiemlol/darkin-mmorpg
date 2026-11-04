@@ -8,7 +8,7 @@ export type LoadedVisual={prototype:any;appearance:Appearance;actions:Record<str
 const freeze=(v:any):any=>{if(v&&typeof v==='object'&&!Object.isFrozen(v)){Object.values(v).forEach(freeze);Object.freeze(v)}return v};
 export class AssetRegistry{
  catalog!:Catalog;data=new Map<string,Promise<any>>();visuals=new Map<string,Promise<LoadedVisual>>();
- async init(){const r=await fetch('/game-data/catalog.json');if(!r.ok)throw Error('Không tải được catalog');this.catalog=validateCatalog(await r.json());return this}
+ async init(){const r=await fetch('/game-data/catalog.json',{cache:'no-cache'});if(!r.ok)throw Error('Không tải được catalog');this.catalog=validateCatalog(await r.json());return this}
  resource(id:string,type?:string){const r=this.catalog.resources.find(r=>r.id===id&&(!type||r.type===type));if(!r)throw Error('Không tìm thấy tài nguyên '+id);return r}
  async read(r:Resource):Promise<any>{
   if(r.source){const raw=await this.read(this.resource(r.source));const source=raw.project||raw;return r.embedded==='clips'&&!source.clips&&source.clip?{[source.clip.name]:source.clip}:r.embedded?source[r.embedded]:source}
@@ -16,11 +16,18 @@ export class AssetRegistry{
   if(!this.data.has(r.path))this.data.set(r.path,(async()=>{const res=await fetch('/game-data/'+r.path);if(!res.ok)throw Error('Thiếu '+r.path);return freeze(await res.json())})().catch(e=>{this.data.delete(r.path!);throw e}));
   return this.data.get(r.path)!;
  }
- key(id:string,state:EquipmentState=defaultEquipment(id)){return JSON.stringify([id,state.headId,state.bodyId,state.accessories])}
+ key(id:string,state:EquipmentState=defaultEquipment(id)){const base:any[]=[id,state.headId,state.bodyId,state.accessories];if((state as any).toolId==='mining_hammer')base.push('mining_hammer');return JSON.stringify(base)}
  async load(id:string,state:EquipmentState=defaultEquipment(id)):Promise<LoadedVisual>{
   const key=this.key(id,state);if(!this.visuals.has(key))this.visuals.set(key,this.build(id,state,key).catch(e=>{this.visuals.delete(key);throw e}));return this.visuals.get(key)!;
  }
- async acquire(id:string,state?:EquipmentState){const loaded=await this.load(id,state);loaded.refs++;return loaded}
+ async acquire(id:string,state?:EquipmentState):Promise<LoadedVisual>{
+  const loaded=await this.load(id,state);
+  // Another visual can release the last reference in the same render frame,
+  // while this asynchronous acquisition is still waiting on the cached promise.
+  // Never hand a disposed prototype to a new actor; rebuild before taking a ref.
+  if(loaded.prototype.disposed)return this.acquire(id,state);
+  loaded.refs++;return loaded;
+ }
  release(loaded:LoadedVisual){loaded.refs=Math.max(0,loaded.refs-1);if(!loaded.refs&&!loaded.pinned){this.visuals.delete(loaded.key);loaded.prototype.dispose()}}
  async readBundle(path:string){return this.read({id:path,type:'character',rig:'',path})}
  private origin(r:Resource):string{return r.source?this.origin(this.resource(r.source)):r.path!}
@@ -55,7 +62,18 @@ export class AssetRegistry{
   }
   if(a.outfit){const outfit=this.resource(a.outfit,'outfit');if(outfit.source!==a.character||outfit.path){const o=this.qualified(await this.read(outfit),outfit,urls);raw.parts=structuredClone(o.parts||o)}}
   if(animation.source!==a.character||animation.path){const d=await this.read(animation);const p=d.project||d;raw.clips={...(raw.clips||base?.clips),...(p.clips||(p.clip?{[p.clip.name]:p.clip}:p))}}
-  const combined=adaptStudio(raw,rig.sourceRig,animation.actions!,base);
+  const actions={...animation.actions};
+  if((state as any).toolId==='mining_hammer'){
+   const tool=this.catalog.tools?.find(t=>t.id==='mining_hammer');if(!tool||!tool.compatibleRigs.includes(a.rig)||tool.channelConvention!=='nightcamp-six-part-angles-v1')throw Error('Chưa có ánh xạ rig cho công cụ đào');
+   const mining=await this.read(this.resource(tool.resourceId,'animation'));if(mining.format!=='nightcamp-cutout-v1'||mining.clip.name!==tool.clipId||mining.rig!=='traveler')throw Error('Clip đào Studio không hợp lệ');
+   // Explicit retargeting: both published rigs share the six-part local angle channels.
+   // Preserve the current parts/joints. Only the authored pose channel values transfer.
+   for(const key of mining.clip.keys)for(const channel of Object.keys(key.P))if(!rig.channels?.includes(channel))throw Error('Kênh đào không tương thích '+channel);
+   const hammer=mining.attachments.find((v:any)=>v.accessoryId===tool.attachmentId&&v.visible);if(!hammer||hammer.socket!=='handF'||hammer.mountProfiles?.length)throw Error('Búa không có cấu hình socket tương thích');
+   raw.clips={...raw.clips,[tool.clipId]:{...structuredClone(mining.clip),kind:'loop'}};actions.mining={clip:tool.clipId,loop:true,rate:1};
+   raw.attachments=[...(raw.attachments||[]).map((v:any)=>v.category==='weapon'||v.socket?.startsWith('hand')?{...v,visible:false}:v),structuredClone(hammer)];
+  }
+  const combined=adaptStudio(raw,rig.sourceRig,actions,base);
   const resolved=resolveInventory(state,combined.spec.attachments||[],{headId:raw.headId||state.headId,bodyId:raw.bodyId||state.bodyId,parts:raw.parts,mountSignatures:raw.mountSignatures});combined.spec.attachments=resolved.inventory;
   for(const id of a.accessories){const r=this.resource(id,'accessory');if(r.source===a.character&&r.embedded==='weapon')continue;const d=this.qualified(await this.read(r),r,urls);if(r.embedded==='weapon'||d.spriteData){combined.spec.weapon=structuredClone(d);continue}const items=Array.isArray(d)?d:d.attachments||[d];for(const item of items){if(!rig.sockets.includes(item.socket))throw Error('Slot không tương thích '+item.socket)}combined.spec.attachments=[...(combined.spec.attachments||[]),...structuredClone(items)]}
   validateAttachments(combined.spec.attachments);

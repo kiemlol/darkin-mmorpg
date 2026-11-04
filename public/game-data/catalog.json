@@ -265,6 +265,19 @@
           "rate": 1
         }
       }
+    },
+    {
+      "id": "traveler-mining",
+      "type": "animation",
+      "path": "animations/mining/traveler.cutout.json",
+      "rig": "traveler-rig",
+      "actions": {
+        "mining": {
+          "clip": "my_walk",
+          "loop": true,
+          "rate": 1
+        }
+      }
     }
   ],
   "appearances": [
@@ -288,6 +301,19 @@
       "animationSet": "shadow-knight-actions",
       "rig": "shadow-knight-rig",
       "scale": 0.69
+    }
+  ],
+  "tools": [
+    {
+      "id": "mining_hammer",
+      "resourceId": "traveler-mining",
+      "clipId": "my_walk",
+      "attachmentId": "hammer",
+      "compatibleRigs": [
+        "traveler-rig",
+        "shadow-knight-rig"
+      ],
+      "channelConvention": "nightcamp-six-part-angles-v1"
     }
   ]
 }

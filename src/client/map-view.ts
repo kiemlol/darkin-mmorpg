@@ -10,10 +10,11 @@ export class MapProjection{
 }
 export class MapBaseCache{
  entries=new Map<string,HTMLCanvasElement>();builds=0;
- get(p:any,images:Map<string,HTMLImageElement>,revision:string){const key=p.id+':'+revision;if(this.entries.has(key))return this.entries.get(key)!;
-  const neutral=structuredClone(p);neutral.lighting={...neutral.lighting,mode:'day',hour:12,ambient:1,vignette:false,playerLight:false};
+ renderers=new Map<string,MapRenderer>();
+ get(p:any,images:Map<string,HTMLImageElement>,revision:string,hidden:string[]=[]){const key=p.id+':'+revision+':'+hidden.join(',');if(this.entries.has(key))return this.entries.get(key)!;
+  const rendererKey=p.id+':'+revision;let renderer=this.renderers.get(rendererKey);if(!renderer){const neutral=structuredClone(p);neutral.lighting={...neutral.lighting,mode:'day',hour:12,ambient:1,vignette:false,playerLight:false};renderer=new MapRenderer(neutral,images);this.renderers.set(rendererKey,renderer);if(this.renderers.size>2)this.renderers.delete(this.renderers.keys().next().value!)}
   const factor=Math.min(1/3,1536/Math.max(p.cols*p.cell,p.rows*p.cell)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.ceil(p.cols*p.cell*factor));canvas.height=Math.max(1,Math.ceil(p.rows*p.cell*factor));
-  new MapRenderer(neutral,images).draw(canvas.getContext('2d'),{x:0,y:0,width:canvas.width,height:canvas.height,zoom:factor,actor:null,actors:[],markers:false,grid:false,collision:false,time:0} as any);
+  const inactive=new Set(hidden);renderer.draw(canvas.getContext('2d'),{x:0,y:0,width:canvas.width,height:canvas.height,zoom:factor,actor:null,actors:[],markers:false,grid:false,collision:false,time:0,objectState:(id:string)=>({hidden:inactive.has(id)})} as any);
   this.entries.set(key,canvas);this.builds++;if(this.entries.size>2)this.entries.delete(this.entries.keys().next().value!);return canvas;
  }
 }

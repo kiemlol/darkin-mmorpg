@@ -9,6 +9,7 @@ import { assets, assetWarning } from './assets';
 import {EquipmentUI} from './equipment-ui';
 import {MinimapHUD} from './map-hud';
 import {PlayerHUD} from './player-hud';
+import {InteractionUI} from './interaction-ui';
 import {clockHour} from '../shared/map-state';
 import type { Intent } from '../shared/world';
 const $ = (id: string) => document.getElementById(id)!;
@@ -20,18 +21,21 @@ let ready = false;
 const equipmentUI=new EquipmentUI(()=>session);
 const mapHUD=new MinimapHUD(()=>{input?.clear();stop()});
 const playerHUD=new PlayerHUD(mapHUD.root);
+const interactionUI=new InteractionUI($('attack'));
+window.addEventListener('blur',()=>session?.cancelInteraction());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)session?.cancelInteraction()});
 let sceneHour=-1;
 function setZoom(f: number) { zoom = camera.fitZoom(Math.max(.35, Math.min(2, zoom * f)), innerWidth, innerHeight, bounds); $('zoom-label').textContent = Math.round(zoom * 100) + '%'; }
 $('plus').onclick = () => setZoom(1.15);
 $('minus').onclick = () => setZoom(1 / 1.15);
-function stop() { currentIntent = { dx: 0, dy: 0, run: false, attack: false }; session?.input({ ...currentIntent, seq: ++seq }, false); }
-function cleanup() { mapHUD.close();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
+function stop() { interactionUI.release();currentIntent = { dx: 0, dy: 0, run: false, attack: false }; session?.input({ ...currentIntent, seq: ++seq }, false); }
+function cleanup() { mapHUD.close();interactionUI.reset();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
     v.destroy(); visuals.clear(); acc = 0; seq = 0; currentIntent = { dx: 0, dy: 0, run: false, attack: false }; }
 async function start(m: string) { if (!ready)
     return; cleanup(); mode = m; try {
     const name = ($('name') as HTMLInputElement).value.trim() || 'Lữ khách';
     session = m === 'offline' ? new LocalGameSession(player.sourceProject||player.project, name) : new NetworkGameSession(player.sourceProject||player.project, name, ($('server') as HTMLInputElement).value.trim());
-    camera.reset(player.project.spawn.x, player.project.spawn.y);
+    const initial=session.renderActors().find(a=>a.id===session!.id);camera.reset(initial?.x??player.project.spawn.x,initial?.y??player.project.spawn.y);playerHUD.update(initial||null,true);
     input = new Input(canvas, setZoom, stop);
     $('lobby').hidden = true;
     $('hud').hidden = false;
@@ -91,12 +95,13 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
     let actors = session?.renderActors() || [];
     if (session) {
         if (!dialog.open && !mapHUD.panel.open && !document.hidden)
-            currentIntent = input!.sample();
+            currentIntent = interactionUI.intent(session,actors.find(a=>a.id===session!.id),input!.sample(),input!.consumeActionPress(),()=>session!.input({seq:++seq,dx:0,dy:0,run:false,attack:false},false));
         else
             currentIntent = { dx: 0, dy: 0, run: false, attack: false };
         acc += dt;
         while (acc + 1e-10 >= .05) {
             session.input({ ...currentIntent, seq: ++seq });
+            interactionUI.sent();
             acc = Math.max(0, acc - .05);
         }
         if (!(session instanceof LocalGameSession && (dialog.open || document.hidden)))
@@ -131,7 +136,7 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
             visuals.delete(id);
         }
     if(session){const hour=Math.floor(clockHour(session.clock())*12)/12;if(hour!==sceneHour){sceneHour=hour;player.project.lighting={...player.project.lighting,mode:'time',hour}}}
-    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: actors.find(a => a.id === session?.id) || { x: camera.x, y: camera.y }, actors, drawActor: (ctx: CanvasRenderingContext2D,a:any) => visuals.get(a.id)?.draw(ctx) } as any);
+    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: actors.find(a => a.id === session?.id) || { x: camera.x, y: camera.y }, actors, objectState:(id:string)=>{const n=session?.snapshot.nodes?.find(n=>n.objectId===id);return n?{hidden:n.hidden,shakeX:n.status==='mining'?Math.sin(now/1000*36)*1.5:0,shakeAngle:n.status==='mining'?Math.sin(now/1000*31)*.008:0}:undefined},drawActor: (ctx: CanvasRenderingContext2D,a:any) => visuals.get(a.id)?.draw(ctx) } as any);
     if (session) {
         c.save();
         c.scale(zoom, zoom);
@@ -149,7 +154,7 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
         }
         c.restore();
     }
-    const me=actors.find(a=>a.id===session?.id)||null,visual=me?visuals.get(me.id):null,portrait=visual instanceof CutoutCharacterVisual?()=>visual.portrait():undefined;playerHUD.update(me,!!session,portrait);mapHUD.update(player,session,me,dt,portrait);
+    const me=actors.find(a=>a.id===session?.id)||null,visual=me?visuals.get(me.id):null,portrait=visual instanceof CutoutCharacterVisual?()=>visual.portrait():undefined;playerHUD.update(me,!!session,portrait);mapHUD.update(player,session,me,dt,portrait);interactionUI.update(session,me,dt);
 } requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
 // Read-only diagnostics for acceptance tests; no gameplay authority.

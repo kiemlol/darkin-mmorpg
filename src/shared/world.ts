@@ -2,6 +2,8 @@ import { gameCatalog, allowedAppearance } from './catalog';
 import {defaultEquipment,changeEquipment,resolveInventory,type EquipmentState,type CosmeticCommand} from './equipment';
 import {CLOCK_RATE,initialClock,type ClockState} from './map-state';
 import {DEFAULT_REALM,validRealmState,type RealmState} from './realms';
+import {InteractionSystem,type Definition,type MiningBook,type Transaction,type Receipt} from './interactions';
+import {normalizeWallet,type Wallet} from './resources';
 import { validateMap, canWalk as mapCanWalk, moveActor } from '../../public/game-data/maps/map-runtime.mjs';
 export { moveActor };
 // Keep full character artwork inside terrain when the camera reaches a hard map edge.
@@ -16,6 +18,10 @@ export type Intent = {
     attack: boolean;
 };
 export type Actor = EquipmentState & RealmState & {
+    wallet:Wallet;
+    combatUntil:number;
+    toolId:'combat'|'mining_hammer';
+    interactionTarget?:{objectId:string;actionId:string;type:string;label:string;cycle:number};
     teleportSeq:number;
     equipmentWarnings: string[];
     corpseOpacity?: number;
@@ -58,6 +64,7 @@ export function movement(p: any, a: Actor, i: Intent, dt: number) { if (a.hp <= 
     if(distance>0){const x=Math.max(b.x0,Math.min(b.x1,a.x+i.dx/len*distance)),y=Math.max(b.y0,Math.min(b.y1,a.y+i.dy/len*distance));moveActor(p,a,(x-a.x)/distance,(y-a.y)/distance,t,speed)} if (Math.hypot(i.dx, i.dy) > .01)
     a.dir = Math.atan2(i.dy, i.dx); }
 export class World {
+    interactions:InteractionSystem;
     p: any;
     actors = new Map<string, Actor>();
     inputs = new Map<string, {
@@ -68,41 +75,44 @@ export class World {
     clockBaseSeconds=0;
     events: Hit[] = [];
     serial = 0;
-    constructor(p: any) { this.p = validateMap(p);this.clockBaseSeconds=initialClock(p); for (let k = 0; k < 6; k++) {
-        const h = this.findSpawn(p.spawn.x + Math.cos(k * 2.4) * (150 + k * 75), p.spawn.y + Math.sin(k * 2.4) * (150 + k * 75));
+    constructor(p: any,options:{instanceId?:string;book?:MiningBook;epochSeconds?:number;nowSeconds?:()=>number;random?:()=>number;commit?:(tx:Transaction)=>Receipt|Promise<Receipt>}={}) { this.p = validateMap(p);this.clockBaseSeconds=initialClock(p);this.interactions=new InteractionSystem(this,options.instanceId||'darkin-frontier-v1:'+p.id,options); for (let k = 0; k < 6; k++) {
+        const h = this.findSpawn(p.spawn.x + Math.cos(k * 2.4) * (150 + k * 75), p.spawn.y + Math.sin(k * 2.4) * (150 + k * 75),true);
         const a = this.make('mob' + k, 'Mầm bóng tối', 'mob', h);
         this.actors.set(a.id, a);
     } }
-    findSpawn(x: number, y: number) { for (let r = 0; r < 5000; r += 24)
+    findSpawn(x: number, y: number,staticProps=false) { for (let r = 0; r < 5000; r += 24)
         for (let k = 0; k < Math.max(1, Math.ceil(r / 12)); k++) {
             const n = Math.max(1, Math.ceil(r / 12)), xx = x + Math.cos(k / n * Math.PI * 2) * r, yy = y + Math.sin(k / n * Math.PI * 2) * r;
-            if (canWalk(this.p, xx, yy, 12))
+            if (canWalk(this.p, xx, yy, 12)&&(!staticProps||mapCanWalk(this.p,xx,yy,12,{isObjectActive:()=>true})))
                 return { x: xx, y: yy };
         } throw Error('Map không có spawn hợp lệ'); }
     make(id: string, name: string, kind: Actor['kind'], h: {
         x: number;
         y: number;
-    }): Actor { return { ...DEFAULT_REALM,teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
+    }): Actor { return { wallet:normalizeWallet(null).wallet,combatUntil:0,toolId:'combat',...DEFAULT_REALM,teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
     // Internal simulation operation only. There is deliberately no client message/API for this.
     setRealm(id:string,state:RealmState){if(!validRealmState(state))throw Error('Cảnh giới/bậc không hợp lệ');const a=this.actors.get(id);if(a?.kind==='player'){a.realmId=state.realmId;a.realmStageId=state.realmStageId}}
+    inCombat(a:Actor){if(a.combatUntil>this.time)return true;return [...this.actors.values()].some(b=>b.kind!==a.kind&&b.hp>0&&Math.hypot(a.x-b.x,a.y-b.y)<116&&this.clearLine(a,b))}
+    clearLine(a:Actor,b:Actor){for(let t=.1;t<1;t+=.1)if(!canWalk(this.p,a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,2))return false;return true}
+    canStand(a:Actor){return canWalk(this.p,a.x,a.y,a.radius)}
     setAppearance(id: string, appearanceId: string) { if (!allowedAppearance(appearanceId))
         throw Error('Ngoại hình không được phép'); const a = this.actors.get(id); if (a?.kind === 'player')
         {const next=defaultEquipment(appearanceId);next.accessories=structuredClone(a.accessories);Object.assign(a,next,{appearanceId,equipmentWarnings:resolveInventory(next).warnings});} }
     cosmetic(id:string,command:CosmeticCommand){const a=this.actors.get(id);if(a?.kind!=='player')return;const next=changeEquipment(a,command);Object.assign(a,next,{equipmentWarnings:resolveInventory(next).warnings})}
     join(id: string, name: string) { if ([...this.actors.values()].filter(a => a.kind === 'player').length >= 32)
         throw Error('Map đầy (32 người)'); const a = this.make(id, name, 'player', this.findSpawn(this.p.spawn.x, this.p.spawn.y)); this.actors.set(id, a); return a; }
-    leave(id: string) { this.actors.delete(id); this.inputs.delete(id); }
+    leave(id: string) { this.interactions.cancel(id,'Mất kết nối / rời map');this.interactions.errors.delete(id);this.actors.delete(id); this.inputs.delete(id); }
     input(id: string, i: Intent) { const a = this.actors.get(id); if (!a || !validIntent(i) || i.seq <= Math.max(a.ack, this.inputs.get(id)?.i.seq ?? -1))
-        return false; this.inputs.set(id, { i, time: this.time }); return true; }
+        return false; if(Math.hypot(i.dx,i.dy)>.01||i.attack)this.interactions.cancel(id);this.inputs.set(id, { i, time: this.time }); return true; }
     respawn(id: string) { const a = this.actors.get(id); if (a && a.hp <= 0) {
         Object.assign(a, this.findSpawn(this.p.spawn.x, this.p.spawn.y), { hp: a.maxHp, action: 'idle', anim: 0,teleportSeq:a.teleportSeq+1 });
         this.inputs.delete(id);
     } }
     hit(a: Actor, b: Actor, damage: number) { if (b.hp <= 0)
-        return; b.hp = Math.max(0, b.hp - damage); b.action = b.hp ? 'hurt' : 'death'; b.anim = b.hp ? .22 : 0; b.deadAt = this.time; if (!b.hp && a.kind === 'player')
+        return; a.combatUntil=b.combatUntil=this.time+3;this.interactions.cancel(a.id,'Đang giao chiến');this.interactions.cancel(b.id,'Bị tấn công');b.hp = Math.max(0, b.hp - damage); b.action = b.hp ? 'hurt' : 'death'; b.anim = b.hp ? .22 : 0; b.deadAt = this.time; if (!b.hp && a.kind === 'player')
         a.kills++; this.events.push({ id: ++this.serial, x: b.x, y: b.y - 50, damage, target: b.id, time: this.time }); }
     attack(a: Actor) { if (a.cooldown > 0 || a.hp <= 0)
-        return; a.attackSeq++; a.cooldown = a.kind === 'mob' ? .95 : COOLDOWN; a.action = 'attack'; a.anim = .24; for (const b of this.actors.values()) {
+        return; this.interactions.cancel(a.id,'Đang đánh');a.combatUntil=this.time+3;a.attackSeq++; a.cooldown = a.kind === 'mob' ? .95 : COOLDOWN; a.action = 'attack'; a.anim = .24; for (const b of this.actors.values()) {
         if (b.kind === a.kind || b.hp <= 0)
             continue;
         const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
@@ -154,12 +164,13 @@ export class World {
                 i.dy = (ty - a.y) / d * .62;
             }
         }
+        if(this.interactions.channels.has(a.id)){a.action=this.interactions.presentation(this.interactions.definitions.get(this.interactions.channels.get(a.id)!.intent.objectId)!).action;continue}
         movement(this.p, a, i, dt);
         if (!a.anim)
             a.action = Math.hypot(i.dx, i.dy) > .01 ? (i.run ? 'run' : 'walk') : 'idle';
         if (i.attack)
             this.attack(a);
-    } this.events = this.events.filter(e => this.time - e.time < 1.2); }
-    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState} { return { clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
+    }this.interactions.step();for(const a of this.actors.values())if(a.kind==='player'){const c=this.interactions.channels.get(a.id),d=c?this.interactions.definitions.get(c.intent.objectId):this.interactions.nearest(a);a.interactionTarget=d?{objectId:d.objectId,actionId:d.actionId,type:d.type,label:d.label,cycle:this.interactions.states.get(d.objectId)!.cycle}:undefined;a.toolId=d&&a.hp>0?this.interactions.presentation(d).toolId:'combat'} this.events = this.events.filter(e => this.time - e.time < 1.2); }
+    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
 }
 export type Snapshot = ReturnType<World['snapshot']>;

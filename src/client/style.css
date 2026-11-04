@@ -47,3 +47,13 @@ body.playing .session-card{top:calc(var(--top-hud-bottom,120px) + 48px);right:ma
  body.playing .zoom button{padding:7px 10px;min-width:36px;min-height:38px}
  body.playing header #menu span,.hint{display:none}
 }
+#wallet-hud{left:752px;top:275px;width:332px;height:66px;z-index:4;text-align:center;color:#bde4d4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#spirit-stone-balance{display:block;font-size:42px;font-weight:700;line-height:42px}
+#spirit-stone-balance{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#wallet-hud small{display:block;font-size:26px;color:#d4c09b;line-height:24px}
+#mining-panel{position:fixed;left:50%;bottom:max(160px,calc(env(safe-area-inset-bottom) + 155px));transform:translateX(-50%);width:min(320px,80vw);z-index:8;pointer-events:none;text-align:center;background:#122724e6;border:1px solid #b7ca9b55;border-radius:6px;padding:9px;color:#e2efcf}
+#mining-panel p{font-size:12px;margin:0;line-height:1.5}.mining-track{height:6px;background:#26382e;margin-top:7px;border-radius:4px;overflow:hidden}.mining-track i{display:block;height:100%;background:#93e3c3;transition:width .08s linear}
+#attack>span,#attack>small{pointer-events:none}#attack[data-action=mine],#attack[data-action=mining]{background:#61b79535;border-color:#9de7bb99}
+#mining-panel{bottom:max(180px,calc(env(safe-area-inset-bottom) + 175px))}
+.map-open #mining-panel{visibility:hidden}
+@media(max-height:550px){#mining-panel{bottom:18px;width:260px;padding:7px}}

@@ -4,12 +4,15 @@ import { createExploration, offlineCharacter, loadExploration, saveExploration, 
 import { type ExplorationStore, type ClockState, CLOCK_RATE, initialClock, scopeKey, WORLD_ID, mapRevision } from '../shared/map-state';
 import { World, movement, validIntent, type Intent, type Snapshot, type Actor } from '../shared/world';
 import {normalizeRealm,validRealmState} from '../shared/realms';
+import {normalizeWallet,addReward,type Wallet} from '../shared/resources';
+import {activeNodes,type InteractionIntent,type MiningBook,type Transaction} from '../shared/interactions';
 export interface GameSession {
     id: string;
     characterId: string;
     exploration: ExplorationStore | null;
     status: string;
     dataWarnings?:string[];
+    interactionMessage:string;
     snapshot: Snapshot;
     clock(): ClockState;
     input(i: Intent, tick?: boolean): void;
@@ -18,6 +21,8 @@ export interface GameSession {
     respawn(): void;
     setAppearance(id: string): void;
     cosmetic(command: CosmeticCommand): void;
+    interact(intent:InteractionIntent):void;
+    cancelInteraction():void;
     destroy(): void;
 }
 const SAVE = 'darkin-frontier-mvp:offline:v1';
@@ -25,6 +30,9 @@ export class LocalGameSession implements GameSession {
     id = 'local';
     status = 'Offline';
     dataWarnings:string[]=[];
+    interactionMessage='';
+    interactionMaps:Record<string,MiningBook>={};
+    private savedExtras:Record<string,unknown>={};
     world: World;
     snapshot: Snapshot;
     previous: Snapshot;
@@ -37,12 +45,15 @@ export class LocalGameSession implements GameSession {
         this.characterId = offlineCharacter(name);
         this.exploration = createExploration(p, this.characterId);
         loadExploration(this.exploration);
-        this.world = new World(p);
+        let saved:any=null;try{saved=JSON.parse(localStorage.getItem(SAVE+':'+this.characterId)||(name==='Lữ khách'?localStorage.getItem(SAVE):null)||'null')}catch{}
+        if(saved&&typeof saved==='object'&&!Array.isArray(saved))this.savedExtras=saved;
+        this.interactionMaps=saved?.interactionMaps||{};
+        this.world = new World(p,{instanceId:'offline:'+this.characterId+':'+p.id,book:this.interactionMaps[p.id],nowSeconds:()=>Date.now()/1000});
         const a = this.world.join(this.id, name);
         let migrate=false;
         try {
-            const s = JSON.parse(localStorage.getItem(SAVE + ':' + this.characterId) || (name === 'Lữ khách' ? localStorage.getItem(SAVE) : null) || 'null');
-            const profile=normalizeRealm(s);this.world.setRealm(this.id,profile.state);this.dataWarnings=profile.warnings;migrate=!!s&&(s.version!==2||profile.migrated);
+            const s = saved;
+            const profile=normalizeRealm(s),balance=normalizeWallet(s?.wallet);this.world.setRealm(this.id,profile.state);a.wallet=balance.wallet;this.dataWarnings=[...profile.warnings,...balance.warnings];migrate=!!s&&(s.version!==3||profile.migrated||!s.wallet);
             if (s?.map === p.id) {
                 if (Number.isFinite(s.clockSeconds))
                     this.world.clockBaseSeconds = s.clockSeconds;
@@ -59,6 +70,7 @@ export class LocalGameSession implements GameSession {
         this.snapshot = this.world.snapshot();
         this.previous = this.snapshot;
         this.exploration.visit(a.x, a.y, this.world.time, a.teleportSeq);
+        this.world.interactions.commit=tx=>this.commitMining(tx);
         if(migrate)this.save();
         if (typeof window !== 'undefined') {
             window.addEventListener('pagehide', () => this.save(), {signal:this.lifetime.signal});
@@ -69,6 +81,7 @@ export class LocalGameSession implements GameSession {
     update(dt: number) { this.acc += Math.min(dt, .25); while (this.acc + 1e-10 >= STEP) {
         this.previous = this.snapshot;
         this.world.step(STEP);
+        const message=this.world.interactions.errors.get(this.id);if(message){this.interactionMessage=message;this.world.interactions.errors.delete(this.id)}
         this.snapshot = this.world.snapshot();
         const a = this.world.actors.get(this.id)!;
         this.exploration.visit(a.x, a.y, this.world.time, a.teleportSeq);
@@ -79,14 +92,18 @@ export class LocalGameSession implements GameSession {
     } }
     clock() { return { gameSeconds: this.world.clockBaseSeconds + (this.world.time + this.acc) * CLOCK_RATE, rate: CLOCK_RATE }; }
     renderActors() { return interpolateSnapshot(this.world.p, this.previous, this.snapshot, this.acc / STEP); }
-    save() { const a = this.world.actors.get(this.id)!; saveExploration(this.exploration); try {
-        localStorage.setItem(SAVE + ':' + this.characterId, JSON.stringify({ version: 2, characterId: this.characterId, realmId:a.realmId,realmStageId:a.realmStageId,map: this.world.p.id, x: a.x, y: a.y, hp: a.hp, kills: a.kills, clockSeconds: this.clock().gameSeconds }));
+    private record(wallet?:Wallet,book?:MiningBook){const a=this.world.actors.get(this.id)!;return{...this.savedExtras,version:3,characterId:this.characterId,realmId:a.realmId,realmStageId:a.realmStageId,wallet:wallet||a.wallet,map:this.world.p.id,x:a.x,y:a.y,hp:a.hp,kills:a.kills,clockSeconds:this.clock().gameSeconds,interactionMaps:{...this.interactionMaps,[this.world.p.id]:book||this.world.interactions.durable()}}}
+    private commitMining(tx:Transaction){const a=this.world.actors.get(this.id)!,book=this.world.interactions.durable();if(book.ledger[tx.key])return{wallet:structuredClone(a.wallet)};const wallet=tx.resourceId?addReward(a.wallet,tx.resourceId,tx.amount):structuredClone(a.wallet);book.nodes[tx.objectId]=structuredClone(tx.node);book.ledger[tx.key]=structuredClone(tx);localStorage.setItem(SAVE+':'+this.characterId,JSON.stringify(this.record(wallet,book)));return{wallet}}
+    save() { saveExploration(this.exploration); try {
+        localStorage.setItem(SAVE + ':' + this.characterId, JSON.stringify(this.record()));
     }
     catch { } }
     setAppearance(id: string) { this.world.setAppearance(this.id, id); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; }
     cosmetic(command: CosmeticCommand) { this.world.cosmetic(this.id, command); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; }
     respawn() { this.world.respawn(this.id); const a = this.world.actors.get(this.id)!; this.exploration.visit(a.x, a.y, this.world.time, a.teleportSeq); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; }
-    destroy() { this.lifetime.abort(); this.save(); }
+    interact(intent:InteractionIntent){try{this.world.interactions.start(this.id,intent);this.interactionMessage='';this.snapshot=this.world.snapshot()}catch(e){this.interactionMessage=String(e)}}
+    cancelInteraction(){this.world.interactions.cancel(this.id);this.snapshot=this.world.snapshot();this.previous=this.snapshot}
+    destroy() { this.lifetime.abort();this.cancelInteraction(); this.save(); }
     static reset(name = 'Lữ khách') { const id = offlineCharacter(name); localStorage.removeItem(SAVE + ':' + id); if (name === 'Lữ khách')
         localStorage.removeItem(SAVE); for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
@@ -98,6 +115,7 @@ export class NetworkGameSession implements GameSession {
     id = '';
     status = 'Đang kết nối…';
     dataWarnings:string[]=[];
+    interactionMessage='';
     snapshot: Snapshot = { time: 0, actors: [], events: [] };
     socket: WebSocket;
     pending: {
@@ -116,10 +134,12 @@ export class NetworkGameSession implements GameSession {
     clockElapsed = 0;
     tokenKey = '';
     resumeToken = '';
+    resumeSession=false;
     constructor(public p: any, name: string, url: string) { const u = new URL(url || `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`); if (!['ws:', 'wss:'].includes(u.protocol) || location.protocol === 'https:' && u.protocol !== 'wss:')
-        throw Error('Trang HTTPS yêu cầu địa chỉ wss://');this.tokenKey='darkin-frontier:online-guest:v1:'+encodeURIComponent(u.href)+':'+encodeURIComponent(name);try{this.resumeToken=sessionStorage.getItem(this.tokenKey)||localStorage.getItem(this.tokenKey)||''}catch{} this.socket = new WebSocket(u); this.socket.onopen = () => this.socket.send(JSON.stringify({ type: 'join', name,resumeToken:this.resumeToken })); this.socket.onmessage = e => { try {
+        throw Error('Trang HTTPS yêu cầu địa chỉ wss://');this.tokenKey='darkin-frontier:online-guest:v1:'+encodeURIComponent(u.href)+':'+encodeURIComponent(name);try{const tabToken=sessionStorage.getItem(this.tokenKey);this.resumeSession=!!tabToken;this.resumeToken=tabToken||localStorage.getItem(this.tokenKey)||''}catch{} this.socket = new WebSocket(u); this.socket.onopen = () => this.socket.send(JSON.stringify({ type: 'join', name,resumeToken:this.resumeToken,resume:this.resumeSession })); this.socket.onmessage = e => { try {
         const m = JSON.parse(e.data);
         if (m.type === 'welcome') {
+            if(m.interactionProtocol!==1){this.status='Server cần cập nhật tương tác/ví';this.socket.close();return}
             if (m.map !== p.id) {
                 this.status = 'Server dùng map khác';
                 this.socket.close();
@@ -134,11 +154,13 @@ export class NetworkGameSession implements GameSession {
         }
         if (m.type === 'error')
             this.status = m.message;
+        if(m.type==='interactionError')this.interactionMessage=m.message;
         if(m.type==='exploration'&&this.exploration)this.exploration.restore(m.record);
         if (m.type === 'snapshot') {
             if(!Array.isArray(m.actors)||m.actors.some((a:any)=>a.kind==='player'&&!validRealmState(a))){this.status='Dữ liệu cảnh giới server không hợp lệ';return}
             this.previous = this.snapshot;
             this.snapshot = m;
+            activeNodes(this.p,m.nodes||[]);
             this.clockElapsed=0;
             this.timeline.push(m);
             this.received = performance.now();
@@ -155,7 +177,7 @@ export class NetworkGameSession implements GameSession {
     }
     catch {
         this.status = 'Dữ liệu server không hợp lệ';
-    } }; this.socket.onclose = () => { this.status = 'Mất kết nối — bấm Thử lại'; this.pending = []; }; this.socket.onerror = () => { this.status = 'Không kết nối được server — bấm Thử lại'; }; }
+    } }; this.socket.onclose = () => { if(!this.status.startsWith('Server '))this.status = 'Mất kết nối — bấm Thử lại'; this.pending = []; }; this.socket.onerror = () => { this.status = 'Không kết nối được server — bấm Thử lại'; }; }
     input(i: Intent, tick = true) { if (this.socket.readyState !== 1 || !this.id || !validIntent(i))
         return; this.socket.send(JSON.stringify({ type: 'input', input: i })); this.pending.push({ input: i, dt: tick ? STEP : 0 }); if (this.pending.length > 40)
         this.pending.shift(); if (this.predicted && tick) {
@@ -175,5 +197,7 @@ export class NetworkGameSession implements GameSession {
         this.socket.send(JSON.stringify({ type: 'cosmetic', command })); }
     respawn() { if (this.socket.readyState === 1)
         this.socket.send(JSON.stringify({ type: 'respawn' })); }
+    interact(intent:InteractionIntent){if(this.socket.readyState===1){this.interactionMessage='';this.socket.send(JSON.stringify({type:'interact',intent}))}}
+    cancelInteraction(){if(this.socket.readyState===1)this.socket.send(JSON.stringify({type:'cancelInteraction'}))}
     destroy() { this.closed = true; this.socket.onclose = null; this.socket.onmessage = null; this.socket.close(); this.pending = []; }
 }

@@ -17,7 +17,7 @@ export class CutoutCharacterVisual implements CharacterVisual{
   let candidate:LoadedVisual|null=null;
   try{const next=await assets.acquire(id,equipment);candidate=next;if(this.disposed||generation!==this.generation){assets.release(next);return}
    const player=next.prototype.fork(),old=this.player,oldLoaded=this.loaded;
-   if(old){for(const key of ['name','time','face','pose','blend','hitFired','attachmentTime'])player[key]=structuredClone(old[key]);if(!player.spec.clips[player.name])throw Error('Clip đang phát không tồn tại trong rig mới')}
+   if(old){for(const key of ['name','time','face','pose','blend','hitFired','attachmentTime'])player[key]=structuredClone(old[key]);if(!player.spec.clips[player.name])player.play(next.actions[this.actor?.action]?.clip||next.actions.idle.clip,{restart:true})}
    else{this.attacking=false;this.lastAttack=this.actor?.attackSeq??0}
    this.player=player;this.loaded=next;candidate=null;old?.dispose();if(oldLoaded)assets.release(oldLoaded);
    if(next.warnings.length)assetWarning(next.warnings.join(' · '));

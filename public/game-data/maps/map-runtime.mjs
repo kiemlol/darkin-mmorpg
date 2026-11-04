@@ -46,12 +46,19 @@ export function insideShape(s,x,y){if(!s)return false;const dx=(x-s.x)/(s.w/2),d
 export function objectBounds(p,o){const s=p.assets[o.asset],xy=[[-s.ax*s.w,-s.ay*s.h],[(1-s.ax)*s.w,-s.ay*s.h],[-s.ax*s.w,(1-s.ay)*s.h],[(1-s.ax)*s.w,(1-s.ay)*s.h]].map(pt=>objectWorld(o,...pt));return {x0:Math.min(...xy.map(v=>v[0])),y0:Math.min(...xy.map(v=>v[1])),x1:Math.max(...xy.map(v=>v[0])),y1:Math.max(...xy.map(v=>v[1]))}}
 export function orderedObjects(p){return [...p.objects].sort((a,b)=>a.y-b.y)}
 export function pickObject(p,x,y){return [...orderedObjects(p).filter(o=>o.layer==='ground'),...orderedObjects(p).filter(o=>o.layer==='sorted'),...orderedObjects(p).filter(o=>o.layer==='front')].reverse().find(o=>{const s=p.assets[o.asset],[px,py]=objectLocal(o,x,y);return px>=-s.ax*s.w&&px<=(1-s.ax)*s.w&&py>=-s.ay*s.h&&py<=(1-s.ay)*s.h})||null}
-export function pointWalkable(p,x,y){
+// Per-instance state is held outside the immutable Studio project/bundle.
+const objectActivity=new WeakMap();
+const visibleWidthCache=new WeakMap();
+// Studio ground shadows use the opaque width, without cropping/resizing the asset.
+// Cache the bounded alpha scan once per decoded image, never once per frame.
+function visibleImageWidth(image){if(!image)return 0;if(visibleWidthCache.has(image))return visibleWidthCache.get(image);let width=0;try{const w=image.naturalWidth||image.width,h=image.naturalHeight||image.height,k=Math.min(1,256/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));const cc=c.getContext('2d',{willReadFrequently:true});cc.drawImage(image,0,0,c.width,c.height);const pixels=cc.getImageData(0,0,c.width,c.height).data;let left=c.width,right=-1;for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(pixels[(y*c.width+x)*4+3]>=24){left=Math.min(left,x);right=Math.max(right,x)}if(right>=0)width=(right+1-left)/c.width}catch{}visibleWidthCache.set(image,width);return width}
+export function setObjectActivity(p,isActive){if(isActive)objectActivity.set(p,isActive);else objectActivity.delete(p)}
+export function pointWalkable(p,x,y,{isObjectActive=objectActivity.get(p)||(()=>true)}={}){
  const i=cellIndex(p,x,y);if(i<0||p.blocked[i])return false;
- let onBridge=false;for(const o of p.objects){const [lx,ly]=objectLocal(o,x,y);if(insideShape(o.collider,lx,ly))return false;if(insideShape(o.walk,lx,ly))onBridge=true}
+ let onBridge=false;for(const o of p.objects){if(!isObjectActive(o.id))continue;const [lx,ly]=objectLocal(o,x,y);if(insideShape(o.collider,lx,ly))return false;if(insideShape(o.walk,lx,ly))onBridge=true}
  return p.terrain[i]!=='water'||p.walkable[i]===1||onBridge;
 }
-export function canWalk(p,x,y,r=12){if(!pointWalkable(p,x,y))return false;for(let i=0;i<8;i++)if(!pointWalkable(p,x+Math.cos(i*Math.PI/4)*r,y+Math.sin(i*Math.PI/4)*r*.6))return false;return true}
+export function canWalk(p,x,y,r=12,options={}){if(!pointWalkable(p,x,y,options))return false;for(let i=0;i<8;i++)if(!pointWalkable(p,x+Math.cos(i*Math.PI/4)*r,y+Math.sin(i*Math.PI/4)*r*.6,options))return false;return true}
 export function moveActor(p,actor,dx,dy,dt,speed=180){const len=Math.max(1,Math.hypot(dx,dy)),x=dx/len*speed*Math.max(0,Math.min(.1,dt)),y=dy/len*speed*Math.max(0,Math.min(.1,dt)),n=Math.max(1,Math.ceil(Math.hypot(x,y)/5));for(let i=0;i<n;i++){if(canWalk(p,actor.x+x/n,actor.y,actor.radius??12))actor.x+=x/n;if(canWalk(p,actor.x,actor.y+y/n,actor.radius??12))actor.y+=y/n}return actor}
 export function warpAt(p,x,y){return p.warps.find(w=>Math.hypot(w.x-x,w.y-y)<=w.radius)||null}
 // Interpolating cardinal spline: the editable points lie ON the road. Repeated
@@ -123,12 +130,14 @@ export class MapRenderer{
   }
   if(l.vignette){ctx.save();const r=Math.max(w,h),g=ctx.createRadialGradient(x+w*.5,y+h*.45,0,x+w*.5,y+h*.45,r*.72);g.addColorStop(0,'rgba(8,10,28,0)');g.addColorStop(1,`rgba(8,10,28,${n*.5})`);ctx.fillStyle=g;ctx.fillRect(x,y,w,h);ctx.restore()}
  }
- draw(ctx,{x=0,y=0,zoom=1,width,height,grid=false,collision=false,selected=null,actor=null,time=0,markers=false,drawActor=null,actors=null}={}){
+ draw(ctx,{x=0,y=0,zoom=1,width,height,grid=false,collision=false,selected=null,actor=null,time=0,markers=false,drawActor=null,actors=null,objectState=null}={}){
   const p=this.project,cs=p.cell,overview=cs*zoom<18,visible=b=>b.x1>=x&&b.y1>=y&&b.x0<=x+width/zoom&&b.y0<=y+height/zoom;ctx.save();ctx.scale(zoom,zoom);ctx.translate(-x,-y);ctx.fillStyle='#0d1520';ctx.fillRect(x,y,width/zoom,height/zoom);
   if(overview)ctx.drawImage(this.overview(),0,0,p.cols*cs,p.rows*cs);
   else for(let gy=Math.max(0,Math.floor(y/cs));gy<Math.min(p.rows,Math.ceil((y+height/zoom)/cs));gy++)for(let gx=Math.max(0,Math.floor(x/cs));gx<Math.min(p.cols,Math.ceil((x+width/zoom)/cs));gx++){const type=p.terrain[gy*p.cols+gx];ctx.drawImage(this.tile(type,gx,gy),gx*cs,gy*cs,cs+.2,cs+.2);if(type==='water'){ctx.strokeStyle='#d5f5ff33';ctx.lineWidth=1/zoom;ctx.beginPath();ctx.moveTo(gx*cs+8,gy*cs+cs*.5+Math.sin(time*2+gx)*3);ctx.lineTo(gx*cs+cs-8,gy*cs+cs*.5+Math.sin(time*2+gx+1)*3);ctx.stroke()}}
   this.drawRoads(ctx,{x,y,zoom,width,height});
-  const draw=o=>{if(!visible(objectBounds(p,o)))return;const s=p.assets[o.asset],img=this.images.get(o.asset);ctx.save();ctx.translate(o.x,o.y);ctx.rotate(o.rotation);ctx.scale(o.scale*(o.flip?-1:1),o.scale);if(img){if(s.kind==='tree'&&actor&&actor.y<o.y&&Math.abs(actor.x-o.x)<s.w*o.scale*.35&&actor.y>o.y-s.h*o.scale)ctx.globalAlpha=.5;ctx.drawImage(img,-s.ax*s.w,-s.ay*s.h,s.w,s.h)}ctx.restore()};
+  const draw=o=>{const state=objectState?.(o.id);if(state?.hidden||!visible(objectBounds(p,o)))return;const s=p.assets[o.asset],img=this.images.get(o.asset);ctx.save();ctx.translate(o.x+(state?.shakeX||0),o.y);ctx.rotate(o.rotation+(state?.shakeAngle||0));ctx.scale(o.scale*(o.flip?-1:1),o.scale);if(img){if((s.kind==='tree'||s.fadeBehind)&&actor&&actor.y<o.y&&Math.abs(actor.x-o.x)<s.w*o.scale*.35&&actor.y>o.y-s.h*o.scale)ctx.globalAlpha=.5;ctx.drawImage(img,-s.ax*s.w,-s.ay*s.h,s.w,s.h)}ctx.restore()};
+  // Authored groundShadow metadata from newer Studio maps; never changes colliders/anchors.
+  for(const o of p.objects){const s=p.assets[o.asset];if(!s.groundShadow||objectState?.(o.id)?.hidden||!visible(objectBounds(p,o)))continue;const width=visibleImageWidth(this.images.get(o.asset))*s.w*o.scale;if(!width)continue;const rx=Math.max(3,width*.2),ry=Math.max(1.5,rx*.23);ctx.save();ctx.translate(o.x,o.y);ctx.scale(rx,ry);const gradient=ctx.createRadialGradient(0,0,0,0,0,1);gradient.addColorStop(0,'rgba(8,17,20,.3)');gradient.addColorStop(1,'rgba(8,17,20,0)');ctx.fillStyle=gradient;ctx.fillRect(-1,-1,2,2);ctx.restore()}
   for(const o of orderedObjects(p).filter(o=>o.layer==='ground'))draw(o);
   // Optional multi-actor extension; original actor/drawActor contract remains valid.
   const drawHero=a=>{if(drawActor)drawActor(ctx,a);else{ctx.save();ctx.translate(a.x,a.y);ctx.fillStyle='#d3ed92';ctx.beginPath();ctx.arc(0,-17,12,0,Math.PI*2);ctx.fill();ctx.restore()}};
