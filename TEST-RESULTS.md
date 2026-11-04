@@ -58,3 +58,14 @@ Camera dừng trong terrain 0..cols*cell, 0..rows*cell; minimum zoom tăng tự 
 - `node tests/cutout-browser.cjs` và `node tests/jitter-browser.cjs`: PASS, bốn animation, hai player thật và hồi quy rung chuyển động.
 
 Mobile đã kiểm thử bằng Chromium cảm ứng giả lập; chưa kiểm thử trực tiếp Safari trên iPhone trong ảnh người dùng.
+
+## Studio accessory packs — 2026-11-04
+
+- `npm test`: 25/25 PASS; thêm chữ ký thật Traveler/Shadow Knight, exact fit, exclusive category giữ món cũ, geometry/profile thiếu bị từ chối, kiểm tra lệnh cosmetic không đổi vị trí/HP/kill/hitbox/action.
+- `node tests/accessories-browser.cjs` trên dist: PASS kính được renderer thật nạp và vẽ; transform khớp nguyên profile, idle/walk/run/attack và flip, đổi kính cùng loại, đổi head/body liên tiếp, tháo; không mất HP/position/progress khi đổi phụ kiện. Đã xem screenshots kính vuông Traveler và kính tròn Shadow Knight.
+- `node tests/accessories-harness.cjs` qua Vite: PASS drawImage thật khớp ma trận socket và nguyên anchor/w/h (Canvas tolerance .0001), player mới giữ clip/time/pose/face; lỗi giải mã ảnh giữ player hợp lệ; geometry khác cùng ID bị ẩn/báo lý do; variant cũ giải phóng sprite/rig; wingRig fixture nạp đủ cây ảnh và đồng hồ riêng theo giây thật.
+- `node tests/accessories-online.cjs`: PASS hai browser Online thật thấy cùng kính và mã đầu/thân, tháo và đổi nhanh; WebSocket không có base64, bundle, profile hay pose mỗi frame.
+- Hồi quy `cutout-browser`, `browser`, `movement-regression`, `jitter-browser`: PASS. Giữ combat/map/mobile/camera/corpse và bản lưu chết đã sửa.
+- `node tests/offline-accessories.cjs` và `offline-no-backend.cjs`: PASS khi Node game server tắt; kính vẫn nạp/vẽ qua file tĩnh, zero WebSocket. Harness tài nguyên cũ cũng đã qua lại sau tích hợp Studio.
+
+Chỉ có hai gói kính thật được cung cấp. Cánh được kiểm tra bằng fixture kỹ thuật, chưa có pack cánh Studio thật để so khớp thị giác. Backend Online chưa công khai; các kiểm thử Online chạy Node server trong môi trường dự án. Thiết bị thật iOS/Android chưa kiểm thử.

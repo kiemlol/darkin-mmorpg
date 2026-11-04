@@ -2,8 +2,9 @@ import {CutoutPlayer} from '../../public/game-data/cutout-runtime/player.mjs';
 import {validateAttachments} from '../../public/game-data/cutout-runtime/attachments.mjs';
 import {validateCatalog,type Catalog,type Resource,type Appearance,type ActionBinding} from '../shared/catalog';
 import {adaptStudio,studioSpec} from './studio-adapter';
+import {defaultEquipment,resolveInventory,mountCatalog,type EquipmentState} from '../shared/equipment';
 const RuntimePlayer:any=CutoutPlayer;
-export type LoadedVisual={prototype:any;appearance:Appearance;actions:Record<string,ActionBinding>};
+export type LoadedVisual={prototype:any;appearance:Appearance;actions:Record<string,ActionBinding>;key:string;warnings:string[];refs:number;pinned:boolean};
 const freeze=(v:any):any=>{if(v&&typeof v==='object'&&!Object.isFrozen(v)){Object.values(v).forEach(freeze);Object.freeze(v)}return v};
 export class AssetRegistry{
  catalog!:Catalog;data=new Map<string,Promise<any>>();visuals=new Map<string,Promise<LoadedVisual>>();
@@ -15,9 +16,13 @@ export class AssetRegistry{
   if(!this.data.has(r.path))this.data.set(r.path,(async()=>{const res=await fetch('/game-data/'+r.path);if(!res.ok)throw Error('Thiếu '+r.path);return freeze(await res.json())})().catch(e=>{this.data.delete(r.path!);throw e}));
   return this.data.get(r.path)!;
  }
- async load(id:string):Promise<LoadedVisual>{
-  if(!this.visuals.has(id))this.visuals.set(id,this.build(id).catch(e=>{this.visuals.delete(id);throw e}));return this.visuals.get(id)!;
+ key(id:string,state:EquipmentState=defaultEquipment(id)){return JSON.stringify([id,state.headId,state.bodyId,state.accessories])}
+ async load(id:string,state:EquipmentState=defaultEquipment(id)):Promise<LoadedVisual>{
+  const key=this.key(id,state);if(!this.visuals.has(key))this.visuals.set(key,this.build(id,state,key).catch(e=>{this.visuals.delete(key);throw e}));return this.visuals.get(key)!;
  }
+ async acquire(id:string,state?:EquipmentState){const loaded=await this.load(id,state);loaded.refs++;return loaded}
+ release(loaded:LoadedVisual){loaded.refs=Math.max(0,loaded.refs-1);if(!loaded.refs&&!loaded.pinned){this.visuals.delete(loaded.key);loaded.prototype.dispose()}}
+ async readBundle(path:string){return this.read({id:path,type:'character',rig:'',path})}
  private origin(r:Resource):string{return r.source?this.origin(this.resource(r.source)):r.path!}
  private qualified(data:any,r:Resource,urls:Map<string,string>):any{
   const copy=structuredClone(data),origin=this.origin(r);
@@ -28,15 +33,30 @@ export class AssetRegistry{
    }else if(typeof value==='object')visit(value);
   }};visit(copy);return copy;
  }
- private async build(id:string):Promise<LoadedVisual>{
+ private async build(id:string,state:EquipmentState,key:string):Promise<LoadedVisual>{
   const a=this.catalog.appearances.find(a=>a.id===id);if(!a)throw Error('Ngoại hình chưa đăng ký: '+id);
   const rig=this.catalog.rigs.find(r=>r.id===a.rig)!;const character=this.resource(a.character,'character'),animation=this.resource(a.animationSet,'animation');
   const urls=new Map<string,string>();let raw=this.qualified(await this.read(character),character,urls);
   // Studio project/export may refer to a registered complete base character, without editing its original JSON.
   const baseId=(character as any).baseCharacter;const base=baseId?this.qualified(await this.read(this.resource(baseId,'character')),this.resource(baseId),urls):undefined;raw=studioSpec(raw,base);
+  if(character.studioBundle){
+   if(character.animationSourceRig&&character.animationSourceRig!==raw.rig)throw Error('Rig animation nền không tương thích');
+   const project=(await this.readBundle(character.studioBundle)).project;
+   // Both released rigs explicitly use the same six-part angle channel convention.
+   // Keep all existing clips and the additional authored clip, without remapping joints.
+   raw={...raw,...structuredClone(project),format:'cutout-character-v1',clips:{...raw.clips,[project.clip.name]:structuredClone(project.clip)}};
+   const head=mountCatalog.characters.find(c=>c.headId===state.headId),body=mountCatalog.characters.find(c=>c.bodyId===state.bodyId);
+   if(!head||!body)throw Error('Đầu/thân chưa được phát hành');
+   const headProject=(await this.readBundle(head.path)).project,bodyProject=(await this.readBundle(body.path)).project;
+   raw.parts={...structuredClone(bodyProject.parts),head:structuredClone(headProject.parts.head)};
+   raw.headId=headProject.headId;raw.bodyId=bodyProject.bodyId;
+   raw.mountSignatures={head:headProject.mountSignatures.head,body:bodyProject.mountSignatures.body};
+   raw.mountState={head:structuredClone(headProject.mountState.head),body:structuredClone(bodyProject.mountState.body)};
+  }
   if(a.outfit){const outfit=this.resource(a.outfit,'outfit');if(outfit.source!==a.character||outfit.path){const o=this.qualified(await this.read(outfit),outfit,urls);raw.parts=structuredClone(o.parts||o)}}
   if(animation.source!==a.character||animation.path){const d=await this.read(animation);const p=d.project||d;raw.clips={...(raw.clips||base?.clips),...(p.clips||(p.clip?{[p.clip.name]:p.clip}:p))}}
   const combined=adaptStudio(raw,rig.sourceRig,animation.actions!,base);
+  const resolved=resolveInventory(state,combined.spec.attachments||[],{headId:raw.headId||state.headId,bodyId:raw.bodyId||state.bodyId,parts:raw.parts,mountSignatures:raw.mountSignatures});combined.spec.attachments=resolved.inventory;
   for(const id of a.accessories){const r=this.resource(id,'accessory');if(r.source===a.character&&r.embedded==='weapon')continue;const d=this.qualified(await this.read(r),r,urls);if(r.embedded==='weapon'||d.spriteData){combined.spec.weapon=structuredClone(d);continue}const items=Array.isArray(d)?d:d.attachments||[d];for(const item of items){if(!rig.sockets.includes(item.socket))throw Error('Slot không tương thích '+item.socket)}combined.spec.attachments=[...(combined.spec.attachments||[]),...structuredClone(items)]}
   validateAttachments(combined.spec.attachments);
   const channels=(rig as any).channels as string[]|undefined;
@@ -44,7 +64,7 @@ export class AssetRegistry{
   for(const clip of Object.values(combined.spec.clips) as any[])for(const key of clip.keys)for(const channel of (rig as any).requiredChannels||[])if(!Object.hasOwn(key.P,channel))throw Error('Thiếu kênh bắt buộc '+channel);
   const prototype=await RuntimePlayer.load(combined.spec,new URL('/game-data/'+character.path!.slice(0,character.path!.lastIndexOf('/')+1),location.href),{resolveSource:(src:string)=>src.startsWith('data:')?src:urls.get(src)||(()=>{throw Error('Ảnh chưa đăng ký '+src)})()});
   freeze(prototype.spec);
-  return{prototype,appearance:a,actions:combined.actions};
+  return{prototype,appearance:a,actions:combined.actions,key,warnings:resolved.warnings,refs:0,pinned:id===this.catalog.defaults.appearance&&key===this.key(id)};
  }
 }
 export const assets=new AssetRegistry();

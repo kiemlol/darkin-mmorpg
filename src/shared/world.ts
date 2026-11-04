@@ -1,4 +1,5 @@
 import { gameCatalog, allowedAppearance } from './catalog';
+import {defaultEquipment,changeEquipment,resolveInventory,type EquipmentState,type CosmeticCommand} from './equipment';
 import { validateMap, canWalk as mapCanWalk, moveActor } from '../../public/game-data/maps/map-runtime.mjs';
 export { moveActor };
 // Keep full character artwork inside terrain when the camera reaches a hard map edge.
@@ -12,7 +13,8 @@ export type Intent = {
     run: boolean;
     attack: boolean;
 };
-export type Actor = {
+export type Actor = EquipmentState & {
+    equipmentWarnings: string[];
     corpseOpacity?: number;
     appearanceId: string;
     attackSeq: number;
@@ -76,10 +78,11 @@ export class World {
     make(id: string, name: string, kind: Actor['kind'], h: {
         x: number;
         y: number;
-    }): Actor { return { appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
+    }): Actor { return { ...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
     setAppearance(id: string, appearanceId: string) { if (!allowedAppearance(appearanceId))
         throw Error('Ngoại hình không được phép'); const a = this.actors.get(id); if (a?.kind === 'player')
-        a.appearanceId = appearanceId; }
+        {const next=defaultEquipment(appearanceId);next.accessories=structuredClone(a.accessories);Object.assign(a,next,{appearanceId,equipmentWarnings:resolveInventory(next).warnings});} }
+    cosmetic(id:string,command:CosmeticCommand){const a=this.actors.get(id);if(a?.kind!=='player')return;const next=changeEquipment(a,command);Object.assign(a,next,{equipmentWarnings:resolveInventory(next).warnings})}
     join(id: string, name: string) { if ([...this.actors.values()].filter(a => a.kind === 'player').length >= 32)
         throw Error('Map đầy (32 người)'); const a = this.make(id, name, 'player', this.findSpawn(this.p.spawn.x, this.p.spawn.y)); this.actors.set(id, a); return a; }
     leave(id: string) { this.actors.delete(id); this.inputs.delete(id); }

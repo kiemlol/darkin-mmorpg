@@ -7,7 +7,7 @@ export function studioSpec(data:any,base?:any){
   const p=validate(data.format==='nightcamp-cutout-export-v1'?data.project:data);
   if(!base)throw Error('Project Studio có một clip; cần baseCharacter tương thích cung cấp các clip còn lại');
   if(p.rig!==base.rig)throw Error('Rig project không tương thích baseCharacter');
-  spec={...structuredClone(base),rig:p.rig,parts:structuredClone(p.parts),attachments:structuredClone(p.attachments||[])};
+  spec={...structuredClone(base),rig:p.rig,parts:structuredClone(p.parts),headId:p.headId,bodyId:p.bodyId,mountSignatures:structuredClone(p.mountSignatures),mountState:structuredClone(p.mountState),attachments:structuredClone(p.attachments||[])};
   spec.clips[p.clip.name]=structuredClone(p.clip);
   // Same explicit compatible-base pose completion as the demo import workflow.
   for(const key of spec.clips[p.clip.name].keys)key.P={...base.clips.idle.keys[0].P,...key.P};

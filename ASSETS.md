@@ -1,5 +1,7 @@
 # Nhân vật thật và catalog tài nguyên
 
+**Cập nhật 2026-11-04:** parts, headId, bodyId và mountSignatures hiện lấy từ hai bundle Studio vừa cung cấp; runtime và bốn clip gameplay vẫn lấy từ demo. Xem [STUDIO-ACCESSORIES.md](STUDIO-ACCESSORIES.md) cho giao diện đeo/tháo, quy tắc resolve, thay renderer và kiểm thử mới. Phần nguồn demo bên dưới mô tả nền animation/runtime được giữ lại.
+
 ## Nguồn đã tích hợp
 
 - Map: `kiemlol/Darkin` commit `f04460d307412fc225e73d7f8cd717b20a0c2657`. `public/game-data/maps/forest.map-bundle.json` nguyên byte từ `spawn_map.map-bundle.json`, SHA-256 `916e8b58f28c5331fbf26ee36298df59ee91d17048f91b4ac1a56f0e4c7719a6`. Không đổi terrain/neo/scale/rotation/flip/roads/lighting/collision. Runtime map vẫn bản v2 cùng extension multi-actor hiện có; upstream không đổi MJS trong lần cập nhật này.
@@ -44,7 +46,7 @@ Không có cơ chế hiểu file bất kỳ chỉ bằng cách chép vào thư m
 
 Manifest version 1 phân biệt rigs, resources và appearances; defaults chỉ định appearance và animationSet. Rig contract gồm sourceRig, sáu parts, sockets và danh sách channels. Runtime gốc kiểm tra joints neck/pelvis/shoulder/hand/hip/foot và numeric keyframes. Parts thiếu joints, thiếu requiredChannels, kênh animation lạ, clip thiếu hoặc slot sai bị từ chối. Không có tự chuyển đổi rig; cần thêm adapter mapping tường minh cho một rig khác trước khi sử dụng.
 
-Bộ validator demo hiện yêu cầu anchor attachment trong 0–1; game giữ nguyên quy tắc gốc, không tự clamp hay chuẩn hóa dữ liệu. Điểm fit mục tiêu/headFit giữ phạm vi gốc; wing rig được module gốc kiểm tra và phát. Traveler không chứa cánh/kính/mũ, nên chưa có QA trực quan phụ kiện/cánh thật trên nhân vật demo. Không tuyên bố đã thử mọi bundle Studio tương lai.
+Bộ validator demo hiện yêu cầu anchor attachment trong 0–1; game giữ nguyên quy tắc gốc, không tự clamp hay chuẩn hóa dữ liệu. Điểm fit mục tiêu/headFit giữ phạm vi gốc; wing rig được module gốc kiểm tra và phát. Kính vuông/tròn từ Studio đã được QA trực quan; chưa có pack cánh thật trong các file gửi lần này. Không tuyên bố đã thử mọi bundle Studio tương lai.
 
 ## Kiểm thử
 

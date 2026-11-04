@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "packs": [
+    {
+      "id": "glasses_square",
+      "path": "accessories/studio/glasses_square.accessory-pack.json"
+    },
+    {
+      "id": "glasses_round",
+      "path": "accessories/studio/glasses_round.accessory-pack.json"
+    }
+  ],
+  "characters": [
+    {
+      "id": "traveler",
+      "name": "Traveler",
+      "appearanceId": "traveler-default",
+      "path": "characters/studio/traveler.game-bundle.json",
+      "rig": "traveler",
+      "headId": "nightcamp-head-original-v1",
+      "bodyId": "custom-body-9f093436",
+      "mountSignatures": {
+        "head": "40ff4c04",
+        "body": "40dfe08c"
+      },
+      "parts": {
+        "head": {
+          "w": 78.67,
+          "h": 63.33,
+          "ax": 0,
+          "ay": 0,
+          "joints": {
+            "neck": [
+              37.67,
+              58.87
+            ]
+          },
+          "head": [
+            0.5327,
+            0,
+            0.9237
+          ]
+        },
+        "torso": {
+          "w": 62.67,
+          "h": 58,
+          "ax": 0,
+          "ay": 0,
+          "joints": {
+            "pelvis": [
+              39.5,
+              51.53
+            ],
+            "neck": [
+              39.67,
+              2.9
+            ],
+            "shoulderL": [
+              24.28,
+              16.35
+            ],
+            "shoulderR": [
+              58.61,
+              18.78
+            ],
+            "hipL": [
+              28.67,
+              51.53
+            ],
+            "hipR": [
+              50.33,
+              51.53
+            ]
+          }
+        }
+      },
+      "inventory": [
+        {
+          "accessoryId": "hat_ironrage",
+          "visible": false
+        },
+        {
+          "accessoryId": "attachment_1793463106295_6",
+          "visible": false
+        },
+        {
+          "accessoryId": "hat_paladin",
+          "visible": false
+        },
+        {
+          "accessoryId": "glasses_square",
+          "visible": false
+        },
+        {
+          "accessoryId": "hat_dragonknight",
+          "visible": false
+        },
+        {
+          "accessoryId": "hat_archmage",
+          "visible": false
+        },
+        {
+          "accessoryId": "glasses_round",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "id": "shadow_knight",
+      "name": "Shadow Knight",
+      "appearanceId": "shadow-knight-default",
+      "path": "characters/studio/shadow_knight.game-bundle.json",
+      "rig": "shadow_knight",
+      "headId": "nightcamp-head-shadow_knight-v1",
+      "bodyId": "custom-body-e851fa74",
+      "mountSignatures": {
+        "head": "4f911d66",
+        "body": "e6cc412e"
+      },
+      "parts": {
+        "head": {
+          "w": 78,
+          "h": 63.33,
+          "ax": 0,
+          "ay": 0,
+          "joints": {
+            "neck": [
+              37.33,
+              58.87
+            ]
+          },
+          "head": [
+            0.5369,
+            0,
+            0.9316
+          ]
+        },
+        "torso": {
+          "w": 57.33,
+          "h": 57.33,
+          "ax": 0,
+          "ay": 0,
+          "joints": {
+            "pelvis": [
+              31.5,
+              50.93
+            ],
+            "neck": [
+              30.33,
+              2.87
+            ],
+            "shoulderL": [
+              16.19,
+              15.85
+            ],
+            "shoulderR": [
+              48.89,
+              13.84
+            ],
+            "hipL": [
+              20.67,
+              50.93
+            ],
+            "hipR": [
+              42.33,
+              50.93
+            ]
+          }
+        }
+      },
+      "inventory": [
+        {
+          "accessoryId": "hat_ironrage",
+          "visible": false
+        },
+        {
+          "accessoryId": "attachment_1793463106295_6",
+          "visible": false
+        },
+        {
+          "accessoryId": "hat_paladin",
+          "visible": false
+        },
+        {
+          "accessoryId": "glasses_square",
+          "visible": false
+        },
+        {
+          "accessoryId": "hat_dragonknight",
+          "visible": false
+        },
+        {
+          "accessoryId": "hat_archmage",
+          "visible": false
+        },
+        {
+          "accessoryId": "glasses_round",
+          "visible": true
+        }
+      ]
+    }
+  ]
+}

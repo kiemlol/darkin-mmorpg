@@ -84,6 +84,85 @@
         "kB",
         "wAng"
       ]
+    },
+    {
+      "id": "shadow-knight-rig",
+      "sourceRig": "shadow_knight",
+      "parts": [
+        "head",
+        "torso",
+        "armF",
+        "armB",
+        "legF",
+        "legB"
+      ],
+      "sockets": [
+        "head",
+        "face",
+        "handF",
+        "handB",
+        "back"
+      ],
+      "channels": [
+        "aB",
+        "aBack",
+        "aF",
+        "act",
+        "bk",
+        "breathe",
+        "bx",
+        "by",
+        "eB",
+        "eF",
+        "fade",
+        "gAdj",
+        "head",
+        "headY",
+        "hk",
+        "hx",
+        "hy",
+        "ik",
+        "kB",
+        "kF",
+        "lean",
+        "legB",
+        "legF",
+        "pG",
+        "pX",
+        "pY",
+        "plant",
+        "pull",
+        "rot",
+        "sq",
+        "tuck",
+        "turn",
+        "wAng",
+        "wBehind",
+        "wFar",
+        "wHide",
+        "wLen",
+        "wPush",
+        "wSheath",
+        "wz",
+        "x",
+        "y"
+      ],
+      "requiredChannels": [
+        "x",
+        "y",
+        "rot",
+        "lean",
+        "sq",
+        "aF",
+        "eF",
+        "aB",
+        "eB",
+        "legF",
+        "kF",
+        "legB",
+        "kB",
+        "wAng"
+      ]
     }
   ],
   "resources": [
@@ -91,7 +170,8 @@
       "id": "traveler",
       "type": "character",
       "path": "characters/traveler/traveler.character.json",
-      "rig": "traveler-rig"
+      "rig": "traveler-rig",
+      "studioBundle": "characters/studio/traveler.game-bundle.json"
     },
     {
       "id": "traveler-original",
@@ -142,6 +222,49 @@
           "rate": 1
         }
       }
+    },
+    {
+      "id": "shadow-knight",
+      "type": "character",
+      "path": "characters/traveler/traveler.character.json",
+      "studioBundle": "characters/studio/shadow_knight.game-bundle.json",
+      "animationSourceRig": "traveler",
+      "rig": "shadow-knight-rig"
+    },
+    {
+      "id": "shadow-knight-actions",
+      "type": "animation",
+      "source": "shadow-knight",
+      "embedded": "clips",
+      "rig": "shadow-knight-rig",
+      "actions": {
+        "idle": {
+          "clip": "idle",
+          "aliases": [
+            "idel"
+          ],
+          "loop": true,
+          "rate": 1
+        },
+        "walk": {
+          "clip": "walk",
+          "loop": true,
+          "rate": 1.24
+        },
+        "run": {
+          "clip": "run",
+          "loop": true,
+          "rate": 0.97826087
+        },
+        "attack": {
+          "clip": "attack",
+          "aliases": [
+            "atack"
+          ],
+          "loop": false,
+          "rate": 1
+        }
+      }
     }
   ],
   "appearances": [
@@ -155,6 +278,15 @@
       ],
       "animationSet": "traveler-actions",
       "rig": "traveler-rig",
+      "scale": 0.69
+    },
+    {
+      "id": "shadow-knight-default",
+      "name": "Shadow Knight · Studio",
+      "character": "shadow-knight",
+      "accessories": [],
+      "animationSet": "shadow-knight-actions",
+      "rig": "shadow-knight-rig",
       "scale": 0.69
     }
   ]

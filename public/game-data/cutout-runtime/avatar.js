@@ -27,6 +27,7 @@
   const GRIP_MIN = 1.22; // (the grip rule in solve(): a handle at least ~70 degrees across the forearm)
   NC.GRIPFIX = true;
   const rigs = {};
+  NC.releaseRig = name => { delete rigs[name]; };
 
   const angOf = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]);
   const rotV = (v, r) => { const c = Math.cos(r), s = Math.sin(r); return [v[0] * c - v[1] * s, v[0] * s + v[1] * c]; };

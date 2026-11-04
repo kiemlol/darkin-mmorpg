@@ -6,6 +6,7 @@ import { Input } from './input';
 import { PlaceholderCharacterVisual, type CharacterVisual } from './visual';
 import { CutoutCharacterVisual } from './cutout-visual';
 import { assets, assetWarning } from './assets';
+import {EquipmentUI} from './equipment-ui';
 import type { Intent } from '../shared/world';
 const $ = (id: string) => document.getElementById(id)!;
 const canvas = $('game') as HTMLCanvasElement, c = canvas.getContext('2d')!;
@@ -13,11 +14,12 @@ let player: any, session: GameSession | null = null, input: Input | null = null,
 let currentIntent: Omit<Intent, 'seq'> = { dx: 0, dy: 0, run: false, attack: false };
 const camera = new Camera2D();
 let ready = false;
+const equipmentUI=new EquipmentUI(()=>session);
 function setZoom(f: number) { zoom = camera.fitZoom(Math.max(.35, Math.min(2, zoom * f)), innerWidth, innerHeight, bounds); $('zoom-label').textContent = Math.round(zoom * 100) + '%'; }
 $('plus').onclick = () => setZoom(1.15);
 $('minus').onclick = () => setZoom(1 / 1.15);
 function stop() { currentIntent = { dx: 0, dy: 0, run: false, attack: false }; session?.input({ ...currentIntent, seq: ++seq }, false); }
-function cleanup() { $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
+function cleanup() { equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
     v.destroy(); visuals.clear(); acc = 0; seq = 0; currentIntent = { dx: 0, dy: 0, run: false, attack: false }; }
 async function start(m: string) { if (!ready)
     return; cleanup(); mode = m; try {
@@ -35,7 +37,7 @@ catch (e) {
     $('error').textContent = String(e);
 } }
 const appearanceSelect = $('appearance') as HTMLSelectElement;
-appearanceSelect.onchange = () => session?.setAppearance(appearanceSelect.value);
+appearanceSelect.onchange = () => {equipmentUI.reset();session?.setAppearance(appearanceSelect.value)};
 $('offline').onclick = () => start('offline');
 $('online').onclick = () => start('online');
 $('retry').onclick = () => start('online');
@@ -113,10 +115,11 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
         let v = visuals.get(a.id);
         if (!v) {
             v = a.kind === 'player' ? new CutoutCharacterVisual() : new PlaceholderCharacterVisual();
-            void v.load({ appearanceId: a.appearanceId });
+            void v.load({ appearanceId: a.appearanceId,equipment:a });
             visuals.set(a.id, v);
         }
         v.update(a, dt);
+        if(a.id===session?.id)equipmentUI.update(v instanceof CutoutCharacterVisual?v.loaded?.key:undefined);
     }
     for (const [id, v] of visuals)
         if (!actors.some(a => a.id === id)) {

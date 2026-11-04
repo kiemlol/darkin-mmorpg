@@ -1,6 +1,7 @@
 import {STEP,interpolateSnapshot,PredictedPresentation,SnapshotTimeline} from './presentation';
+import type {CosmeticCommand} from '../shared/equipment';
 import {World,movement,validIntent,type Intent,type Snapshot,type Actor} from '../shared/world';
-export interface GameSession {id:string;status:string;snapshot:Snapshot;input(i:Intent,tick?:boolean):void;update(dt:number):void;renderActors():Actor[];respawn():void;setAppearance(id:string):void;destroy():void}
+export interface GameSession {id:string;status:string;snapshot:Snapshot;input(i:Intent,tick?:boolean):void;update(dt:number):void;renderActors():Actor[];respawn():void;setAppearance(id:string):void;cosmetic(command:CosmeticCommand):void;destroy():void}
 const SAVE='darkin-frontier-mvp:offline:v1';
 export class LocalGameSession implements GameSession{
  id='local';status='Offline';world:World;snapshot:Snapshot;previous:Snapshot;acc=0;saveTime=0;
@@ -24,7 +25,8 @@ export class LocalGameSession implements GameSession{
  renderActors(){return interpolateSnapshot(this.world.p,this.previous,this.snapshot,this.acc/STEP)}
 
  save(){const a=this.world.actors.get(this.id)!;try{localStorage.setItem(SAVE,JSON.stringify({map:this.world.p.id,x:a.x,y:a.y,hp:a.hp,kills:a.kills}))}catch{}}
- setAppearance(id:string){this.world.setAppearance(this.id,id)}
+ setAppearance(id:string){this.world.setAppearance(this.id,id);this.snapshot=this.world.snapshot();this.previous=this.snapshot}
+ cosmetic(command:CosmeticCommand){this.world.cosmetic(this.id,command);this.snapshot=this.world.snapshot();this.previous=this.snapshot}
  respawn(){this.world.respawn(this.id);this.snapshot=this.world.snapshot();this.previous=this.snapshot}destroy(){this.save()} static reset(){localStorage.removeItem(SAVE)}
 }
 export class NetworkGameSession implements GameSession{
@@ -35,5 +37,6 @@ export class NetworkGameSession implements GameSession{
  renderActors(){return this.timeline.sample(this.p,this.snapshot).map(a=>a.id===this.id&&this.predicted?this.motion.sample(this.p,{...a,dir:this.predicted.dir}):a)}
 
  setAppearance(id:string){if(this.socket.readyState===1)this.socket.send(JSON.stringify({type:'appearance',appearanceId:id}))}
+ cosmetic(command:CosmeticCommand){if(this.socket.readyState===1)this.socket.send(JSON.stringify({type:'cosmetic',command}))}
  respawn(){if(this.socket.readyState===1)this.socket.send(JSON.stringify({type:'respawn'}))}destroy(){this.closed=true;this.socket.onclose=null;this.socket.onmessage=null;this.socket.close();this.pending=[]}
 }

@@ -1,6 +1,6 @@
 # Darkin Frontier — MMORPG foundation MVP
 
-Game riêng, không thay đổi Studio. Nhân vật mặc định hiện là Traveler thật từ cutout-demo. Xem [ASSETS.md](ASSETS.md) để biết nguồn, API, clip mapping và quy trình đăng ký tài nguyên. TypeScript + Vite + Canvas 2D, Node.js + ws.
+Game riêng, không thay đổi Studio. Nhân vật hiện dùng parts từ bundle Studio, bộ phát/bốn clip từ cutout-demo. Xem [STUDIO-ACCESSORIES.md](STUDIO-ACCESSORIES.md) để thử kính, đổi đầu/thân và kiểm tra cấu hình; [ASSETS.md](ASSETS.md) ghi API và clip mapping. TypeScript + Vite + Canvas 2D, Node.js + ws.
 
 ## Chơi và chạy
 
@@ -25,7 +25,7 @@ Map này: 24×16 ô 128px, 111 vật thể, 3 roads Bézier, night lighting, kh�
 ## Kiến trúc
 
 - `src/shared/world.ts`: mô phỏng 20Hz dùng chung Offline/server. Di chuyển chia bước 5px từ runtime, tốc độ server cố định, hit theo hướng/tầm/line-of-sight/cooldown; mob AI có leash, chết và hồi sinh 8 giây.
-- `src/server/index.ts`: phiên khách UUID; message chỉ input/respawn. Giới hạn 32 người/world, 64 socket, payload 2KB, 50 message/giây/socket, timeout input 300ms. Snapshot 10Hz. Disconnect xóa player. Không nhận tọa độ/HP từ client. Chưa có account, lưu Online hoặc chống lạm dụng theo IP.
+- `src/server/index.ts`: phiên khách UUID; message input/respawn và ID ngoại hình/phụ kiện đã phát hành. Giới hạn 32 người/world, 64 socket, payload 2KB, 50 message/giây/socket, timeout input 300ms. Snapshot 10Hz. Disconnect xóa player. Không nhận tọa độ/HP/fit transform từ client. Chưa có account, lưu Online hoặc chống lạm dụng theo IP.
 - `src/client/session.ts`: GameSession, LocalGameSession, NetworkGameSession. Dự đoán movement local, replay input chưa ack; `presentation.ts` nội suy Offline và prediction giữa tick 20Hz ở tốc độ render, bù sai lệch server riêng và buffer remote 100ms theo server time. Camera theo cùng tọa độ hiển thị và tích phân theo thời gian frame. Không dùng save Offline cho Online. Offline save key riêng `darkin-frontier-mvp:offline:v1`, lưu vị trí/HP/số quái đã hạ; bản lưu đã chết được khôi phục tại spawn với đầy HP khi vào phiên Offline mới. Chết trong phiên hiện tại có bảng hồi sinh rõ ràng. Offline tạm dừng mô phỏng khi mở menu hoặc ứng dụng vào nền; không lưu toàn bộ mob world.
 - `src/client/visual.ts`: interface load/update/playAnimation/draw/destroy. `cutout-visual.ts` đã triển khai bộ phát thật; catalog ánh xạ action → clip ID độc lập tên file. Gameplay/input/camera/network không biết hình vẽ placeholder.
 - `src/client/input.ts`: bàn phím, joystick pointer capture, release/cancel/lost capture, pinch tách vùng joystick; blur/background gửi dừng.
