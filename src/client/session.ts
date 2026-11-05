@@ -6,6 +6,7 @@ import { World, movement, validIntent, type Intent, type Snapshot, type Actor } 
 import {normalizeRealm,validRealmState} from '../shared/realms';
 import {normalizeWallet,addReward,type Wallet} from '../shared/resources';
 import {activeNodes,type InteractionIntent,type MiningBook,type Transaction} from '../shared/interactions';
+import {validSwordFlight} from '../shared/sword-flight';
 export interface GameSession {
     id: string;
     characterId: string;
@@ -13,6 +14,7 @@ export interface GameSession {
     status: string;
     dataWarnings?:string[];
     interactionMessage:string;
+    flightMessage:string;
     snapshot: Snapshot;
     clock(): ClockState;
     input(i: Intent, tick?: boolean): void;
@@ -23,6 +25,7 @@ export interface GameSession {
     cosmetic(command: CosmeticCommand): void;
     interact(intent:InteractionIntent):void;
     cancelInteraction():void;
+    setSwordFlight(enabled:boolean):void;
     destroy(): void;
 }
 const SAVE = 'darkin-frontier-mvp:offline:v1';
@@ -31,6 +34,7 @@ export class LocalGameSession implements GameSession {
     status = 'Offline';
     dataWarnings:string[]=[];
     interactionMessage='';
+    flightMessage='';flightSeq=0;
     interactionMaps:Record<string,MiningBook>={};
     private savedExtras:Record<string,unknown>={};
     world: World;
@@ -103,6 +107,7 @@ export class LocalGameSession implements GameSession {
     respawn() { this.world.respawn(this.id); const a = this.world.actors.get(this.id)!; this.exploration.visit(a.x, a.y, this.world.time, a.teleportSeq); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; }
     interact(intent:InteractionIntent){try{this.world.interactions.start(this.id,intent);this.interactionMessage='';this.snapshot=this.world.snapshot()}catch(e){this.interactionMessage=String(e)}}
     cancelInteraction(){this.world.interactions.cancel(this.id);this.snapshot=this.world.snapshot();this.previous=this.snapshot}
+    setSwordFlight(enabled:boolean){try{this.world.swordFlight(this.id,enabled,++this.flightSeq);this.flightMessage='';this.snapshot=this.world.snapshot();this.previous=this.snapshot}catch(e){this.flightMessage=String(e)}}
     destroy() { this.lifetime.abort();this.cancelInteraction(); this.save(); }
     static reset(name = 'Lữ khách') { const id = offlineCharacter(name); localStorage.removeItem(SAVE + ':' + id); if (name === 'Lữ khách')
         localStorage.removeItem(SAVE); for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -116,6 +121,7 @@ export class NetworkGameSession implements GameSession {
     status = 'Đang kết nối…';
     dataWarnings:string[]=[];
     interactionMessage='';
+    flightMessage='';flightSeq=0;flightSupported=false;
     snapshot: Snapshot = { time: 0, actors: [], events: [] };
     socket: WebSocket;
     pending: {
@@ -139,6 +145,7 @@ export class NetworkGameSession implements GameSession {
         throw Error('Trang HTTPS yêu cầu địa chỉ wss://');this.tokenKey='darkin-frontier:online-guest:v1:'+encodeURIComponent(u.href)+':'+encodeURIComponent(name);try{const tabToken=sessionStorage.getItem(this.tokenKey);this.resumeSession=!!tabToken;this.resumeToken=tabToken||localStorage.getItem(this.tokenKey)||''}catch{} this.socket = new WebSocket(u); this.socket.onopen = () => this.socket.send(JSON.stringify({ type: 'join', name,resumeToken:this.resumeToken,resume:this.resumeSession })); this.socket.onmessage = e => { try {
         const m = JSON.parse(e.data);
         if (m.type === 'welcome') {
+            this.flightSupported=m.swordFlightProtocol===1;
             if(m.interactionProtocol!==1){this.status='Server cần cập nhật tương tác/ví';this.socket.close();return}
             if (m.map !== p.id) {
                 this.status = 'Server dùng map khác';
@@ -155,8 +162,10 @@ export class NetworkGameSession implements GameSession {
         if (m.type === 'error')
             this.status = m.message;
         if(m.type==='interactionError')this.interactionMessage=m.message;
+        if(m.type==='flightError')this.flightMessage=String(m.message);
         if(m.type==='exploration'&&this.exploration)this.exploration.restore(m.record);
         if (m.type === 'snapshot') {
+            if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.swordFlight!==undefined&&!validSwordFlight(a.swordFlight))){this.status='Server gửi dữ liệu phi kiếm không hợp lệ';this.socket.close();return}
             if(!Array.isArray(m.actors)||m.actors.some((a:any)=>a.kind==='player'&&!validRealmState(a))){this.status='Dữ liệu cảnh giới server không hợp lệ';return}
             this.previous = this.snapshot;
             this.snapshot = m;
@@ -199,5 +208,6 @@ export class NetworkGameSession implements GameSession {
         this.socket.send(JSON.stringify({ type: 'respawn' })); }
     interact(intent:InteractionIntent){if(this.socket.readyState===1){this.interactionMessage='';this.socket.send(JSON.stringify({type:'interact',intent}))}}
     cancelInteraction(){if(this.socket.readyState===1)this.socket.send(JSON.stringify({type:'cancelInteraction'}))}
+    setSwordFlight(enabled:boolean){if(!this.flightSupported){this.flightMessage='Backend cần cập nhật phi kiếm';return}if(this.socket.readyState===1){this.flightMessage='';this.socket.send(JSON.stringify({type:'swordFlight',enabled,seq:++this.flightSeq}))}}
     destroy() { this.closed = true; this.socket.onclose = null; this.socket.onmessage = null; this.socket.close(); this.pending = []; }
 }

@@ -10,6 +10,7 @@ import {EquipmentUI} from './equipment-ui';
 import {MinimapHUD} from './map-hud';
 import {PlayerHUD} from './player-hud';
 import {InteractionUI} from './interaction-ui';
+import {SwordFlightUI} from './sword-flight-ui';
 import {clockHour} from '../shared/map-state';
 import type { Intent } from '../shared/world';
 const $ = (id: string) => document.getElementById(id)!;
@@ -22,6 +23,7 @@ const equipmentUI=new EquipmentUI(()=>session);
 const mapHUD=new MinimapHUD(()=>{input?.clear();stop()});
 const playerHUD=new PlayerHUD(mapHUD.root);
 const interactionUI=new InteractionUI($('attack'));
+const flightUI=new SwordFlightUI($('sword-flight') as HTMLButtonElement);
 window.addEventListener('blur',()=>session?.cancelInteraction());
 document.addEventListener('visibilitychange',()=>{if(document.hidden)session?.cancelInteraction()});
 let sceneHour=-1;
@@ -29,7 +31,7 @@ function setZoom(f: number) { zoom = camera.fitZoom(Math.max(.35, Math.min(2, zo
 $('plus').onclick = () => setZoom(1.15);
 $('minus').onclick = () => setZoom(1 / 1.15);
 function stop() { interactionUI.release();currentIntent = { dx: 0, dy: 0, run: false, attack: false }; session?.input({ ...currentIntent, seq: ++seq }, false); }
-function cleanup() { mapHUD.close();interactionUI.reset();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
+function cleanup() { flightUI.reset();mapHUD.close();interactionUI.reset();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
     v.destroy(); visuals.clear(); acc = 0; seq = 0; currentIntent = { dx: 0, dy: 0, run: false, attack: false }; }
 async function start(m: string) { if (!ready)
     return; cleanup(); mode = m; try {
@@ -94,6 +96,8 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
     $('zoom-label').textContent = Math.round(zoom * 100) + '%';
     let actors = session?.renderActors() || [];
     if (session) {
+        const flightPressed=input!.consumeFlightPress();
+        if(flightPressed&&!dialog.open&&!mapHUD.panel.open&&!document.hidden){input!.clear();flightUI.toggle(session,actors.find(a=>a.id===session!.id))}
         if (!dialog.open && !mapHUD.panel.open && !document.hidden)
             currentIntent = interactionUI.intent(session,actors.find(a=>a.id===session!.id),input!.sample(),input!.consumeActionPress(),()=>session!.input({seq:++seq,dx:0,dy:0,run:false,attack:false},false));
         else
@@ -154,7 +158,7 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
         }
         c.restore();
     }
-    const me=actors.find(a=>a.id===session?.id)||null,visual=me?visuals.get(me.id):null,portrait=visual instanceof CutoutCharacterVisual?()=>visual.portrait():undefined;playerHUD.update(me,!!session,portrait);mapHUD.update(player,session,me,dt,portrait);interactionUI.update(session,me,dt);
+    const me=actors.find(a=>a.id===session?.id)||null,visual=me?visuals.get(me.id):null,portrait=visual instanceof CutoutCharacterVisual?()=>visual.portrait():undefined;playerHUD.update(me,!!session,portrait);mapHUD.update(player,session,me,dt,portrait);interactionUI.update(session,me,dt);flightUI.update(session,me,dt);
 } requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
 // Read-only diagnostics for acceptance tests; no gameplay authority.

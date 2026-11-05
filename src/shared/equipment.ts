@@ -9,6 +9,7 @@ export const mountCatalog=mounts;
 export const accessoryItems=[...validateAccessoryPack(square).items,...validateAccessoryPack(round).items,...validateAccessoryPack(patchwork).items];
 if(new Set(accessoryItems.map(a=>a.accessoryId)).size!==accessoryItems.length)throw Error('Trùng accessoryId giữa các gói');
 if(gameCatalog.defaults.weaponId&&!accessoryItems.some(a=>a.accessoryId===gameCatalog.defaults.weaponId&&a.category==='weapon'))throw Error('Vũ khí mặc định chưa được đăng ký');
+for(const w of gameCatalog.swordFlight?.weapons||[])if(!accessoryItems.some(a=>a.accessoryId===w.accessoryId&&a.category==='weapon'))throw Error('Kiếm cho phép bay chưa được đăng ký: '+w.accessoryId);
 export type EquipmentState={headId:string;bodyId:string;accessories:{accessoryId:string;visible:boolean}[]};
 export type CosmeticCommand={operation:'equip'|'unequip'|'mount'|'set';accessoryId?:string;headId?:string;bodyId?:string;accessoryIds?:string[]};
 export function characterMount(state:EquipmentState){

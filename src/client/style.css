@@ -57,3 +57,9 @@ body.playing .session-card{top:calc(var(--top-hud-bottom,120px) + 48px);right:ma
 #mining-panel{bottom:max(180px,calc(env(safe-area-inset-bottom) + 175px))}
 .map-open #mining-panel{visibility:hidden}
 @media(max-height:550px){#mining-panel{bottom:18px;width:260px;padding:7px}}
+
+#sword-flight{position:absolute;right:0;bottom:100px;width:82px;min-height:52px;padding:7px 4px;pointer-events:auto;touch-action:manipulation;background:#17342fe8;border:1px solid #c7d6a970;border-radius:16px;color:#e8dfba;box-shadow:0 2px 8px #071c2055}
+#sword-flight>span{font-size:20px;line-height:20px;display:block;pointer-events:none}#sword-flight small{display:block;font-size:8px;letter-spacing:.3px;pointer-events:none}#sword-flight[aria-pressed=true]{background:#526653df;border-color:#f3d299;box-shadow:0 0 10px #a9dab338}#sword-flight:disabled{opacity:.4;cursor:default}
+#flight-notice{position:fixed;bottom:max(235px,calc(env(safe-area-inset-bottom) + 230px));left:50%;transform:translateX(-50%);max-width:min(320px,72vw);padding:8px 12px;border-radius:6px;background:#172b2eef;color:#f0d69b;text-align:center;font-size:12px;z-index:8;pointer-events:none}
+.map-open #flight-notice{visibility:hidden}
+@media(max-height:550px){#sword-flight{bottom:96px;right:0;min-height:45px;width:75px}#flight-notice{bottom:145px;font-size:11px}}

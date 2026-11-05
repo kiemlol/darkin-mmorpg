@@ -319,6 +319,20 @@
       "path": "accessories/studio/patchwork/merged.accessory-pack.json",
       "rig": "traveler-rig",
       "slot": "handF"
+    },
+    {
+      "id": "sword-flight-jump",
+      "type": "animation",
+      "path": "animations/sword-flight/jump.animation-pack.json",
+      "rig": "traveler-rig",
+      "actions": {
+        "jump": {
+          "clip": "flight_jump",
+          "animationId": "animation-4516eb2d-4810-45de-9ded-c9e419ed157d",
+          "loop": false,
+          "rate": 1
+        }
+      }
     }
   ],
   "appearances": [
@@ -358,5 +372,27 @@
       "attachmentResourceId": "traveler-tools"
     }
   ],
-  "runtimeVersion": 2
+  "runtimeVersion": 2,
+  "swordFlight": {
+    "animationResourceId": "sword-flight-jump",
+    "compatibleRigs": [
+      "traveler-rig",
+      "shadow-knight-rig"
+    ],
+    "orbitSeconds": 1.2,
+    "settleSeconds": 0.25,
+    "landingSeconds": 0.25,
+    "hoverHeight": 16,
+    "mountDistance": 32,
+    "orbitRadius": 36,
+    "planeScaleY": 0.55,
+    "jumpArc": 28,
+    "weapons": [
+      {
+        "accessoryId": "sw_patchwork",
+        "sizeMultiplier": 1.3,
+        "tipAngle": -1.5707963267948966
+      }
+    ]
+  }
 }

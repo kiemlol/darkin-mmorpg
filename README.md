@@ -4,6 +4,8 @@ Game riêng, không thay đổi Studio. Nhân vật hiện dùng parts từ bund
 
 ## Chơi và chạy
 
+Bấm **Phi kiếm** hoặc **F** khi đeo kiếm và rời giao chiến: kiếm bay một vòng, lớn nhẹ, nhân vật dùng clip Nhảy mới rồi đứng idle trên kiếm. WASD/joystick lái cùng nhân vật; bấm lại để hạ. Có bóng dưới kiếm, giữ va chạm/tốc độ/combat cũ. Xem [SWORD-FLIGHT.md](SWORD-FLIGHT.md) về clip gốc, config, sync và kiểm thử.
+
 Kiếm chắp vá đã là vũ khí hiển thị mặc định, dùng đúng bốn bộ neo Studio theo idle/walk/run/attack (pack 4 cho attack). Menu → Thử phụ kiện Studio cho phép Đeo/Tháo. Gần linh thạch dùng búa tạm thời rồi trả lại kiếm; không thay chỉ số chiến đấu. Xem [PATCHWORK.md](PATCHWORK.md) về file nguồn, binding ID và kiểm thử.
 
 Runtime hiện dùng gói Cutout v2 mới; ID hoạt ảnh đã được lưu cố định trong catalog, neo phụ kiện có thể cấu hình bằng `animationProfiles[].animationId`, thiếu profile dùng neo mặc định. Xem [RUNTIME-V2.md](RUNTIME-V2.md) về bảng ID, cách nạp animation/accessory pack và kiểm thử. Giữ nguyên các asset/clip/gameplay hiện tại.

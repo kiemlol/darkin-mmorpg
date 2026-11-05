@@ -32,9 +32,9 @@ export class InteractionSystem{
  isActive(id:string){return !this.states.get(id)?.hidden}
  presentation(d:Definition){const h=interactionHandlers.get(d.actionId);return{action:h?.visualAction||'idle',toolId:h?.toolId||'combat' as const}}
  available(d:Definition){const s=this.states.get(d.objectId),h=interactionHandlers.get(d.actionId);return s?.status==='ready'&&!!h&&h.types.includes(d.type)}
- nearest(a:Actor){if(a.hp<=0||this.world.inCombat(a))return null;let nearest:Definition|null=null,best=Infinity;for(const d of this.definitions.values()){const distance=Math.hypot(d.point.x-a.x,d.point.y-a.y);if(distance<=d.range&&distance<best&&this.available(d)&&interactionLOS(this.world,a,d)){nearest=d;best=distance}}return nearest}
+ nearest(a:Actor){if(a.hp<=0||a.swordFlight||this.world.inCombat(a))return null;let nearest:Definition|null=null,best=Infinity;for(const d of this.definitions.values()){const distance=Math.hypot(d.point.x-a.x,d.point.y-a.y);if(distance<=d.range&&distance<best&&this.available(d)&&interactionLOS(this.world,a,d)){nearest=d;best=distance}}return nearest}
  start(actorId:string,intent:InteractionIntent){if(!validInteractionIntent(intent))throw Error('Yêu cầu tương tác không hợp lệ');const a=this.world.actors.get(actorId),d=this.definitions.get(intent.objectId),s=this.states.get(intent.objectId),key=actorId+':'+intent.requestId;
-  if(intent.mapId!==this.world.p.id||!a||a.kind!=='player'||a.hp<=0||!d||!s)throw Error('Không tìm thấy node/nhân vật hợp lệ');if(intent.cycle!==s.cycle)throw Error('Chu kỳ node đã thay đổi');
+  if(intent.mapId!==this.world.p.id||!a||a.kind!=='player'||a.hp<=0||!d||!s)throw Error('Không tìm thấy node/nhân vật hợp lệ');if(a.swordFlight)throw Error('Hãy hạ phi kiếm trước khi tương tác');if(intent.cycle!==s.cycle)throw Error('Chu kỳ node đã thay đổi');
   const pending=this.channels.get(a.id);if(pending?.transaction){if(pending.intent.objectId===d.objectId)return;throw Error('Đang lưu lượt đào trước')}
   const prior=this.requests.get(key);if(prior){if(prior!==d.objectId+':'+s.cycle)throw Error('requestId đã được sử dụng');return}
   if(s.status!=='ready'){if(s.ownerId===a.id&&this.channels.get(a.id)?.intent.objectId===d.objectId)return;throw Error(s.ownerId?'Node đang bận':'Node chưa sẵn sàng')}

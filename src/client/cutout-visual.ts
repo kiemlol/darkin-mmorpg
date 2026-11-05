@@ -3,7 +3,9 @@ import type {CharacterVisual} from './visual';
 import {PlaceholderCharacterVisual} from './visual';
 import {assets,assetWarning,type LoadedVisual} from './assets';
 import type {EquipmentState} from '../shared/equipment';
+import {SwordFlightVisual} from './sword-flight-visual';
 export class CutoutCharacterVisual implements CharacterVisual{
+ flight=new SwordFlightVisual();
  portraitKey='';portraitCanvas:HTMLCanvasElement|null=null;
  portrait(){if(!this.loaded||!this.player)return null;if(this.portraitKey===this.loaded.key&&this.portraitCanvas)return{key:this.portraitKey,image:this.portraitCanvas};
   const temporary=document.createElement('canvas');temporary.width=temporary.height=320;const c=temporary.getContext('2d')!,fork=this.loaded.prototype.fork(),head=fork.rig.P.head.img,draw=c.drawImage.bind(c);let box:any=null;
@@ -26,8 +28,16 @@ export class CutoutCharacterVisual implements CharacterVisual{
  missingAnimations=new Set<string>();
  playAnimation(action:string,restart=false){const b=this.loaded?.actions[action];if(!this.player||!this.loaded)return false;try{if(!b?.animationId)throw Error('Chưa đăng ký animationId cho '+action);this.player.play(b.animationId,{restart});return true}catch(e){if(!this.missingAnimations.has(action)){this.missingAnimations.add(action);assetWarning(String(e)+' · Dùng idle.')}this.player.play(this.loaded.actions.idle.animationId);return false}}
  update(a:Actor,dt:number){this.actor=a;this.fallback.update(a,dt);if(a.appearanceId&&assets.key(a.appearanceId,a)!==this.requested)void this.setAppearance(a.appearanceId,a);if(!this.player||!this.loaded)return;
+  this.flight.update(a,dt);
   if(Math.abs(Math.cos(a.dir))>.15)this.player.face=Math.cos(a.dir)<0?-1:1;
   if(a.hp<=0)return; // Demo has no death/hurt clips: retain real rig, no invented animation.
+  if(a.swordFlight&&this.flight.frame){
+   this.player.face=this.flight.frame.facing;this.attacking=false;this.lastAttack=a.attackSeq;
+   if(this.flight.frame.phase==='jump'){
+    this.playAnimation('jump');this.player.time=this.flight.frame.jump*this.player.spec.clips[this.player.name].dur;this.player.blend=null;this.player.update(0,undefined,dt);
+   }else{this.playAnimation('idle');this.player.update(dt*this.loaded.actions.idle.rate,undefined,dt)}
+   return;
+  }
   const attack=a.attackSeq??0;
   if(attack!==this.lastAttack){this.lastAttack=attack;if(a.action==='attack'||a.cooldown>0)this.attacking=this.playAnimation('attack',true)}
   const action=this.attacking?'attack':this.loaded.actions[a.action]?a.action:'idle';
@@ -36,10 +46,16 @@ export class CutoutCharacterVisual implements CharacterVisual{
   if(this.attacking&&finished){this.attacking=false;this.playAnimation(['walk','run'].includes(a.action)?a.action:'idle')}
  }
  draw(c:CanvasRenderingContext2D){if(!this.player||!this.loaded){this.fallback.draw(c);return}const a=this.actor;c.save();if(a.hp<=0)c.globalAlpha=.35;else if(a.action==='hurt')c.globalAlpha=.65;
-  this.player.draw(c,a.x,a.y,this.loaded.appearance.scale,{weapon:true});c.restore();
+  const flight=this.flight.frame,weapon=a.swordFlight&&flight?this.flight.weapon(this.player,a.swordFlight,this.loaded.appearance.scale):null;
+  if(flight&&weapon)this.flight.drawShadow(c,weapon);
+  const front=flight?.phase==='orbit'&&flight.y>a.y;
+  if(flight&&weapon&&!front)this.flight.drawSword(c,weapon);
+  const origin=flight?this.flight.bodyOrigin(this.player,a,this.loaded.appearance.scale):a;
+  this.player.draw(c,origin.x,origin.y,this.loaded.appearance.scale,{weapon:!flight});
+  if(flight&&weapon&&front)this.flight.drawSword(c,weapon);c.restore();
   // UI only; no old body, weapon, shadow or temporary attack geometry is drawn.
-  c.save();const y=a.y-160*this.loaded.appearance.scale-10;c.textAlign='center';c.font='600 12px system-ui';c.strokeStyle='#12201d';c.lineWidth=3;c.strokeText(a.name,a.x,y);c.fillStyle=a.color;c.fillText(a.name,a.x,y);c.fillStyle='#101923';c.fillRect(a.x-23,y+6,46,5);c.fillStyle='#a5ca9c';c.fillRect(a.x-22,y+7,44*a.hp/a.maxHp,3);c.restore();
+  c.save();const y=a.y-(flight?.riderHeight||0)-160*this.loaded.appearance.scale-10;c.textAlign='center';c.font='600 12px system-ui';c.strokeStyle='#12201d';c.lineWidth=3;c.strokeText(a.name,a.x,y);c.fillStyle=a.color;c.fillText(a.name,a.x,y);c.fillStyle='#101923';c.fillRect(a.x-23,y+6,46,5);c.fillStyle='#a5ca9c';c.fillRect(a.x-22,y+7,44*a.hp/a.maxHp,3);c.restore();
  }
  destroy(){this.disposed=true;this.generation++;this.player?.dispose();if(this.loaded)assets.release(this.loaded);this.player=null;this.loaded=null;this.fallback.destroy()}
- debug(){const nc=(window as any).NC;return{type:'cutout',key:this.loaded?.key,headId:this.player?.spec.headId,bodyId:this.player?.spec.bodyId,mountSignatures:this.player?.spec.mountSignatures,attachments:this.player?(nc.ITEMS[this.player.equip.top]?.attachments||[]).map((raw:any)=>{const a=nc.resolveAttachment(raw,this.player.renderPose());return({accessoryId:a.accessoryId||a.id,visible:a.visible,socket:a.socket,layer:a.layer,w:a.w,h:a.h,scale:a.scale,x:a.x,y:a.y,rotation:a.rotation,anchor:a.anchor,loaded:a.wingRig?a.wingRig.spriteOrder.every((id:string)=>!!nc.SPR[a.wingRig.sprites[id].sprite]?.img):!!nc.SPR[a.sprite]?.img,matrix:nc.attachmentMatrix(this.player.equip,this.player.renderPose(),a,this.actor?.x||0,this.actor?.y||0,this.loaded?.appearance.scale)})}):[],appearance:this.loaded?.appearance.id,scale:this.loaded?.appearance.scale,clip:this.player?.name,animationId:this.player?.animationId,time:this.player?.time,attachmentTime:this.player?.attachmentTime,face:this.player?.face,foot:this.actor?{x:this.actor.x,y:this.actor.y}:null}}
+ debug(){const nc=(window as any).NC;return{type:'cutout',flight:this.flight.frame?{...this.flight.frame,weaponId:this.actor.swordFlight?.weaponId,bodyOrigin:this.player&&this.loaded?this.flight.bodyOrigin(this.player,this.actor,this.loaded.appearance.scale):null}:null,key:this.loaded?.key,headId:this.player?.spec.headId,bodyId:this.player?.spec.bodyId,mountSignatures:this.player?.spec.mountSignatures,attachments:this.player?(nc.ITEMS[this.player.equip.top]?.attachments||[]).map((raw:any)=>{const a=nc.resolveAttachment(raw,this.player.renderPose());return({accessoryId:a.accessoryId||a.id,visible:a.visible,socket:a.socket,layer:a.layer,w:a.w,h:a.h,scale:a.scale,x:a.x,y:a.y,rotation:a.rotation,anchor:a.anchor,loaded:a.wingRig?a.wingRig.spriteOrder.every((id:string)=>!!nc.SPR[a.wingRig.sprites[id].sprite]?.img):!!nc.SPR[a.sprite]?.img,matrix:nc.attachmentMatrix(this.player.equip,this.player.renderPose(),a,this.actor?.x||0,this.actor?.y||0,this.loaded?.appearance.scale)})}):[],appearance:this.loaded?.appearance.id,scale:this.loaded?.appearance.scale,clip:this.player?.name,animationId:this.player?.animationId,time:this.player?.time,attachmentTime:this.player?.attachmentTime,face:this.player?.face,foot:this.actor?{x:this.actor.x,y:this.actor.y}:null}}
 }
