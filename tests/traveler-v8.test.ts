@@ -16,5 +16,5 @@ test('plain Studio project keeps new geometry/signatures and hammer; base gamepl
 });
 test('new default head/body match Studio 8; supplied glasses mismatch is reported without remapping',()=>{
  const mount=characterMount(defaultEquipment('traveler-default'));assert.equal(mount.headId,source.headId);assert.equal(mount.bodyId,source.bodyId);assert.deepEqual(mount.mountSignatures,source.mountSignatures);
- for(const item of accessoryItems){assert.equal(item.mountProfiles[0].headId,'custom-head-b01afa2d');assert.equal(item.mountProfiles[0].signature,'224934f4');assert.throws(()=>resolveAccessory(item,mount),/custom-head-2bca4fed \(8480a2dc\)/)}
+ for(const item of accessoryItems.filter(a=>a.category==='glasses')){assert.equal(item.mountProfiles[0].headId,'custom-head-b01afa2d');assert.equal(item.mountProfiles[0].signature,'224934f4');assert.throws(()=>resolveAccessory(item,mount),/custom-head-2bca4fed \(8480a2dc\)/)}
 });

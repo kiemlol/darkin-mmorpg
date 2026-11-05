@@ -53,7 +53,7 @@ export class CutoutPlayer {
     return !loop&&this.time>=c.dur;
   }
   draw(ctx,x,y,scale,{bones=false,weapon=true}={}){
-    const pose=this.renderPose(),hasAttachedWeapon=this.spec.attachments?.some(raw=>{const a=NC.resolveAttachment(raw,pose);return a.visible!==false&&a.socket.startsWith('hand')});NC.drawRig(ctx,this.rig,this.equip,pose,x,y,{scale,noWeapon:!weapon||hasAttachedWeapon,hideAttachedWeapons:!weapon});
+    const pose=this.renderPose(),hasAttachedWeapon=this.spec.attachments?.some(raw=>{const a=NC.resolveAttachment(raw,pose);return a.visible!==false&&a.socket.startsWith('hand')});NC.drawRig(ctx,this.rig,this.equip,pose,x,y,{scale,noWeapon:!weapon||hasAttachedWeapon||this.spec.hideLegacyWeapon,hideAttachedWeapons:!weapon});
     if(bones){const js=NC.rigJoints(this.equip,pose,x,y,scale);ctx.save();ctx.strokeStyle='#d9ed9c';ctx.fillStyle='#f4ffc9';ctx.lineWidth=1;for(const chain of [['pel','neck','headTop'],['shN','elN','haN'],['shF','elF','haF'],['hipN','knN','ftN'],['hipF','knF','ftF']]){ctx.beginPath();chain.forEach((k,i)=>ctx[i?'lineTo':'moveTo'](...js[k]));ctx.stroke()}for(const p of Object.values(js)){ctx.beginPath();ctx.arc(...p,3,0,7);ctx.fill()}ctx.restore()}
   }
   renderPose(){return{...this.pose,face:this.face,attachmentTime:this.attachmentTime,animationId:this.animationId,headId:this.spec.headId,bodyId:this.spec.bodyId,mountSignatures:{head:targetSignature(this.spec.parts.head),body:targetSignature(this.spec.parts.torso)}}}

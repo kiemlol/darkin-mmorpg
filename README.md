@@ -4,6 +4,8 @@ Game riêng, không thay đổi Studio. Nhân vật hiện dùng parts từ bund
 
 ## Chơi và chạy
 
+Kiếm chắp vá đã là vũ khí hiển thị mặc định, dùng đúng bốn bộ neo Studio theo idle/walk/run/attack (pack 4 cho attack). Menu → Thử phụ kiện Studio cho phép Đeo/Tháo. Gần linh thạch dùng búa tạm thời rồi trả lại kiếm; không thay chỉ số chiến đấu. Xem [PATCHWORK.md](PATCHWORK.md) về file nguồn, binding ID và kiểm thử.
+
 Runtime hiện dùng gói Cutout v2 mới; ID hoạt ảnh đã được lưu cố định trong catalog, neo phụ kiện có thể cấu hình bằng `animationProfiles[].animationId`, thiếu profile dùng neo mặc định. Xem [RUNTIME-V2.md](RUNTIME-V2.md) về bảng ID, cách nạp animation/accessory pack và kiểm thử. Giữ nguyên các asset/clip/gameplay hiện tại.
 
 Nhân vật mặc định hiện dùng nguyên asset/rig/khớp của `traveler.cutout 8.json`, búa và điểm neo mới. Hoạt ảnh idle/walk/run/attack và vung búa đào cũ giữ nguyên. Hai gói kính mới đã thay nhưng profile đang nhắm một đầu khác, nên thao tác Đeo sẽ báo thiếu cấu hình thay vì gắn sai; xem [STUDIO-ACCESSORIES.md](STUDIO-ACCESSORIES.md). Không cần xóa save để nhận nhân vật mới.

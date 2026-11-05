@@ -68,6 +68,8 @@ export class AssetRegistry{
   // A tool in the authored character inventory is displayed by the gameplay tool
   // state. Keep its exact geometry; return to the normal combat weapon elsewhere.
   const toolAttachments=new Set(this.catalog.tools?.map(t=>t.attachmentId)||[]);
+  let activeTool:any=null;
+  raw.hideLegacyWeapon=!!this.catalog.defaults.weaponId;
   raw.attachments=(raw.attachments||[]).map((v:any)=>toolAttachments.has(v.accessoryId)?{...v,visible:false}:v);
   if((state as any).toolId==='mining_hammer'){
    const tool=this.catalog.tools?.find(t=>t.id==='mining_hammer');if(!tool||!tool.compatibleRigs.includes(a.rig)||tool.channelConvention!=='nightcamp-six-part-angles-v1')throw Error('Chưa có ánh xạ rig cho công cụ đào');
@@ -78,11 +80,14 @@ export class AssetRegistry{
    const toolProject=tool.attachmentResourceId?studioProject(await this.read(this.resource(tool.attachmentResourceId))):mining;
    const hammer=toolProject.attachments.find((v:any)=>v.accessoryId===tool.attachmentId&&v.visible);if(!hammer||hammer.socket!=='handF'||hammer.mountProfiles?.length)throw Error('Búa không có cấu hình socket tương thích');
    animationIds[tool.clipId]=mining.clip.id||miningResource.animationIds?.[tool.clipId];raw.clips={...raw.clips,[tool.clipId]:{...structuredClone(mining.clip),kind:'loop'}};actions.mining={...miningResource.actions!.mining,clip:tool.clipId,loop:true,rate:1};
-   raw.attachments=[...(raw.attachments||[]).filter((v:any)=>v.accessoryId!==tool.attachmentId).map((v:any)=>v.category==='weapon'||v.socket?.startsWith('hand')?{...v,visible:false}:v),structuredClone(hammer)];
+   activeTool=structuredClone(hammer);
   }
   const combined=adaptStudio(raw,rig.sourceRig,actions,base,animationIds);
   const resolved=resolveInventory(state,combined.spec.attachments||[],{headId:raw.headId||state.headId,bodyId:raw.bodyId||state.bodyId,parts:raw.parts,mountSignatures:raw.mountSignatures});combined.spec.attachments=resolved.inventory;
   for(const id of a.accessories){const r=this.resource(id,'accessory');if(r.source===a.character&&r.embedded==='weapon')continue;const d=this.qualified(await this.read(r),r,urls);if(r.embedded==='weapon'||d.spriteData){combined.spec.weapon=structuredClone(d);continue}const items=Array.isArray(d)?d:d.attachments||[d];for(const item of items){if(!rig.sockets.includes(item.socket))throw Error('Slot không tương thích '+item.socket)}combined.spec.attachments=[...(combined.spec.attachments||[]),...structuredClone(items)]}
+  // A temporary gameplay tool takes visual priority without changing the player's
+  // selected combat weapon. Restore that weapon naturally when toolId changes.
+  if(activeTool)combined.spec.attachments=[...(combined.spec.attachments||[]).filter((v:any)=>v.accessoryId!==activeTool.accessoryId).map((v:any)=>v.category==='weapon'||v.socket?.startsWith('hand')?{...v,visible:false}:v),activeTool];
   validateAttachments(combined.spec.attachments);
   const channels=(rig as any).channels as string[]|undefined;
   if(channels)for(const clip of Object.values(combined.spec.clips) as any[])for(const k of clip.keys)for(const channel of Object.keys(k.P))if(!channels.includes(channel))throw Error('Kênh animation không tương thích rig: '+channel);

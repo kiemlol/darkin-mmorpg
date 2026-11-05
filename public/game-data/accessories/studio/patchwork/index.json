@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "accessoryId": "sw_patchwork",
+  "rig": "traveler-rig",
+  "compatibleRigs": [
+    "traveler-rig",
+    "shadow-knight-rig"
+  ],
+  "sources": [
+    {
+      "action": "idle",
+      "path": "accessories/studio/patchwork/idle.accessory-pack.json",
+      "sourceName": "2-sw_patchwork.accessory-pack.json",
+      "sha256": "37e1313559bf2eb3b48b81f83abb9a586ac2b289c34a9f441e8f84efa13c0890",
+      "sourceAnimationId": "nightcamp-animation-idle-4cd85783-v1"
+    },
+    {
+      "action": "walk",
+      "path": "accessories/studio/patchwork/walk.accessory-pack.json",
+      "sourceName": "4-sw_patchwork.accessory-pack-2.json",
+      "sha256": "4d1bf73ca866fed902841d5a3836d58a7682a57caacf56f743b69c717133232e",
+      "sourceAnimationId": "nightcamp-animation-walk-ee063896-v1"
+    },
+    {
+      "action": "run",
+      "path": "accessories/studio/patchwork/run.accessory-pack.json",
+      "sourceName": "1-sw_patchwork.accessory-pack-3.json",
+      "sha256": "33f9149e54148973bc353aa45aa67f36112ff396eae48dc7fed92ab0d4c377d3",
+      "sourceAnimationId": "nightcamp-animation-run-908d1b98-v1"
+    },
+    {
+      "action": "attack",
+      "path": "accessories/studio/patchwork/attack.accessory-pack.json",
+      "sourceName": "3-sw_patchwork.accessory-pack-4.json",
+      "sha256": "d4323d9813e1ded78da2f6a1c16ed07bdaa13fe1a12dd0ca283ccb3666492cda",
+      "sourceAnimationId": "nightcamp-animation-iaiS2-ad7cc353-v1"
+    }
+  ],
+  "actionSet": "traveler-actions",
+  "output": "accessories/studio/patchwork/merged.accessory-pack.json"
+}

@@ -1,4 +1,16 @@
-# Cutout runtime v2 / animationId — 2026-11-05
+# Kiếm chắp vá — 2026-11-05
+
+- Giữ nguyên byte cả bốn pack Studio, ghi SHA trong `accessories/studio/patchwork/index.json`. Một accessoryId `sw_patchwork`/một ảnh nhúng; adapter chọn đúng idle từ pack gốc, walk từ pack 2, run từ pack 3 và attack từ pack 4. Pack 4 mang ID iaiS2 khác clip attack game: bind nguyên transform vào ID attack đã cài, giữ cả profile gốc; không thay keyframe, thời lượng hoặc tạo lại animationId. Xem [PATCHWORK.md](PATCHWORK.md).
+- `npm test`: **60/60 PASS**. `npm run build`: **PASS**, gồm kiểm nguồn SHA/đầu ra merged, cấu trúc catalog/asset và TypeScript. Map/parts/khớp/scale/clip/combat không đổi; allowlist server chỉ cho ID đã phát hành.
+- `patchwork-harness.cjs`: **PASS drawImage/ma trận thật** trên Traveler và Shadow Knight: từng trường transform đúng nguồn, neo theo handF/layer, bốn action/ID cũ, lật/zoom, không vẽ chồng kiếm demo; búa tạm ẩn kiếm rồi trả kiếm, tháo là tay trống; cache/animator riêng và HP/vị trí không đổi.
+- `patchwork-browser.cjs` trên **dist tĩnh 4173**, mobile 390×844 @3x: **PASS**, có pixel kiếm thật và đủ idle/walk/run/attack, exact profile, lật, zoom, menu Đeo/Tháo; giữ HP/vị trí/ví/cảnh giới, zero WebSocket/pageerror/request asset lỗi. Đã xem ảnh thực `tests/patchwork-idle-mobile.png` và `tests/patchwork-attack-mobile.png` để đối chiếu vị trí nắm/cỡ/lớp kiếm.
+- `patchwork-online.cjs`: **PASS** hai Chromium process thật và backend Node local 3001. Đi bằng input joystick hợp lệ, client còn lại thấy kiếm attack đúng transform pack 4/ID attack cũ; cả hai trả kiếm sau đào. Kiểm hồi quy khóa node/bận/retry/spam/fake reward, input timeout/disconnect, một ledger/thưởng, backend restart/reconnect giữ ví/vàng/cảnh giới/node. Không dùng NPC giả người chơi.
+- `runtime-v2-harness.cjs`, `accessories-harness.cjs`, `mining-visual-harness.cjs`: **PASS** giữ API/ID, hai rig/clock độc lập, ảnh lỗi rollback, kính lệch profile vẫn bị từ chối, wing fixture và búa Studio 8 giữ nguyên hình học.
+- `mining-browser.cjs` trên bản đóng gói: **PASS**, không cần backend; tự dùng búa, hủy bằng di chuyển/blur, đủ thời gian mới nhận một lần, ẩn node/trả kiếm, reload và chờ 30 giây hồi node; minimap/fog/zoom vẫn đúng, không có asset lỗi.
+
+Giới hạn: chưa có backend WSS công khai, Online đã kiểm ở local như trên; chưa thử điện thoại vật lý/tải lớn. Lựa chọn trang bị thử nghiệm vẫn chỉ trong phiên; tải lại dùng kiếm mặc định, không reset save gameplay. Kính vẫn thiếu fit đầu Studio 8 như báo cáo trước. Không tuyên bố đã nhập animation iaiS2: chỉ dùng neo pack 4 theo chỉ định, giữ clip đánh game hiện tại.
+
+# Cutout runtime v2 / animationId — 2026-11-05 (lịch sử)
 
 - Đã đọc README và module thực từ ZIP mới, cập nhật cả cây runtime; sao lưu bản trước tại `backups/runtime/before-animation-id/`. Source ZIP/SHA từng module được ghi trong `public/game-data/cutout-runtime/studio-runtime-provenance.json`. Giữ các mở rộng game về cache ảnh/fork/wing clock/refcount và giải phóng rig. Module ghép ở đường dẫn cũ re-export cùng bản v2 chính, không chạy hai bản resolver khác nhau.
 - Không sửa map, ảnh/parts/joints/mountState/signatures/scale hay keyframe/duration của nhân vật hiện tại. ID legacy được cài **một lần** vào catalog (`resources[].animationIds`, `actions[].animationId`); load/play không tạo ID. Source Studio 8 và hai pack kính vẫn nguyên byte. Hai my_walk có ID riêng (.8 giây đào và 1.1 giây đứng); runtime phát bằng ID và giữ phase theo ID khi đổi trang bị/alias.

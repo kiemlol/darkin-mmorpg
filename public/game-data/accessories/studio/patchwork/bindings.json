@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "accessoryId": "sw_patchwork",
+  "bindings": [
+    {
+      "action": "idle",
+      "source": "accessories/studio/patchwork/idle.accessory-pack.json",
+      "sourceAnimationId": "nightcamp-animation-idle-4cd85783-v1",
+      "animationId": "nightcamp-animation-idle-4cd85783-v1",
+      "transform": {
+        "socket": "handF",
+        "layer": "back",
+        "w": 28.974999999999998,
+        "h": 87.39999999999999,
+        "scale": 1,
+        "x": 0,
+        "y": 0,
+        "rotation": 4.537856055185257,
+        "anchor": [
+          0.5253393266349372,
+          0.8483514479236617
+        ]
+      }
+    },
+    {
+      "action": "walk",
+      "source": "accessories/studio/patchwork/walk.accessory-pack.json",
+      "sourceAnimationId": "nightcamp-animation-walk-ee063896-v1",
+      "animationId": "nightcamp-animation-walk-ee063896-v1",
+      "transform": {
+        "socket": "handF",
+        "layer": "back",
+        "w": 28.974999999999998,
+        "h": 87.39999999999999,
+        "scale": 1,
+        "x": 0,
+        "y": 0,
+        "rotation": 4.537856055185257,
+        "anchor": [
+          0.4999999999999999,
+          0.843310866267068
+        ]
+      }
+    },
+    {
+      "action": "run",
+      "source": "accessories/studio/patchwork/run.accessory-pack.json",
+      "sourceAnimationId": "nightcamp-animation-run-908d1b98-v1",
+      "animationId": "nightcamp-animation-run-908d1b98-v1",
+      "transform": {
+        "socket": "handF",
+        "layer": "back",
+        "w": 28.974999999999998,
+        "h": 87.39999999999999,
+        "scale": 1,
+        "x": 0,
+        "y": 0,
+        "rotation": 4.537856055185257,
+        "anchor": [
+          0.5202714613079497,
+          0.8113871824419736
+        ]
+      }
+    },
+    {
+      "action": "attack",
+      "source": "accessories/studio/patchwork/attack.accessory-pack.json",
+      "sourceAnimationId": "nightcamp-animation-iaiS2-ad7cc353-v1",
+      "animationId": "nightcamp-animation-attack-d9129f6d-v1",
+      "transform": {
+        "socket": "handF",
+        "layer": "back",
+        "w": 28.974999999999998,
+        "h": 87.39999999999999,
+        "scale": 1,
+        "x": 0,
+        "y": 0,
+        "rotation": -0.17453292519943295,
+        "anchor": [
+          0.5557465185968621,
+          0.7979456313577237
+        ]
+      }
+    }
+  ]
+}

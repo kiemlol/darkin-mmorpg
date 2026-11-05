@@ -3,7 +3,8 @@
   "version": 1,
   "defaults": {
     "appearance": "traveler-default",
-    "animationSet": "traveler-actions"
+    "animationSet": "traveler-actions",
+    "weaponId": "sw_patchwork"
   },
   "rigs": [
     {
@@ -309,6 +310,13 @@
       "id": "traveler-tools",
       "type": "accessory",
       "path": "characters/studio/traveler-v8.cutout.json",
+      "rig": "traveler-rig",
+      "slot": "handF"
+    },
+    {
+      "id": "patchwork-sword",
+      "type": "accessory",
+      "path": "accessories/studio/patchwork/merged.accessory-pack.json",
       "rig": "traveler-rig",
       "slot": "handF"
     }

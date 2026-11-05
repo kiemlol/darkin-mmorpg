@@ -4,7 +4,7 @@
 
 **Studio 8 — 2026-11-05:** nhân vật mặc định đã thay bằng `traveler.cutout 8.json`, headId `custom-head-2bca4fed` / signature `8480a2dc`, bodyId `custom-body-b4d78784` / `f9ceb4e9`. Hai gói kính mới đã thay nguyên byte, cùng accessoryId như cũ, nhưng cả hai chỉ có profile cho `custom-head-b01afa2d` / `224934f4`. Chúng không khớp đầu Studio 8 hoặc Shadow Knight hiện được phát hành. Game báo thiếu cấu hình và không đeo; không sửa ID/chữ ký hoặc mượn profile khác để giả thành công. Cần xuất lại kính từ đúng đầu Studio 8 để xác nhận khớp hình. Các profile cũ chỉ còn trong backup, không trộn vào gói mới.
 
-Mở **Menu → Thử phụ kiện Studio**: chọn đầu, thân, kính gọng vuông hoặc kính tròn, bấm **Đeo/Tháo**, rồi **Tiếp tục** để xem trên nhân vật trong map. Đổi đầu/thân riêng hoặc chọn ngoại hình Shadow Knight ở mục phía trên. Các lựa chọn chỉ thay hình ảnh, không đổi HP, chân, hitbox, tốc độ hoặc sát thương. Menu thử phụ kiện cuộn được trên mobile.
+Mở **Menu → Thử phụ kiện Studio**: chọn đầu, thân, **Kiếm chắp vá**, kính gọng vuông hoặc kính tròn, bấm **Đeo/Tháo**, rồi **Tiếp tục** để xem trên nhân vật trong map. Kiếm mới có đủ neo riêng bốn hành động, được đeo mặc định; chi tiết tại [PATCHWORK.md](PATCHWORK.md). Đổi đầu/thân riêng hoặc chọn ngoại hình Shadow Knight ở mục phía trên. Các lựa chọn chỉ thay hình ảnh, không đổi HP, chân, hitbox, tốc độ hoặc sát thương. Menu thử phụ kiện cuộn được trên mobile.
 
 ## Dữ liệu nguồn
 

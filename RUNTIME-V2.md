@@ -38,7 +38,7 @@ Transform giữ socket/layer/w/h/scale/x/y/rotation/anchor/headFit đúng dữ l
 
 Player đưa **ID của clip thực sự đang phát** vào pose, kể cả khi one-shot attack đang phát trong lúc trạng thái di chuyển đã đổi. Renderer chọn transform riêng cho từng actor trong lượt world/Y-sort/lighting. `NC.resolveAttachment`, draw thật, kiểm tra vũ khí cầm tay và `NC.attachmentMatrix` dùng cùng quy tắc. Không sửa mảng transform dùng chung để đổi hành động; hai actor cùng một sprite inventory có thể dùng handF và handB độc lập.
 
-Các asset đang dùng chưa chứa animationProfiles mới: chúng tiếp tục dùng neo mặc định, gồm điểm neo Búa đá Studio 8. Kiểm thử cấu hình carry/shoot dùng fixture kỹ thuật với chính ảnh búa hiện có; không phát hành animation, vũ khí, hay cơ chế bắn cung giả vào gameplay.
+Kiếm chắp vá hiện dùng animationProfiles thật cho idle/walk/run/attack; xem [PATCHWORK.md](PATCHWORK.md) về bốn pack và binding pack 4. Búa đá Studio 8 tiếp tục dùng neo mặc định. Kiểm thử cấu hình carry/shoot dùng fixture kỹ thuật với chính ảnh búa hiện có; không phát hành animation hoặc cơ chế bắn cung giả vào gameplay.
 
 ## Nạp gói qua API
 

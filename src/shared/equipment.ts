@@ -1,11 +1,14 @@
 import mounts from '../../public/game-data/accessories/studio/mount-data.json';
 import square from '../../public/game-data/accessories/studio/glasses_square.accessory-pack.json';
 import round from '../../public/game-data/accessories/studio/glasses_round.accessory-pack.json';
+import patchwork from '../../public/game-data/accessories/studio/patchwork/merged.accessory-pack.json';
+import {gameCatalog} from './catalog';
 import {validateAccessoryPack,resolveAccessory,equipAccessory} from '../../public/game-data/accessories/studio/accessory-runtime.mjs';
 export {validateAccessoryPack,resolveAccessory,equipAccessory};
 export const mountCatalog=mounts;
-export const accessoryItems=[...validateAccessoryPack(square).items,...validateAccessoryPack(round).items];
+export const accessoryItems=[...validateAccessoryPack(square).items,...validateAccessoryPack(round).items,...validateAccessoryPack(patchwork).items];
 if(new Set(accessoryItems.map(a=>a.accessoryId)).size!==accessoryItems.length)throw Error('Trùng accessoryId giữa các gói');
+if(gameCatalog.defaults.weaponId&&!accessoryItems.some(a=>a.accessoryId===gameCatalog.defaults.weaponId&&a.category==='weapon'))throw Error('Vũ khí mặc định chưa được đăng ký');
 export type EquipmentState={headId:string;bodyId:string;accessories:{accessoryId:string;visible:boolean}[]};
 export type CosmeticCommand={operation:'equip'|'unequip'|'mount'|'set';accessoryId?:string;headId?:string;bodyId?:string;accessoryIds?:string[]};
 export function characterMount(state:EquipmentState){
@@ -15,7 +18,7 @@ export function characterMount(state:EquipmentState){
 }
 export function defaultEquipment(appearanceId:string):EquipmentState{
  const c=mounts.characters.find(c=>c.appearanceId===appearanceId)||mounts.characters[0];
- return{headId:c.headId,bodyId:c.bodyId,accessories:accessoryItems.map(a=>({accessoryId:a.accessoryId,visible:c.inventory.some(v=>v.accessoryId===a.accessoryId&&v.visible)}))};
+ return{headId:c.headId,bodyId:c.bodyId,accessories:accessoryItems.map(a=>({accessoryId:a.accessoryId,visible:a.accessoryId===gameCatalog.defaults.weaponId||c.inventory.some(v=>v.accessoryId===a.accessoryId&&v.visible)}))};
 }
 export function resolveInventory(state:EquipmentState,base:any[]=[],character:any=characterMount(state)){
  const warnings:string[]=[];

@@ -20,7 +20,8 @@ export class EquipmentUI{
   try{const prior=this.draft?.session===session&&this.draft.appearanceId===actor.appearanceId?this.draft.state:actor;
    const next=changeEquipment(prior,command);this.draft={session,appearanceId:actor.appearanceId,state:next};const loaded=await assets.acquire(actor.appearanceId,next);
    if(generation!==this.generation||this.session()!==session){assets.release(loaded);return}
-   if(command.operation==='equip'&&loaded.warnings.length){assets.release(loaded);throw Error(loaded.warnings.join(' · '))}
+   const selected=loaded.prototype.spec.attachments.find((a:any)=>(a.accessoryId||a.id)===command.accessoryId);
+   if(command.operation==='equip'&&(!selected||selected.visible===false)){assets.release(loaded);throw Error(loaded.warnings.join(' · ')||'Phụ kiện không có cấu hình hiển thị phù hợp')}
    if(this.lease)assets.release(this.lease);this.lease=loaded;
    session.cosmetic({operation:'set',headId:next.headId,bodyId:next.bodyId,accessoryIds:next.accessories.filter(a=>a.visible).map(a=>a.accessoryId)});this.note.textContent=loaded.warnings.length?loaded.warnings.join(' · '):'Đã nạp ảnh và cấu hình. Bấm Tiếp tục để xem trên nhân vật.';
   }catch(e){if(generation===this.generation){this.draft=null;this.note.textContent=String(e)+' · Giữ phụ kiện đang dùng.';this.last=''}}

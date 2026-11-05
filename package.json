@@ -8,8 +8,9 @@
     "build": "tsc --noEmit && npm run check:assets && vite build",
     "start": "tsx src/server/index.ts",
     "test": "tsx --test tests/*.test.ts",
-    "check:assets": "tsx scripts/check-assets.ts",
-    "register:character": "tsx scripts/register-character.ts"
+    "check:assets": "tsx scripts/merge-patchwork.ts --check && tsx scripts/check-assets.ts",
+    "register:character": "tsx scripts/register-character.ts",
+    "merge:patchwork": "tsx scripts/merge-patchwork.ts"
   },
   "dependencies": {
     "ws": "^8.18.0",
