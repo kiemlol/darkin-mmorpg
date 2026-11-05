@@ -1,4 +1,19 @@
-# Đào Linh thạch trên map mới — 2026-11-04
+# Thay asset Traveler Studio 8 — 2026-11-05
+
+- Ba file mới được giữ nguyên byte. Nhân vật mặc định: `characters/studio/traveler-v8.cutout.json`, SHA-256 `57b0008d6e3f8bce078e1b18efe078ac7836f4f24d2f9c36269ca5b1c4fd45fc`. Kính tròn `bfdeae6e71be86f72269bb9927cc91e2e28f6ca293b3be9dc48382eab1102c4d`; kính vuông `81e3bc3e993f7dfab209fc665f5dafaa0e5e02af1eb3e9ea080d81b981386a68`. Bản cũ lưu ngoài public tại `backups/characters/before-traveler-v8/`.
+- Đầu/thân/ảnh/joints/mountState/signatures lấy từ Studio 8; scale game vẫn .69, radius/tốc độ/combat/map không đổi. Bốn clip idle/walk/run/attack và clip đào .8 giây cũ được giữ. Búa/điểm neo mới lấy qua `tools[].attachmentResourceId`, không lấy nhầm anchor cũ. Clip mới 1.1 giây trong file là đứng/cầm búa, được giữ trong spec nhưng không thay chuyển động vung búa đào.
+- **Dữ liệu kính chưa tương thích:** cả hai pack chỉ khai báo `custom-head-b01afa2d / 224934f4`, khác đầu mới `custom-head-2bca4fed / 8480a2dc`. Đã thay và đăng ký pack, nhưng chưa thể đeo/kiểm chứng khớp hình trên đầu mới. Game báo thiếu cấu hình, không sửa ID/signature, không mượn profile. Các test thành công với kính cũ được chuyển thành fixture lưu trữ, không được dùng để tuyên bố pack mới đã khớp.
+- `npm test`: **50/50 PASS**; `npm run build`: **PASS**. Kiểm SHA file, format plain/wrapped, exact parts/joints/signatures, clip cũ không thay, điểm neo/góc búa mới, registry và từ chối sai profile; các kiểm thử gameplay/map/wallet/ledger/realm trước đó vẫn đạt.
+- `traveler-v8-browser.cjs` trên dist tĩnh 4173: **PASS**, mobile 390×844 @3x, đầu/thân và avatar thật mới, idle/walk/run/attack một lần, flip/zoom/chân không lệch, không cầm búa khi chưa vào range, UI hai kính báo đúng lỗi, reload giữ HP/realm/stage/kill/wallet/gold. Không có WebSocket, pageerror hoặc request asset lỗi.
+- `mining-visual-harness.cjs`: **PASS**, kiểm trực tiếp `player.spec.parts` bằng source Studio 8 và drawImage/ma trận rig: búa có nguyên w/h/anchor/rotation/scale/layer/socket, nhân vật giữ hình học khi chuyển tool, hai rig/animator độc lập và cache release/acquire cùng frame. `accessories-harness.cjs`: **PASS**, kính sai profile thực sự bị renderer ẩn, lỗi ảnh rollback, không thay gameplay; wing fixture vẫn tải đủ ảnh và có clock riêng. Đây là fixture wing, không phải cánh mới từ người dùng.
+- `asset-browser.cjs`: **PASS** bốn clip, one-shot attack, flip, cache/animator độc lập, lỗi resource/ảnh/kênh và tải cũ không ghi đè lựa chọn mới. Warning/ảnh thiếu trong test âm là cố ý.
+- `accessories-online.cjs`: **PASS** hai trình duyệt Online thật ở Node local 3000 cùng thấy headId/bodyId mới, menu từ chối hai kính thiếu fit, đổi ngoại hình hợp lệ đồng bộ và WebSocket chỉ mang ID/trạng thái, không ảnh/profile/pose.
+- `mining-browser.cjs` trên bản đóng gói khi backend không chạy: **PASS**, đào/hủy/nhận một lần, búa mới với clip đào cũ, save/reload, chờ 30 giây hồi đá và full-map zoom/fog giữ nguyên. `mining-online.cjs`: **PASS** hai Chromium process thật trên backend Node local 3001, đi bằng input hợp lệ, khóa node/bận/retry/spam, cắt input/disconnect, restart/reconnect và giữ ví/cảnh giới/node/ledger. Không gửi tọa độ/tiền Offline để server tin.
+- Ảnh thực tế đã xem: `tests/traveler-v8-mobile.png`, `tests/traveler-v8-glasses-mismatch.png`, `tests/mining-mobile-progress.png`.
+
+Giới hạn: backend WSS công khai vẫn chưa có; Online kiểm ở local. Chưa thử thiết bị điện thoại vật lý hoặc tải lớn. Muốn kính mới đeo được cần profile được Studio xuất cho đúng đầu mới và chữ ký hình học của file Studio 8; chưa thể xác nhận hình kính khớp khi dữ liệu đó còn thiếu.
+
+# Đào Linh thạch trên map mới — 2026-11-04 (lịch sử)
 
 Môi trường thực: Linux/Node.js/Chromium; bản frontend `dist` đã đóng gói, backend dự án Node/WebSocket local. Không dùng NPC thay hai người chơi. Chi tiết thiết kế/chạy ở [MINING.md](MINING.md).
 

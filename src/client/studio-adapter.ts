@@ -1,10 +1,17 @@
 import {validate,PARTS} from '../../public/game-data/cutout-runtime/model.mjs';
 import type {ActionBinding} from '../shared/catalog';
+// Studio publishes both a complete export wrapper and a single-clip project.
+// Unwrap without renaming or rewriting the source format.
+export function studioProject(data:any){
+ const p=data?.format==='nightcamp-cutout-export-v1'?data.project:data;
+ if(p?.format!=='nightcamp-cutout-v1')throw Error('Không hỗ trợ định dạng project Studio');
+ return validate(p);
+}
 export function studioSpec(data:any,base?:any){
  let spec:any;
  if(data?.format==='cutout-character-v1')spec=structuredClone(data);
  else if(['nightcamp-cutout-v1','nightcamp-cutout-export-v1'].includes(data?.format)){
-  const p=validate(data.format==='nightcamp-cutout-export-v1'?data.project:data);
+  const p=studioProject(data);
   if(!base)throw Error('Project Studio có một clip; cần baseCharacter tương thích cung cấp các clip còn lại');
   if(p.rig!==base.rig)throw Error('Rig project không tương thích baseCharacter');
   spec={...structuredClone(base),rig:p.rig,parts:structuredClone(p.parts),headId:p.headId,bodyId:p.bodyId,mountSignatures:structuredClone(p.mountSignatures),mountState:structuredClone(p.mountState),attachments:structuredClone(p.attachments||[])};

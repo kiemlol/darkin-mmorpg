@@ -1,20 +1,22 @@
 # Phụ kiện Studio trong game
 
+**Studio 8 — 2026-11-05:** nhân vật mặc định đã thay bằng `traveler.cutout 8.json`, headId `custom-head-2bca4fed` / signature `8480a2dc`, bodyId `custom-body-b4d78784` / `f9ceb4e9`. Hai gói kính mới đã thay nguyên byte, cùng accessoryId như cũ, nhưng cả hai chỉ có profile cho `custom-head-b01afa2d` / `224934f4`. Chúng không khớp đầu Studio 8 hoặc Shadow Knight hiện được phát hành. Game báo thiếu cấu hình và không đeo; không sửa ID/chữ ký hoặc mượn profile khác để giả thành công. Cần xuất lại kính từ đúng đầu Studio 8 để xác nhận khớp hình. Các profile cũ chỉ còn trong backup, không trộn vào gói mới.
+
 Mở **Menu → Thử phụ kiện Studio**: chọn đầu, thân, kính gọng vuông hoặc kính tròn, bấm **Đeo/Tháo**, rồi **Tiếp tục** để xem trên nhân vật trong map. Đổi đầu/thân riêng hoặc chọn ngoại hình Shadow Knight ở mục phía trên. Các lựa chọn chỉ thay hình ảnh, không đổi HP, chân, hitbox, tốc độ hoặc sát thương. Menu thử phụ kiện cuộn được trên mobile.
 
 ## Dữ liệu nguồn
 
 Các file dưới đây được sao chép nguyên byte từ các tệp đã cung cấp:
 
-- `public/game-data/characters/studio/traveler.game-bundle.json`
+- `public/game-data/characters/studio/traveler-v8.cutout.json`
 - `public/game-data/characters/studio/shadow_knight.game-bundle.json`
 - `public/game-data/accessories/studio/glasses_square.accessory-pack.json`
 - `public/game-data/accessories/studio/glasses_round.accessory-pack.json`
 - `public/game-data/accessories/studio/accessory-runtime.mjs`
 
-Không chạy trường `bundle.code`. Game đọc `bundle.project`, giữ parts (kể cả elbow/knee), headId, bodyId, mountSignatures và mountState. Bốn clip idle/walk/run/attack đang chạy vẫn được giữ nguyên. Clip bổ sung `Cú đá tử thần` trong bundle được giữ dưới đúng tên và thời lượng 1.3 giây, không tự gán thành đòn đánh hiện tại.
+Không chạy trường `bundle.code`. `studioProject` đọc project `nightcamp-cutout-v1` trực tiếp hoặc `.project` trong `nightcamp-cutout-export-v1`, giữ parts (kể cả elbow/knee), headId, bodyId, mountSignatures và mountState. Bốn clip idle/walk/run/attack đang chạy vẫn được giữ nguyên. Clip bổ sung trong từng file được giữ đúng tên/thời lượng, không tự gán thành đòn đánh hiện tại. Bộ ảnh/rig cũ và gói kính cũ được sao lưu ngoài public trong `backups/characters/before-traveler-v8/`.
 
-Traveler: headId `nightcamp-head-original-v1`, bodyId `custom-body-9f093436`. Shadow Knight: headId `nightcamp-head-shadow_knight-v1`, bodyId `custom-body-e851fa74`. Hai rig dùng cùng sáu phần head/torso/armF/armB/legF/legB và cùng các kênh góc; catalog Shadow Knight khai báo rõ nguồn clip traveler, dùng nguyên góc pose, không chuyển đổi hay căn lại hình học. Scale tổng thể game giữ .69 như bản trước; ảnh/khớp/phụ kiện không được fit thêm.
+Traveler Studio 8 dùng các ID mới ghi trên. Shadow Knight giữ headId `nightcamp-head-shadow_knight-v1`, bodyId `custom-body-e851fa74`. Hai rig dùng cùng sáu phần head/torso/armF/armB/legF/legB và cùng các kênh góc; catalog Shadow Knight khai báo rõ nguồn clip traveler, dùng nguyên góc pose, không chuyển đổi hay căn lại hình học. Scale tổng thể game giữ .69 như bản trước; ảnh/khớp/phụ kiện không được fit thêm. Mount registry chỉ giữ hình học kiểm fit, không nhúng lại ảnh trong JS/WebSocket; bộ phát nạp parts đầy đủ từ JSON gốc.
 
 ## Ghép, tải và vẽ
 
@@ -36,13 +38,13 @@ Offline và Online dùng chung helper. Ngoại hình thử hiện áp dụng tro
 
 ## Thay hoặc thêm gói
 
-Chạy `node_modules/.bin/tsx scripts/import-studio-accessories.ts <thư-mục-file-đính-kèm>` để tái tạo đúng bản tích hợp này. Script sao chép nguyên file và sinh metadata nhẹ, không chỉnh JSON xuất từ Studio. Khi đăng ký loại mới, bổ sung pack import trong shared/equipment.ts và đường dẫn trong manifest, sinh lại mount metadata từ bundle tương ứng; không chỉ chép file tùy ý vào thư mục.
+Đặt nguyên project/export tại đường dẫn đã khai báo trong catalog và mount registry; sinh metadata đầu/thân từ đúng file đó (w/h, joints, head, ID và chữ ký), không đổi JSON Studio. Búa và animation có thể đến từ hai resource khác nhau qua `tools[].attachmentResourceId` và `resourceId`. Khi thay kính, giữ accessoryId ổn định và thay file pack nguyên byte; chỉ đeo khi profile khớp cả ID lẫn chữ ký đầu. Khi đăng ký loại mới, bổ sung pack import trong shared/equipment.ts và đường dẫn manifest. Script `import-studio-accessories.ts` là importer lịch sử cho bộ năm file cũ, không dùng để tái tạo bộ ba file Studio 8 hiện tại.
 
 Chạy `npm run check:assets`, `npm test`, `npm run build`; công cụ build kiểm tra chữ ký metadata trùng geometry của bundle. Luôn phát hành frontend/backend cùng tập ID. Chưa có tự chuyển rig không tương thích hoặc tự căn món thiếu profile.
 
 ## Kiểm chứng
 
-- `node tests/accessories-browser.cjs`: dist thật, kính được vẽ, thông số khớp nguyên profile, đứng/đi/chạy/đánh/lật, đổi kính cùng loại, head/body, tháo và không mất gameplay state. Ảnh: tests/glasses-square.png, tests/glasses-round-shadow.png.
-- `node tests/accessories-online.cjs`: hai trình duyệt thật; player còn lại thấy đúng kính và đầu/thân, đổi nhanh và tháo; snapshot không chứa ảnh/profile/pose.
-- Chạy Vite 5173 rồi `node tests/accessories-harness.cjs`: so ma trận và rectangle **drawImage thực** với socket và anchor Studio (sai số số học Canvas <.0001), giữ phase/pose khi đổi player, lỗi giải mã ảnh giữ renderer cũ, geometry sai thì ẩn món, giải phóng texture, toàn bộ ảnh cây wingRig và đồng hồ cánh riêng.
+- `node tests/accessories-browser.cjs` (server 3000) hoặc `node tests/traveler-v8-browser.cjs` (file tĩnh 4173): nhân vật mới/portrait, bốn clip/lật/zoom, hai kính bị từ chối đúng thiếu profile, giữ gameplay/save. Ảnh hiện tại `tests/traveler-v8-mobile.png`, `tests/traveler-v8-glasses-mismatch.png`. Ảnh kính khớp bản cũ chỉ là lịch sử, không chứng minh pack mới khớp.
+- `node tests/accessories-online.cjs`: hai trình duyệt thật cùng thấy đầu/thân Studio 8, UI từ chối kính không phù hợp, đổi ngoại hình hợp lệ đồng bộ; snapshot không chứa ảnh/profile/pose.
+- Chạy Vite 5173 rồi `node tests/accessories-harness.cjs`: kiểm parts thật, kính không hợp lệ thực sự ẩn trong renderer, lỗi giải mã ảnh giữ renderer cũ, giải phóng texture, wingRig fixture và clock riêng. `mining-visual-harness.cjs` kiểm ma trận **drawImage thực** với socket/điểm neo búa Studio 8 và camera/zoom/lật. Test positive kính cũ dùng cặp export/profile khớp trong backup, không phát hành lại fit cũ.
 - Các file gửi lần này chỉ có hai gói kính. Cánh được kiểm thử bằng fixture kỹ thuật không được phát hành trong game, chưa có xác nhận khớp thị giác cho một pack cánh Studio thật. Chưa thử trực tiếp thiết bị iOS/Android thật.

@@ -1,7 +1,7 @@
 import {CutoutPlayer} from '../../public/game-data/cutout-runtime/player.mjs';
 import {validateAttachments} from '../../public/game-data/cutout-runtime/attachments.mjs';
 import {validateCatalog,type Catalog,type Resource,type Appearance,type ActionBinding} from '../shared/catalog';
-import {adaptStudio,studioSpec} from './studio-adapter';
+import {adaptStudio,studioSpec,studioProject} from './studio-adapter';
 import {defaultEquipment,resolveInventory,mountCatalog,type EquipmentState} from '../shared/equipment';
 const RuntimePlayer:any=CutoutPlayer;
 export type LoadedVisual={prototype:any;appearance:Appearance;actions:Record<string,ActionBinding>;key:string;warnings:string[];refs:number;pinned:boolean};
@@ -48,13 +48,13 @@ export class AssetRegistry{
   const baseId=(character as any).baseCharacter;const base=baseId?this.qualified(await this.read(this.resource(baseId,'character')),this.resource(baseId),urls):undefined;raw=studioSpec(raw,base);
   if(character.studioBundle){
    if(character.animationSourceRig&&character.animationSourceRig!==raw.rig)throw Error('Rig animation nền không tương thích');
-   const project=(await this.readBundle(character.studioBundle)).project;
+   const project=studioProject(await this.readBundle(character.studioBundle));
    // Both released rigs explicitly use the same six-part angle channel convention.
    // Keep all existing clips and the additional authored clip, without remapping joints.
    raw={...raw,...structuredClone(project),format:'cutout-character-v1',clips:{...raw.clips,[project.clip.name]:structuredClone(project.clip)}};
    const head=mountCatalog.characters.find(c=>c.headId===state.headId),body=mountCatalog.characters.find(c=>c.bodyId===state.bodyId);
    if(!head||!body)throw Error('Đầu/thân chưa được phát hành');
-   const headProject=(await this.readBundle(head.path)).project,bodyProject=(await this.readBundle(body.path)).project;
+   const headProject=studioProject(await this.readBundle(head.path)),bodyProject=studioProject(await this.readBundle(body.path));
    raw.parts={...structuredClone(bodyProject.parts),head:structuredClone(headProject.parts.head)};
    raw.headId=headProject.headId;raw.bodyId=bodyProject.bodyId;
    raw.mountSignatures={head:headProject.mountSignatures.head,body:bodyProject.mountSignatures.body};
@@ -63,15 +63,20 @@ export class AssetRegistry{
   if(a.outfit){const outfit=this.resource(a.outfit,'outfit');if(outfit.source!==a.character||outfit.path){const o=this.qualified(await this.read(outfit),outfit,urls);raw.parts=structuredClone(o.parts||o)}}
   if(animation.source!==a.character||animation.path){const d=await this.read(animation);const p=d.project||d;raw.clips={...(raw.clips||base?.clips),...(p.clips||(p.clip?{[p.clip.name]:p.clip}:p))}}
   const actions={...animation.actions};
+  // A tool in the authored character inventory is displayed by the gameplay tool
+  // state. Keep its exact geometry; return to the normal combat weapon elsewhere.
+  const toolAttachments=new Set(this.catalog.tools?.map(t=>t.attachmentId)||[]);
+  raw.attachments=(raw.attachments||[]).map((v:any)=>toolAttachments.has(v.accessoryId)?{...v,visible:false}:v);
   if((state as any).toolId==='mining_hammer'){
    const tool=this.catalog.tools?.find(t=>t.id==='mining_hammer');if(!tool||!tool.compatibleRigs.includes(a.rig)||tool.channelConvention!=='nightcamp-six-part-angles-v1')throw Error('Chưa có ánh xạ rig cho công cụ đào');
    const mining=await this.read(this.resource(tool.resourceId,'animation'));if(mining.format!=='nightcamp-cutout-v1'||mining.clip.name!==tool.clipId||mining.rig!=='traveler')throw Error('Clip đào Studio không hợp lệ');
    // Explicit retargeting: both published rigs share the six-part local angle channels.
    // Preserve the current parts/joints. Only the authored pose channel values transfer.
    for(const key of mining.clip.keys)for(const channel of Object.keys(key.P))if(!rig.channels?.includes(channel))throw Error('Kênh đào không tương thích '+channel);
-   const hammer=mining.attachments.find((v:any)=>v.accessoryId===tool.attachmentId&&v.visible);if(!hammer||hammer.socket!=='handF'||hammer.mountProfiles?.length)throw Error('Búa không có cấu hình socket tương thích');
+   const toolProject=tool.attachmentResourceId?studioProject(await this.read(this.resource(tool.attachmentResourceId))):mining;
+   const hammer=toolProject.attachments.find((v:any)=>v.accessoryId===tool.attachmentId&&v.visible);if(!hammer||hammer.socket!=='handF'||hammer.mountProfiles?.length)throw Error('Búa không có cấu hình socket tương thích');
    raw.clips={...raw.clips,[tool.clipId]:{...structuredClone(mining.clip),kind:'loop'}};actions.mining={clip:tool.clipId,loop:true,rate:1};
-   raw.attachments=[...(raw.attachments||[]).map((v:any)=>v.category==='weapon'||v.socket?.startsWith('hand')?{...v,visible:false}:v),structuredClone(hammer)];
+   raw.attachments=[...(raw.attachments||[]).filter((v:any)=>v.accessoryId!==tool.attachmentId).map((v:any)=>v.category==='weapon'||v.socket?.startsWith('hand')?{...v,visible:false}:v),structuredClone(hammer)];
   }
   const combined=adaptStudio(raw,rig.sourceRig,actions,base);
   const resolved=resolveInventory(state,combined.spec.attachments||[],{headId:raw.headId||state.headId,bodyId:raw.bodyId||state.bodyId,parts:raw.parts,mountSignatures:raw.mountSignatures});combined.spec.attachments=resolved.inventory;

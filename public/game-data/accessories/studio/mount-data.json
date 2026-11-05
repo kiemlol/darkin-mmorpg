@@ -13,15 +13,15 @@
   "characters": [
     {
       "id": "traveler",
-      "name": "Traveler",
+      "name": "Traveler · Studio 8",
       "appearanceId": "traveler-default",
-      "path": "characters/studio/traveler.game-bundle.json",
+      "path": "characters/studio/traveler-v8.cutout.json",
       "rig": "traveler",
-      "headId": "nightcamp-head-original-v1",
-      "bodyId": "custom-body-9f093436",
+      "headId": "custom-head-2bca4fed",
+      "bodyId": "custom-body-b4d78784",
       "mountSignatures": {
-        "head": "40ff4c04",
-        "body": "40dfe08c"
+        "head": "8480a2dc",
+        "body": "f9ceb4e9"
       },
       "parts": {
         "head": {
@@ -31,8 +31,8 @@
           "ay": 0,
           "joints": {
             "neck": [
-              37.67,
-              58.87
+              44.79,
+              63.46
             ]
           },
           "head": [
@@ -52,56 +52,60 @@
               51.53
             ],
             "neck": [
-              39.67,
-              2.9
+              34.39,
+              5.53
             ],
             "shoulderL": [
-              24.28,
-              16.35
+              15.66,
+              12.98
             ],
             "shoulderR": [
-              58.61,
-              18.78
+              51.95,
+              12.28
             ],
             "hipL": [
-              28.67,
-              51.53
+              23.18,
+              59.15
             ],
             "hipR": [
-              50.33,
-              51.53
+              46.07,
+              59.77
             ]
           }
         }
       },
       "inventory": [
         {
-          "accessoryId": "hat_ironrage",
+          "accessoryId": "w_c3_revolver",
           "visible": false
         },
         {
-          "accessoryId": "attachment_1793463106295_6",
+          "accessoryId": "w_c3_sunblade",
           "visible": false
         },
         {
-          "accessoryId": "hat_paladin",
+          "accessoryId": "w_c3_starswords",
           "visible": false
         },
         {
-          "accessoryId": "glasses_square",
+          "accessoryId": "w_c3_moonaxe",
           "visible": false
         },
         {
-          "accessoryId": "hat_dragonknight",
+          "accessoryId": "w_steelwire",
           "visible": false
         },
         {
-          "accessoryId": "hat_archmage",
+          "accessoryId": "w_torch",
           "visible": false
         },
         {
-          "accessoryId": "glasses_round",
+          "accessoryId": "axe",
           "visible": false
+        },
+        {
+          "accessoryId": "hammer",
+          "visible": true
         }
       ]
     },

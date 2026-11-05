@@ -4,6 +4,8 @@ Game riêng, không thay đổi Studio. Nhân vật hiện dùng parts từ bund
 
 ## Chơi và chạy
 
+Nhân vật mặc định hiện dùng nguyên asset/rig/khớp của `traveler.cutout 8.json`, búa và điểm neo mới. Hoạt ảnh idle/walk/run/attack và vung búa đào cũ giữ nguyên. Hai gói kính mới đã thay nhưng profile đang nhắm một đầu khác, nên thao tác Đeo sẽ báo thiếu cấu hình thay vì gắn sai; xem [STUDIO-ACCESSORIES.md](STUDIO-ACCESSORIES.md). Không cần xóa save để nhận nhân vật mới.
+
 Map hiện tại là nguyên bundle upload `spawn_map.map-bundle 6.json`. Map/runtime cũ được sao lưu trong `backups/maps/`. Xem [MINING.md](MINING.md) về tương tác, clip/búa thật từ `traveler.cutout.json`, ví và lưu giao dịch. Đi gần đá có tương tác, dừng lại rồi bấm **Đào** trên chính nút đánh hoặc Space. Đào đủ 3 giây nhận 3–8 Linh thạch; đá biến mất và chờ 30 giây. Di chuyển, chết, giao chiến hoặc ngắt kết nối trước khi đủ thời gian sẽ hủy. Khi giao chiến nút ưu tiên đánh. HUD hiển thị một nguồn số dư `wallet.spirit_stone`.
 
 HUD người chơi mới ở trái, cụm map/clock đã thu nhỏ bên phải; xem [HUD-REALMS.md](HUD-REALMS.md) về tài nguyên, registry/migration cảnh giới và kiểm thử. Nhân vật mới Người phàm, ẩn bậc nhỏ; chưa có MP hoặc cơ chế đột phá.

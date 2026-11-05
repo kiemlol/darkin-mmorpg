@@ -171,7 +171,7 @@
       "type": "character",
       "path": "characters/traveler/traveler.character.json",
       "rig": "traveler-rig",
-      "studioBundle": "characters/studio/traveler.game-bundle.json"
+      "studioBundle": "characters/studio/traveler-v8.cutout.json"
     },
     {
       "id": "traveler-original",
@@ -278,12 +278,19 @@
           "rate": 1
         }
       }
+    },
+    {
+      "id": "traveler-tools",
+      "type": "accessory",
+      "path": "characters/studio/traveler-v8.cutout.json",
+      "rig": "traveler-rig",
+      "slot": "handF"
     }
   ],
   "appearances": [
     {
       "id": "traveler-default",
-      "name": "Traveler · Nguyên bản demo",
+      "name": "Traveler · Studio 8",
       "character": "traveler",
       "outfit": "traveler-original",
       "accessories": [
@@ -313,7 +320,8 @@
         "traveler-rig",
         "shadow-knight-rig"
       ],
-      "channelConvention": "nightcamp-six-part-angles-v1"
+      "channelConvention": "nightcamp-six-part-angles-v1",
+      "attachmentResourceId": "traveler-tools"
     }
   ]
 }

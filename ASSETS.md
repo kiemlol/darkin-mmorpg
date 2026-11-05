@@ -1,8 +1,8 @@
 # Nhân vật thật và catalog tài nguyên
 
-**Cập nhật 2026-11-04:** parts, headId, bodyId và mountSignatures hiện lấy từ hai bundle Studio vừa cung cấp; runtime và bốn clip gameplay vẫn lấy từ demo. Xem [STUDIO-ACCESSORIES.md](STUDIO-ACCESSORIES.md) cho giao diện đeo/tháo, quy tắc resolve, thay renderer và kiểm thử mới. Phần nguồn demo bên dưới mô tả nền animation/runtime được giữ lại.
+**Cập nhật 2026-11-05:** nhân vật mặc định lấy nguyên parts/joints/ảnh/headId/bodyId/mountState/mountSignatures từ `public/game-data/characters/studio/traveler-v8.cutout.json` (file `traveler.cutout 8.json`). Scale game vẫn .69. Bộ phát và bốn clip gameplay từ demo giữ nguyên; hoạt ảnh đào .8 giây giữ nguyên, riêng hình/transform búa lấy từ Studio 8 qua `tools[].attachmentResourceId`. Clip đứng cầm búa `my_walk` 1.1 giây trong file mới được giữ trong spec nhưng không tự thay đòn đào. Xem [STUDIO-ACCESSORIES.md](STUDIO-ACCESSORIES.md) về hai gói kính mới đang lệch headId/signature; chưa có cấu hình hợp lệ để đeo chúng lên đầu mới. Map và gameplay không đổi trong lần cập nhật này. Phần nguồn demo bên dưới mô tả nền animation/runtime lịch sử được giữ lại.
 
-## Nguồn đã tích hợp
+## Nguồn demo nền (lịch sử; map hiện tại xem MINING.md)
 
 - Map: `kiemlol/Darkin` commit `f04460d307412fc225e73d7f8cd717b20a0c2657`. `public/game-data/maps/forest.map-bundle.json` nguyên byte từ `spawn_map.map-bundle.json`, SHA-256 `916e8b58f28c5331fbf26ee36298df59ee91d17048f91b4ac1a56f0e4c7719a6`. Không đổi terrain/neo/scale/rotation/flip/roads/lighting/collision. Runtime map vẫn bản v2 cùng extension multi-actor hiện có; upstream không đổi MJS trong lần cập nhật này.
 - Character: `linhphann66-maker/Night-camp`, nhánh main, commit `f46acd71c93a075ea63d7e148c82b1f89f5f548e`, `dist/cutout-demo/traveler.character.json`.

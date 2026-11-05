@@ -1,2 +1,3 @@
-const{chromium}=require('/opt/codex/cua_node/lib/node_modules/playwright');const assert=require('node:assert/strict');
-(async()=>{const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{const p=await b.newPage();let sockets=0;p.on('websocket',()=>sockets++);await p.goto('http://localhost:4173');await p.waitForFunction(()=>window.darkinDebug?.map);await p.click('#offline');await p.click('#menu');await p.selectOption('#equipment-item','glasses_round');await p.click('#equipment-equip');await p.waitForFunction(()=>darkinDebug.visuals.some(v=>v.attachments?.some(a=>a.accessoryId==='glasses_round'&&a.visible&&a.loaded)));assert.equal(sockets,0);assert.equal(await p.evaluate(()=>darkinDebug.status),'Offline');console.log('PASS offline accessory equip renders with game backend stopped and zero WebSocket connections')}finally{await b.close()}})().catch(e=>{console.error(e);process.exit(1)});
+// Real published asset/rig and fit validation with no game backend.
+process.env.GAME_TEST_URL ||= 'http://localhost:4173';
+require('./traveler-v8-browser.cjs');

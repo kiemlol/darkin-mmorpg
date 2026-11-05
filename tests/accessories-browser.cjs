@@ -1,17 +1,3 @@
-const {chromium}=require('/opt/codex/cua_node/lib/node_modules/playwright');const assert=require('node:assert/strict');
-const {readFileSync}=require('node:fs');
-(async()=>{const {resolveAccessory}=await import('../public/game-data/accessories/studio/accessory-runtime.mjs');const pack=JSON.parse(readFileSync('public/game-data/accessories/studio/glasses_square.accessory-pack.json')),traveler=JSON.parse(readFileSync('public/game-data/characters/studio/traveler.game-bundle.json')).project;
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});const p=await browser.newPage({viewport:{width:1400,height:900}});const errors=[];p.on('pageerror',e=>errors.push(String(e)));await p.goto('http://localhost:3000');await p.waitForFunction(()=>window.darkinDebug?.map);await p.evaluate(()=>localStorage.setItem('darkin-frontier-mvp:offline:v1',JSON.stringify({map:'spawn_map',x:1000,y:700,hp:77,kills:9})));await p.click('#offline');
- const own=()=>p.evaluate(()=>darkinDebug.visuals.find(v=>v.id===darkinDebug.id));await p.waitForFunction(()=>darkinDebug.visuals.some(v=>v.headId==='nightcamp-head-original-v1'));
- const base=await p.evaluate(()=>darkinDebug.snapshot.actors.find(a=>a.id===darkinDebug.id));
- await p.click('#menu');await p.selectOption('#equipment-item','glasses_square');await p.click('#equipment-equip');await p.waitForFunction(()=>darkinDebug.visuals.some(v=>v.attachments?.some(a=>a.accessoryId==='glasses_square'&&a.visible&&a.loaded)));
- const square=(await own()).attachments.find(a=>a.accessoryId==='glasses_square');const expected=resolveAccessory(pack.items[0],traveler);for(const k of ['w','h','scale','x','y','rotation','anchor','socket','layer'])assert.deepEqual(square[k],expected[k]);
- const after=await p.evaluate(()=>darkinDebug.snapshot.actors.find(a=>a.id===darkinDebug.id));for(const k of ['x','y','hp','kills','radius','id'])assert.equal(after[k],base[k]);
- await p.click('#resume');await p.click('#plus');await p.click('#plus');await p.screenshot({path:'tests/glasses-square.png'});
- for(const [key,clip]of [['KeyS','walk'],['ShiftLeft','run']]){await p.keyboard.down(key);await p.waitForFunction(clip=>darkinDebug.visuals.some(v=>v.clip===clip&&v.attachments?.some(a=>a.accessoryId==='glasses_square'&&a.visible)),clip)}
- await p.keyboard.up('ShiftLeft');await p.keyboard.up('KeyS');await p.keyboard.down('KeyA');await p.waitForFunction(()=>darkinDebug.visuals.some(v=>v.face===-1));await p.keyboard.up('KeyA');await p.keyboard.down('Space');await p.waitForFunction(()=>darkinDebug.visuals.some(v=>v.clip==='attack'));await p.keyboard.up('Space');
- await p.click('#menu');await p.selectOption('#equipment-item','glasses_round');await p.click('#equipment-equip');await p.waitForFunction(()=>darkinDebug.visuals.some(v=>v.attachments?.some(a=>a.accessoryId==='glasses_round'&&a.visible&&a.loaded)));
- let v=await own();assert.ok(v.attachments.some(a=>a.accessoryId==='glasses_square'&&!a.visible));assert.equal(v.attachments.filter(a=>a.socket==='face'&&a.visible).length,1);
- await p.selectOption('#equipment-head','nightcamp-head-shadow_knight-v1');await p.selectOption('#equipment-body','custom-body-e851fa74');await p.waitForFunction(()=>darkinDebug.visuals.some(v=>v.headId==='nightcamp-head-shadow_knight-v1'&&v.bodyId==='custom-body-e851fa74'));
- await p.click('#resume');await p.screenshot({path:'tests/glasses-round-shadow.png'});await p.click('#menu');await p.click('#equipment-remove');await p.waitForFunction(()=>darkinDebug.visuals.every(v=>!v.attachments?.some(a=>a.socket==='face'&&a.visible)));assert.deepEqual(errors,[]);await browser.close();console.log('PASS actual renderer: exact Studio fit, images drawn, idle/walk/run/attack/flip, exclusive glasses, head/body replacement, unequip and unchanged gameplay');
-})().catch(e=>{console.error(e);process.exit(1)});
+// Current Studio 8 packs intentionally lack a matching head profile; verify the real UI refuses them.
+process.env.GAME_TEST_URL ||= 'http://localhost:3000';
+require('./traveler-v8-browser.cjs');
