@@ -36,9 +36,9 @@ test('camera covers only terrain at all edges, sizes and zoom levels',()=>{
   assert.ok(view.x+w/zoom<=b.x1+1e-7&&view.y+h/zoom<=b.y1+1e-7);
  }
 });
-test('default player visuals grow exactly 15 percent with unchanged physical radius',()=>{
+test('default player visuals grow a further 8 percent with unchanged physical radius',()=>{
  const appearance=gameCatalog.appearances.find(a=>a.id===gameCatalog.defaults.appearance)!;
- assert.ok(Math.abs(appearance.scale/.6-1.15)<1e-9);
+ assert.ok(Math.abs(appearance.scale/.69-1.08)<1e-9);
  const w=new World(p),a=w.join('me','Me');assert.equal(a.radius,12);
 });
 test('movement respects safe terrain border and still slides along it',()=>{

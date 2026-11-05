@@ -4,6 +4,8 @@ Game riêng, không thay đổi Studio. Nhân vật hiện dùng parts từ bund
 
 ## Chơi và chạy
 
+Nhân vật tăng thêm **8%** (scale .7452), zoom mặc định **110%**. Điều khiển ngang lùi vào khỏi mép/safe area, nút phi kiếm đặt cạnh nút đánh. **Menu → Hoạt ảnh → Thử hoạt ảnh bắn cung** phát clip bow1 mới, tạm ẩn kiếm; chưa có cung/tên hoặc sát thương tầm xa. Xem [BOW-LAYOUT.md](BOW-LAYOUT.md).
+
 Bấm **Phi kiếm** hoặc **F** khi đeo kiếm và rời giao chiến: kiếm bay một vòng, lớn nhẹ, nhân vật dùng clip Nhảy mới rồi đứng idle trên kiếm. WASD/joystick lái cùng nhân vật; bấm lại để hạ. Có bóng dưới kiếm, giữ va chạm/tốc độ/combat cũ. Xem [SWORD-FLIGHT.md](SWORD-FLIGHT.md) về clip gốc, config, sync và kiểm thử.
 
 Kiếm chắp vá đã là vũ khí hiển thị mặc định, dùng đúng bốn bộ neo Studio theo idle/walk/run/attack (pack 4 cho attack). Menu → Thử phụ kiện Studio cho phép Đeo/Tháo. Gần linh thạch dùng búa tạm thời rồi trả lại kiếm; không thay chỉ số chiến đấu. Xem [PATCHWORK.md](PATCHWORK.md) về file nguồn, binding ID và kiểm thử.

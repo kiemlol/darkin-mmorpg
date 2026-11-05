@@ -18,7 +18,7 @@ Các file dưới đây được sao chép nguyên byte từ các tệp đã cun
 
 Không chạy trường `bundle.code`. `studioProject` đọc project `nightcamp-cutout-v1` trực tiếp hoặc `.project` trong `nightcamp-cutout-export-v1`, giữ parts (kể cả elbow/knee), headId, bodyId, mountSignatures và mountState. Bốn clip idle/walk/run/attack đang chạy vẫn được giữ nguyên. Clip bổ sung trong từng file được giữ đúng tên/thời lượng, không tự gán thành đòn đánh hiện tại. Bộ ảnh/rig cũ và gói kính cũ được sao lưu ngoài public trong `backups/characters/before-traveler-v8/`.
 
-Traveler Studio 8 dùng các ID mới ghi trên. Shadow Knight giữ headId `nightcamp-head-shadow_knight-v1`, bodyId `custom-body-e851fa74`. Hai rig dùng cùng sáu phần head/torso/armF/armB/legF/legB và cùng các kênh góc; catalog Shadow Knight khai báo rõ nguồn clip traveler, dùng nguyên góc pose, không chuyển đổi hay căn lại hình học. Scale tổng thể game giữ .69 như bản trước; ảnh/khớp/phụ kiện không được fit thêm. Mount registry chỉ giữ hình học kiểm fit, không nhúng lại ảnh trong JS/WebSocket; bộ phát nạp parts đầy đủ từ JSON gốc.
+Traveler Studio 8 dùng các ID mới ghi trên. Shadow Knight giữ headId `nightcamp-head-shadow_knight-v1`, bodyId `custom-body-e851fa74`. Hai rig dùng cùng sáu phần head/torso/armF/armB/legF/legB và cùng các kênh góc; catalog Shadow Knight khai báo rõ nguồn clip traveler, dùng nguyên góc pose, không chuyển đổi hay căn lại hình học. Scale tổng thể hiện .7452 (tăng thêm 8% từ .69); ảnh/khớp/phụ kiện không được fit thêm. Mount registry chỉ giữ hình học kiểm fit, không nhúng lại ảnh trong JS/WebSocket; bộ phát nạp parts đầy đủ từ JSON gốc.
 
 ## Ghép, tải và vẽ
 

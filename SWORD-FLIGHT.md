@@ -28,7 +28,7 @@ Resource `sword-flight-jump` và `catalog.swordFlight` quy định thời gian/�
 
 `src/client/sword-flight-visual.ts` là lớp trình bày. Lấy **ảnh đã giải mã của món đang đeo** từ inventory của CutoutPlayer; không tải lại, không sửa spec/attachment dùng chung. Draw nhân vật với `weapon:false` chỉ khi đang bay, nên không có kiếm trùng trên tay. Toàn bộ ảnh/alpha được dùng, không crop ảnh hoặc đổi neo Studio cầm tay.
 
-Kiếm dùng pivot riêng ở giữa ảnh cho chế độ bay, tăng 30% chỉ khi bay. Chân lấy từ `NC.rigJoints`, căn trung điểm hai chân lên giữa kiếm; không fit lại người hoặc thay parts/joints/scale .69. World XY là điểm trên mặt đất, chiều cao vẽ khoảng 16 px, bob dưới 1 px. Bóng được vẽ tại cùng XY trên đất, kiếm và chân ở phía trên; cùng camera, Y-sort và lượt ánh sáng map.
+Kiếm dùng pivot riêng ở giữa ảnh cho chế độ bay, tăng 30% chỉ khi bay. Chân lấy từ `NC.rigJoints`, căn trung điểm hai chân lên giữa kiếm; không fit lại người hoặc thay parts/joints; scale game hiện .7452 sau lần tăng thêm 8% (BOW-LAYOUT.md). World XY là điểm trên mặt đất, chiều cao vẽ khoảng 16 px, bob dưới 1 px. Bóng được vẽ tại cùng XY trên đất, kiếm và chân ở phía trên; cùng camera, Y-sort và lượt ánh sáng map.
 
 Rig được cung cấp chỉ có hướng trái/phải. Nhân vật flip về đầu kiếm; khi hướng đi gần dọc, kiếm có yaw chéo nhẹ về phía view đó để tránh biểu diễn giả một bộ ảnh trước/sau. Vận tốc XY vẫn đi đúng hướng input. Không xoay cả nhân vật như hình tròn. Hướng local dùng prediction có sẵn để kiếm/nhân vật đổi hướng cùng lúc; camera/networking không nhận thêm lần biến đổi.
 

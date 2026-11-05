@@ -2,7 +2,7 @@
 
 Nguồn: `cutout-runtime.zip` người dùng cung cấp ngày 2026-11-05. Đã đọc README và cập nhật toàn bộ cây module trong `public/game-data/cutout-runtime/`, gồm player/model/avatar, animation-identity, accessory-runtime, mount-profiles, equipment và các module cánh/pet. README gốc và SHA-256 từng file ZIP ở `STUDIO-RUNTIME-README.md` / `studio-runtime-provenance.json`. Backup runtime/catalog trước cập nhật nằm ngoài public tại `backups/runtime/before-animation-id/`.
 
-Game giữ nguyên map, bộ ảnh/parts/joints/headId/bodyId/mountSignatures Studio 8, scale .69, các clip/pose/duration/rate đã dùng, input, camera, combat, ví/save và multiplayer. Không chạy JSON `code`/`runtime.source`.
+Game giữ nguyên map, bộ ảnh/parts/joints/headId/bodyId/mountSignatures Studio 8, scale .7452 (tăng 8% ở lần chỉnh giao diện/bow1), các clip/pose/duration/rate đã dùng, input, camera, combat, ví/save và multiplayer. Không chạy JSON `code`/`runtime.source`.
 
 ## ID đã cài đặt
 

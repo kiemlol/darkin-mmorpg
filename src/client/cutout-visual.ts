@@ -6,6 +6,7 @@ import type {EquipmentState} from '../shared/equipment';
 import {SwordFlightVisual} from './sword-flight-visual';
 export class CutoutCharacterVisual implements CharacterVisual{
  flight=new SwordFlightVisual();
+ previewToken=-1;previewAge=0;
  portraitKey='';portraitCanvas:HTMLCanvasElement|null=null;
  portrait(){if(!this.loaded||!this.player)return null;if(this.portraitKey===this.loaded.key&&this.portraitCanvas)return{key:this.portraitKey,image:this.portraitCanvas};
   const temporary=document.createElement('canvas');temporary.width=temporary.height=320;const c=temporary.getContext('2d')!,fork=this.loaded.prototype.fork(),head=fork.rig.P.head.img,draw=c.drawImage.bind(c);let box:any=null;
@@ -38,6 +39,13 @@ export class CutoutCharacterVisual implements CharacterVisual{
    }else{this.playAnimation('idle');this.player.update(dt*this.loaded.actions.idle.rate,undefined,dt)}
    return;
   }
+  const preview=a.animationPreview;
+  if(preview&&this.loaded.actions[preview.actionId]){
+   if(this.previewToken!==preview.sequence){this.previewToken=preview.sequence;this.previewAge=preview.elapsed;this.playAnimation(preview.actionId,true)}
+   else this.previewAge=Math.min(preview.elapsed+.1,Math.max(preview.elapsed,this.previewAge+dt));
+   this.attacking=false;this.lastAttack=a.attackSeq;
+   this.playAnimation(preview.actionId);this.player.time=Math.min(this.player.spec.clips[this.player.name].dur,this.previewAge);this.player.blend=null;this.player.update(0,undefined,dt);return;
+  }
   const attack=a.attackSeq??0;
   if(attack!==this.lastAttack){this.lastAttack=attack;if(a.action==='attack'||a.cooldown>0)this.attacking=this.playAnimation('attack',true)}
   const action=this.attacking?'attack':this.loaded.actions[a.action]?a.action:'idle';
@@ -51,7 +59,8 @@ export class CutoutCharacterVisual implements CharacterVisual{
   const front=flight?.phase==='orbit'&&flight.y>a.y;
   if(flight&&weapon&&!front)this.flight.drawSword(c,weapon);
   const origin=flight?this.flight.bodyOrigin(this.player,a,this.loaded.appearance.scale):a;
-  this.player.draw(c,origin.x,origin.y,this.loaded.appearance.scale,{weapon:!flight});
+  const hideWeapon=Object.values(this.loaded.actions).some(b=>b.animationId===this.player.animationId&&b.hideWeapon);
+  this.player.draw(c,origin.x,origin.y,this.loaded.appearance.scale,{weapon:!flight&&!hideWeapon});
   if(flight&&weapon&&front)this.flight.drawSword(c,weapon);c.restore();
   // UI only; no old body, weapon, shadow or temporary attack geometry is drawn.
   c.save();const y=a.y-(flight?.riderHeight||0)-160*this.loaded.appearance.scale-10;c.textAlign='center';c.font='600 12px system-ui';c.strokeStyle='#12201d';c.lineWidth=3;c.strokeText(a.name,a.x,y);c.fillStyle=a.color;c.fillText(a.name,a.x,y);c.fillStyle='#101923';c.fillRect(a.x-23,y+6,46,5);c.fillStyle='#a5ca9c';c.fillRect(a.x-22,y+7,44*a.hp/a.maxHp,3);c.restore();

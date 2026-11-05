@@ -11,11 +11,12 @@ import {MinimapHUD} from './map-hud';
 import {PlayerHUD} from './player-hud';
 import {InteractionUI} from './interaction-ui';
 import {SwordFlightUI} from './sword-flight-ui';
+import {DEFAULT_ZOOM} from './view-settings';
 import {clockHour} from '../shared/map-state';
 import type { Intent } from '../shared/world';
 const $ = (id: string) => document.getElementById(id)!;
 const canvas = $('game') as HTMLCanvasElement, c = canvas.getContext('2d')!;
-let player: any, session: GameSession | null = null, input: Input | null = null, zoom = 1, seq = 0, acc = 0, last = performance.now(), mode = 'offline', visuals = new Map<string, CharacterVisual>(), bounds = { x0: -180, y0: -180, x1: 3300, y1: 2300 };
+let player: any, session: GameSession | null = null, input: Input | null = null, zoom = DEFAULT_ZOOM, seq = 0, acc = 0, last = performance.now(), mode = 'offline', visuals = new Map<string, CharacterVisual>(), bounds = { x0: -180, y0: -180, x1: 3300, y1: 2300 };
 let currentIntent: Omit<Intent, 'seq'> = { dx: 0, dy: 0, run: false, attack: false };
 const camera = new Camera2D();
 let ready = false;
@@ -31,10 +32,10 @@ function setZoom(f: number) { zoom = camera.fitZoom(Math.max(.35, Math.min(2, zo
 $('plus').onclick = () => setZoom(1.15);
 $('minus').onclick = () => setZoom(1 / 1.15);
 function stop() { interactionUI.release();currentIntent = { dx: 0, dy: 0, run: false, attack: false }; session?.input({ ...currentIntent, seq: ++seq }, false); }
-function cleanup() { flightUI.reset();mapHUD.close();interactionUI.reset();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
+function cleanup() { $('preview-notice').hidden=true;flightUI.reset();mapHUD.close();interactionUI.reset();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
     v.destroy(); visuals.clear(); acc = 0; seq = 0; currentIntent = { dx: 0, dy: 0, run: false, attack: false }; }
 async function start(m: string) { if (!ready)
-    return; cleanup(); mode = m; try {
+    return; cleanup(); mode = m;zoom=DEFAULT_ZOOM;setZoom(1); try {
     const name = ($('name') as HTMLInputElement).value.trim() || 'Lữ khách';
     session = m === 'offline' ? new LocalGameSession(player.sourceProject||player.project, name) : new NetworkGameSession(player.sourceProject||player.project, name, ($('server') as HTMLInputElement).value.trim());
     const initial=session.renderActors().find(a=>a.id===session!.id);camera.reset(initial?.x??player.project.spawn.x,initial?.y??player.project.spawn.y);playerHUD.update(initial||null,true);
@@ -62,6 +63,7 @@ $('menu').onclick = () => { if (session) {
     dialog.showModal();
 } };
 $('resume').onclick = () => dialog.close();
+$('preview-bow').onclick=()=>{if(session){input?.clear();session.previewAnimation('bow_shoot');dialog.close()}};
 $('exit').onclick = () => { dialog.close(); cleanup(); document.body.classList.remove('playing'); $('lobby').hidden = false; $('hud').hidden = true; $('controls').hidden = true; };
 $('reset').onclick = () => { dialog.close(); cleanup(); LocalGameSession.reset(($('name') as HTMLInputElement).value.trim()||'Lữ khách'); start('offline'); };
 try {
@@ -120,6 +122,7 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
             $('stats').textContent = `${me.kills} quái hạ gục${mode === 'online' ? ' · ' + actors.filter(a => a.kind === 'player').length + ' người chơi' : ''}`;
         }
         $('status').textContent = session.status;
+        const previewNote=$('preview-notice');previewNote.textContent=session.previewMessage;previewNote.hidden=!session.previewMessage;
         const notice=$('profile-notice');notice.hidden=!session.dataWarnings?.length;notice.textContent=session.dataWarnings?.join(' ')||'';
         $('retry').hidden = mode !== 'online' || session.status === 'Online' || session.status === 'Đang kết nối…';
     }

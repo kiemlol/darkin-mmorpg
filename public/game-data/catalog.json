@@ -333,6 +333,21 @@
           "rate": 1
         }
       }
+    },
+    {
+      "id": "bow-actions",
+      "type": "animation",
+      "path": "animations/bow/bow1.animation-pack.json",
+      "rig": "traveler-rig",
+      "actions": {
+        "bow_shoot": {
+          "clip": "bow1",
+          "animationId": "nightcamp-animation-bow1-767a8744-v1",
+          "loop": false,
+          "rate": 1,
+          "hideWeapon": true
+        }
+      }
     }
   ],
   "appearances": [
@@ -346,7 +361,7 @@
       ],
       "animationSet": "traveler-actions",
       "rig": "traveler-rig",
-      "scale": 0.69
+      "scale": 0.7452
     },
     {
       "id": "shadow-knight-default",
@@ -355,7 +370,7 @@
       "accessories": [],
       "animationSet": "shadow-knight-actions",
       "rig": "shadow-knight-rig",
-      "scale": 0.69
+      "scale": 0.7452
     }
   ],
   "tools": [
@@ -394,5 +409,15 @@
         "tipAngle": -1.5707963267948966
       }
     ]
-  }
+  },
+  "actionPacks": [
+    {
+      "resourceId": "bow-actions",
+      "compatibleRigs": [
+        "traveler-rig",
+        "shadow-knight-rig"
+      ],
+      "mode": "preview"
+    }
+  ]
 }

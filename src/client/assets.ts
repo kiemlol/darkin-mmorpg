@@ -65,6 +65,12 @@ export class AssetRegistry{
   if(a.outfit){const outfit=this.resource(a.outfit,'outfit');if(outfit.source!==a.character||outfit.path){const o=this.qualified(await this.read(outfit),outfit,urls);raw.parts=structuredClone(o.parts||o)}}
   if(animation.source!==a.character||animation.path){const d=await this.read(animation);const p=d.format==='darkin-animation-pack-v1'?{clip:readAnimationPack(d)}:d.project||d;raw.clips={...(raw.clips||base?.clips),...(p.clips||(p.clip?{...p.animationClips,[p.clip.name]:p.clip}:p))}}
   const actions={...animation.actions};
+  for(const pack of this.catalog.actionPacks||[])if(pack.compatibleRigs.includes(a.rig)){
+   const resource=this.resource(pack.resourceId,'animation'),clip=readAnimationPack(await this.read(resource));
+   const entry=Object.entries(resource.actions||{}).find(([,binding])=>binding.animationId===clip.id);
+   if(!entry)throw Error('Gói hoạt ảnh chưa có action binding '+resource.id);
+   const [action,binding]=entry;raw.clips={...raw.clips,[binding.clip]:clip};actions[action]={...binding};
+  }
   const flight=this.catalog.swordFlight;
   if(flight?.compatibleRigs.includes(a.rig)){
    const resource=this.resource(flight.animationResourceId,'animation'),clip=readAnimationPack(await this.read(resource));

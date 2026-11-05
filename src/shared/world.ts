@@ -4,6 +4,7 @@ import {CLOCK_RATE,initialClock,type ClockState} from './map-state';
 import {DEFAULT_REALM,validRealmState,type RealmState} from './realms';
 import {InteractionSystem,type Definition,type MiningBook,type Transaction,type Receipt} from './interactions';
 import {normalizeWallet,type Wallet} from './resources';
+import {previewDefinition,type AnimationPreview} from './animation-previews';
 import {equippedFlightWeapon,flightConfig,phaseAt,smooth,JUMP_AT,JUMP_SECONDS,type SwordFlight} from './sword-flight';
 import { validateMap, canWalk as mapCanWalk, moveActor } from '../../public/game-data/maps/map-runtime.mjs';
 export { moveActor };
@@ -20,6 +21,7 @@ export type Intent = {
 };
 export type Actor = EquipmentState & RealmState & {
     swordFlight?:SwordFlight;
+    animationPreview?:AnimationPreview;
     wallet:Wallet;
     combatUntil:number;
     toolId:'combat'|'mining_hammer';
@@ -98,6 +100,17 @@ export class World {
     inCombat(a:Actor){if(a.combatUntil>this.time)return true;return [...this.actors.values()].some(b=>b.kind!==a.kind&&b.hp>0&&Math.hypot(a.x-b.x,a.y-b.y)<116&&this.clearLine(a,b))}
     clearLine(a:Actor,b:Actor){for(let t=.1;t<1;t+=.1)if(!canWalk(this.p,a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,2))return false;return true}
     canStand(a:Actor){return canWalk(this.p,a.x,a.y,a.radius)}
+    previewCommands=new Map<string,{seq:number;time:number}>();
+    cancelAnimationPreview(a:Actor){delete a.animationPreview}
+    previewAnimation(id:string,actionId:string,seq:number){
+        if(typeof actionId!=='string'||!Number.isSafeInteger(seq)||seq<0||seq>=1e12)throw Error('Yêu cầu hoạt ảnh không hợp lệ');
+        const a=this.actors.get(id),clip=a&&previewDefinition(actionId,a.appearanceId),prior=this.previewCommands.get(id);
+        if(!a||a.kind!=='player'||!clip)throw Error('Hoạt ảnh chưa được đăng ký cho nhân vật');
+        if(prior&&seq<=prior.seq)return;
+        if(a.hp<=0||a.swordFlight||this.interactions.channels.has(id)||this.inCombat(a))throw Error('Hãy đứng trên đất, rời giao chiến và dừng đào để thử động tác');
+        if(prior&&this.time-prior.time<.5)throw Error('Hãy chờ động tác trước kết thúc');
+        a.animationPreview={actionId,sequence:seq,elapsed:0};this.previewCommands.set(id,{seq,time:this.time});
+    }
     cancelSwordFlight(a:Actor){if(!a.swordFlight)return;delete a.swordFlight;a.action=a.hp>0?'idle':'death';a.anim=0}
     swordFlight(id:string,enabled:boolean,seq:number){
         if(typeof enabled!=='boolean'||!Number.isSafeInteger(seq)||seq<0||seq>=1e12)throw Error('Lệnh phi kiếm không hợp lệ');
@@ -113,7 +126,7 @@ export class World {
         if(!this.canStand(a))throw Error('Vị trí chân không hợp lệ');
         const x=a.x+Math.cos(a.dir)*flightConfig.mountDistance,y=a.y+Math.sin(a.dir)*flightConfig.mountDistance;
         for(let t=0;t<=flightConfig.mountDistance;t+=2)if(!canWalk(this.p,a.x+Math.cos(a.dir)*t,a.y+Math.sin(a.dir)*t,a.radius))throw Error('Cần khoảng trống trước mặt để lên kiếm');
-        this.interactions.cancel(id,'Đã hủy đào để gọi phi kiếm');this.inputs.delete(id);
+        this.cancelAnimationPreview(a);this.interactions.cancel(id,'Đã hủy đào để gọi phi kiếm');this.inputs.delete(id);
         a.swordFlight={id:seq,weaponId,phase:'orbit',elapsed:0,heading:a.dir,facing:Math.cos(a.dir)<-.15?-1:1,launchX:a.x,launchY:a.y,mountX:x,mountY:y,epoch:a.teleportSeq,landingElapsed:0};a.toolId='combat';a.interactionTarget=undefined;a.action='idle';a.anim=0;
         this.flightCommands.set(id,{seq,time:this.time});
     }
@@ -135,22 +148,22 @@ export class World {
     }
     setAppearance(id: string, appearanceId: string) { if (!allowedAppearance(appearanceId))
         throw Error('Ngoại hình không được phép'); const a = this.actors.get(id); if (a?.kind === 'player')
-        {const next=defaultEquipment(appearanceId);next.accessories=structuredClone(a.accessories);this.cancelSwordFlight(a);Object.assign(a,next,{appearanceId,equipmentWarnings:resolveInventory(next).warnings});} }
-    cosmetic(id:string,command:CosmeticCommand){const a=this.actors.get(id);if(a?.kind!=='player')return;const next=changeEquipment(a,command);this.cancelSwordFlight(a);Object.assign(a,next,{equipmentWarnings:resolveInventory(next).warnings})}
+        {const next=defaultEquipment(appearanceId);next.accessories=structuredClone(a.accessories);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);Object.assign(a,next,{appearanceId,equipmentWarnings:resolveInventory(next).warnings});} }
+    cosmetic(id:string,command:CosmeticCommand){const a=this.actors.get(id);if(a?.kind!=='player')return;const next=changeEquipment(a,command);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);Object.assign(a,next,{equipmentWarnings:resolveInventory(next).warnings})}
     join(id: string, name: string) { if ([...this.actors.values()].filter(a => a.kind === 'player').length >= 32)
         throw Error('Map đầy (32 người)'); const a = this.make(id, name, 'player', this.findSpawn(this.p.spawn.x, this.p.spawn.y)); this.actors.set(id, a); return a; }
-    leave(id: string) { this.flightCommands.delete(id);this.interactions.cancel(id,'Mất kết nối / rời map');this.interactions.errors.delete(id);this.actors.delete(id); this.inputs.delete(id); }
+    leave(id: string) { this.previewCommands.delete(id);this.flightCommands.delete(id);this.interactions.cancel(id,'Mất kết nối / rời map');this.interactions.errors.delete(id);this.actors.delete(id); this.inputs.delete(id); }
     input(id: string, i: Intent) { const a = this.actors.get(id); if (!a || !validIntent(i) || i.seq <= Math.max(a.ack, this.inputs.get(id)?.i.seq ?? -1))
-        return false; if(Math.hypot(i.dx,i.dy)>.01||i.attack)this.interactions.cancel(id);this.inputs.set(id, { i, time: this.time }); return true; }
-    respawn(id: string) { const a = this.actors.get(id); if (a && a.hp <= 0) {this.cancelSwordFlight(a);
+        return false; if(Math.hypot(i.dx,i.dy)>.01||i.attack){this.cancelAnimationPreview(a);this.interactions.cancel(id);}this.inputs.set(id, { i, time: this.time }); return true; }
+    respawn(id: string) { const a = this.actors.get(id); if (a && a.hp <= 0) {this.cancelAnimationPreview(a);this.cancelSwordFlight(a);
         Object.assign(a, this.findSpawn(this.p.spawn.x, this.p.spawn.y), { hp: a.maxHp, action: 'idle', anim: 0,teleportSeq:a.teleportSeq+1 });
         this.inputs.delete(id);
     } }
     hit(a: Actor, b: Actor, damage: number) { if (b.hp <= 0)
-        return; this.cancelSwordFlight(a);this.cancelSwordFlight(b);a.combatUntil=b.combatUntil=this.time+3;this.interactions.cancel(a.id,'Đang giao chiến');this.interactions.cancel(b.id,'Bị tấn công');b.hp = Math.max(0, b.hp - damage); b.action = b.hp ? 'hurt' : 'death'; b.anim = b.hp ? .22 : 0; b.deadAt = this.time; if (!b.hp && a.kind === 'player')
+        return; this.cancelAnimationPreview(a);this.cancelAnimationPreview(b);this.cancelSwordFlight(a);this.cancelSwordFlight(b);a.combatUntil=b.combatUntil=this.time+3;this.interactions.cancel(a.id,'Đang giao chiến');this.interactions.cancel(b.id,'Bị tấn công');b.hp = Math.max(0, b.hp - damage); b.action = b.hp ? 'hurt' : 'death'; b.anim = b.hp ? .22 : 0; b.deadAt = this.time; if (!b.hp && a.kind === 'player')
         a.kills++; this.events.push({ id: ++this.serial, x: b.x, y: b.y - 50, damage, target: b.id, time: this.time }); }
     attack(a: Actor) { if (a.cooldown > 0 || a.hp <= 0)
-        return; this.cancelSwordFlight(a);this.interactions.cancel(a.id,'Đang đánh');a.combatUntil=this.time+3;a.attackSeq++; a.cooldown = a.kind === 'mob' ? .95 : COOLDOWN; a.action = 'attack'; a.anim = .24; for (const b of this.actors.values()) {
+        return; this.cancelAnimationPreview(a);this.cancelSwordFlight(a);this.interactions.cancel(a.id,'Đang đánh');a.combatUntil=this.time+3;a.attackSeq++; a.cooldown = a.kind === 'mob' ? .95 : COOLDOWN; a.action = 'attack'; a.anim = .24; for (const b of this.actors.values()) {
         if (b.kind === a.kind || b.hp <= 0)
             continue;
         const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
@@ -166,6 +179,7 @@ export class World {
             this.hit(a, b, a.kind === 'mob' ? 9 : 22);
     } }
     step(dt = .05) { this.time += dt; for (const a of this.actors.values()) {
+        if(a.animationPreview){const preview=a.animationPreview;preview.elapsed+=dt;if(a.hp<=0||this.inCombat(a)||preview.elapsed>=previewDefinition(preview.actionId,a.appearanceId)!.dur)this.cancelAnimationPreview(a)}
         a.cooldown = Math.max(0, a.cooldown - dt);
         a.anim = Math.max(0, a.anim - dt);
         if (a.hp <= 0) {
@@ -211,6 +225,6 @@ export class World {
             this.attack(a);
         if(a.swordFlight){a.swordFlight.heading=a.dir;if(Math.abs(Math.cos(a.dir))>.15)a.swordFlight.facing=Math.cos(a.dir)<0?-1:1;a.action='idle'}
     }this.interactions.step();for(const a of this.actors.values())if(a.kind==='player'){const c=this.interactions.channels.get(a.id),d=c?this.interactions.definitions.get(c.intent.objectId):this.interactions.nearest(a);a.interactionTarget=d?{objectId:d.objectId,actionId:d.actionId,type:d.type,label:d.label,cycle:this.interactions.states.get(d.objectId)!.cycle}:undefined;a.toolId=d&&a.hp>0?this.interactions.presentation(d).toolId:'combat'} this.events = this.events.filter(e => this.time - e.time < 1.2); }
-    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
+    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, animationPreview:a.animationPreview?{...a.animationPreview}:undefined,swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
 }
 export type Snapshot = ReturnType<World['snapshot']>;
