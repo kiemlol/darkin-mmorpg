@@ -1,0 +1,327 @@
+{
+  "format": "darkin-game-catalog-v1",
+  "version": 1,
+  "defaults": {
+    "appearance": "traveler-default",
+    "animationSet": "traveler-actions"
+  },
+  "rigs": [
+    {
+      "id": "traveler-rig",
+      "sourceRig": "traveler",
+      "parts": [
+        "head",
+        "torso",
+        "armF",
+        "armB",
+        "legF",
+        "legB"
+      ],
+      "sockets": [
+        "head",
+        "face",
+        "handF",
+        "handB",
+        "back"
+      ],
+      "channels": [
+        "aB",
+        "aBack",
+        "aF",
+        "act",
+        "bk",
+        "breathe",
+        "bx",
+        "by",
+        "eB",
+        "eF",
+        "fade",
+        "gAdj",
+        "head",
+        "headY",
+        "hk",
+        "hx",
+        "hy",
+        "ik",
+        "kB",
+        "kF",
+        "lean",
+        "legB",
+        "legF",
+        "pG",
+        "pX",
+        "pY",
+        "plant",
+        "pull",
+        "rot",
+        "sq",
+        "tuck",
+        "turn",
+        "wAng",
+        "wBehind",
+        "wFar",
+        "wHide",
+        "wLen",
+        "wPush",
+        "wSheath",
+        "wz",
+        "x",
+        "y"
+      ],
+      "requiredChannels": [
+        "x",
+        "y",
+        "rot",
+        "lean",
+        "sq",
+        "aF",
+        "eF",
+        "aB",
+        "eB",
+        "legF",
+        "kF",
+        "legB",
+        "kB",
+        "wAng"
+      ]
+    },
+    {
+      "id": "shadow-knight-rig",
+      "sourceRig": "shadow_knight",
+      "parts": [
+        "head",
+        "torso",
+        "armF",
+        "armB",
+        "legF",
+        "legB"
+      ],
+      "sockets": [
+        "head",
+        "face",
+        "handF",
+        "handB",
+        "back"
+      ],
+      "channels": [
+        "aB",
+        "aBack",
+        "aF",
+        "act",
+        "bk",
+        "breathe",
+        "bx",
+        "by",
+        "eB",
+        "eF",
+        "fade",
+        "gAdj",
+        "head",
+        "headY",
+        "hk",
+        "hx",
+        "hy",
+        "ik",
+        "kB",
+        "kF",
+        "lean",
+        "legB",
+        "legF",
+        "pG",
+        "pX",
+        "pY",
+        "plant",
+        "pull",
+        "rot",
+        "sq",
+        "tuck",
+        "turn",
+        "wAng",
+        "wBehind",
+        "wFar",
+        "wHide",
+        "wLen",
+        "wPush",
+        "wSheath",
+        "wz",
+        "x",
+        "y"
+      ],
+      "requiredChannels": [
+        "x",
+        "y",
+        "rot",
+        "lean",
+        "sq",
+        "aF",
+        "eF",
+        "aB",
+        "eB",
+        "legF",
+        "kF",
+        "legB",
+        "kB",
+        "wAng"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "traveler",
+      "type": "character",
+      "path": "characters/traveler/traveler.character.json",
+      "rig": "traveler-rig",
+      "studioBundle": "characters/studio/traveler-v8.cutout.json"
+    },
+    {
+      "id": "traveler-original",
+      "type": "outfit",
+      "source": "traveler",
+      "rig": "traveler-rig",
+      "embedded": "parts"
+    },
+    {
+      "id": "traveler-sword",
+      "type": "accessory",
+      "source": "traveler",
+      "rig": "traveler-rig",
+      "embedded": "weapon",
+      "slot": "handF"
+    },
+    {
+      "id": "traveler-actions",
+      "type": "animation",
+      "source": "traveler",
+      "rig": "traveler-rig",
+      "embedded": "clips",
+      "actions": {
+        "idle": {
+          "clip": "idle",
+          "aliases": [
+            "idel"
+          ],
+          "loop": true,
+          "rate": 1
+        },
+        "walk": {
+          "clip": "walk",
+          "loop": true,
+          "rate": 1.24
+        },
+        "run": {
+          "clip": "run",
+          "loop": true,
+          "rate": 0.97826087
+        },
+        "attack": {
+          "clip": "attack",
+          "aliases": [
+            "atack"
+          ],
+          "loop": false,
+          "rate": 1
+        }
+      }
+    },
+    {
+      "id": "shadow-knight",
+      "type": "character",
+      "path": "characters/traveler/traveler.character.json",
+      "studioBundle": "characters/studio/shadow_knight.game-bundle.json",
+      "animationSourceRig": "traveler",
+      "rig": "shadow-knight-rig"
+    },
+    {
+      "id": "shadow-knight-actions",
+      "type": "animation",
+      "source": "shadow-knight",
+      "embedded": "clips",
+      "rig": "shadow-knight-rig",
+      "actions": {
+        "idle": {
+          "clip": "idle",
+          "aliases": [
+            "idel"
+          ],
+          "loop": true,
+          "rate": 1
+        },
+        "walk": {
+          "clip": "walk",
+          "loop": true,
+          "rate": 1.24
+        },
+        "run": {
+          "clip": "run",
+          "loop": true,
+          "rate": 0.97826087
+        },
+        "attack": {
+          "clip": "attack",
+          "aliases": [
+            "atack"
+          ],
+          "loop": false,
+          "rate": 1
+        }
+      }
+    },
+    {
+      "id": "traveler-mining",
+      "type": "animation",
+      "path": "animations/mining/traveler.cutout.json",
+      "rig": "traveler-rig",
+      "actions": {
+        "mining": {
+          "clip": "my_walk",
+          "loop": true,
+          "rate": 1
+        }
+      }
+    },
+    {
+      "id": "traveler-tools",
+      "type": "accessory",
+      "path": "characters/studio/traveler-v8.cutout.json",
+      "rig": "traveler-rig",
+      "slot": "handF"
+    }
+  ],
+  "appearances": [
+    {
+      "id": "traveler-default",
+      "name": "Traveler · Studio 8",
+      "character": "traveler",
+      "outfit": "traveler-original",
+      "accessories": [
+        "traveler-sword"
+      ],
+      "animationSet": "traveler-actions",
+      "rig": "traveler-rig",
+      "scale": 0.69
+    },
+    {
+      "id": "shadow-knight-default",
+      "name": "Shadow Knight · Studio",
+      "character": "shadow-knight",
+      "accessories": [],
+      "animationSet": "shadow-knight-actions",
+      "rig": "shadow-knight-rig",
+      "scale": 0.69
+    }
+  ],
+  "tools": [
+    {
+      "id": "mining_hammer",
+      "resourceId": "traveler-mining",
+      "clipId": "my_walk",
+      "attachmentId": "hammer",
+      "compatibleRigs": [
+        "traveler-rig",
+        "shadow-knight-rig"
+      ],
+      "channelConvention": "nightcamp-six-part-angles-v1",
+      "attachmentResourceId": "traveler-tools"
+    }
+  ]
+}

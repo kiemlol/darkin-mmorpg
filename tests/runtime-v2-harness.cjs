@@ -1,0 +1,2 @@
+const{chromium}=require('/opt/codex/cua_node/lib/node_modules/playwright');
+(async()=>{const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{const p=await b.newPage(),errors=[];p.on('pageerror',e=>errors.push(String(e)));await p.goto('http://localhost:5173/tests/runtime-v2-harness.html');await p.waitForFunction(()=>window.runRuntimeV2Checks);console.log(await p.evaluate(()=>runRuntimeV2Checks()));if(errors.length)throw Error(errors.join('\n'))}finally{await b.close()}})().catch(e=>{console.error(e);process.exit(1)});

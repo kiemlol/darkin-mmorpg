@@ -836,7 +836,17 @@ function drawPet(ctx,p,pose,images,base=[1,0,0,1,0,0],{bones=false,selected=null
     origin=add(origin,rotV([a.x||0,a.y||0],angle));
     return {origin,angle:angle+(a.rotation||0)};
   }
+  NC.resolveAttachment=function(raw,P){
+    const originalSocket=raw.animationBase?.socket||raw.socket;
+    const target=raw.wingRig||originalSocket==='back'?'body':['head','face'].includes(originalSocket)?'head':null;
+    const targetId=target&&P[target==='body'?'bodyId':'headId'],signature=target&&P.mountSignatures?.[target];
+    const base=target?raw.mountProfiles?.find(f=>f.target===target&&(f.headId||f.bodyId)===targetId&&f.signature===signature)?.transform:raw.animationBase;
+    const profile=!P.animationEditing&&raw.animationProfiles?.find(f=>f.animationId===P.animationId&&(!f.targetId||f.target===target&&f.targetId===targetId&&f.signature===signature));
+    if(!P.animationEditing&&target&&raw.mountProfiles?.length&&!base)return {...raw,visible:false};
+    return P.animationEditing?raw:{...raw,...base,...profile?.transform};
+  };
   NC.attachmentMatrix=function(equip,P,a,x,y,scale){
+    a=NC.resolveAttachment(a,P);
     const rig=topRig(equip),S=solve(rig,equip,P,NC.ITEMS[equip.weapon]);
     const at=attachmentLocal(S,rig,equip,P,a),toW=rootXf(P,x,y,scale),k=a.scale??1;
     const origin=toW(at.origin),u=toW(add(at.origin,rotV([k,0],at.angle))),v=toW(add(at.origin,rotV([0,k],at.angle)));
@@ -848,7 +858,8 @@ function drawPet(ctx,p,pose,images,base=[1,0,0,1,0,0],{bones=false,selected=null
     const W = NC.ITEMS[equip.weapon];
     const S = solve(rig, equip, P, W);
     const drawAttached=(socket,layer)=>{
-      for(const a of (NC.ITEMS[equip.top]?.attachments||NC.RIG_ATTACHMENTS?.[rig.name]||[])){
+      for(const raw of (NC.ITEMS[equip.top]?.attachments||NC.RIG_ATTACHMENTS?.[rig.name]||[])){
+        const a=NC.resolveAttachment(raw,P);
         if(a.visible===false||a.socket!==socket||a.layer!==layer||(o.hideAttachedWeapons&&socket.startsWith('hand')))continue;
         const at=attachmentLocal(S,rig,equip,P,a);
         ctx.save();ctx.translate(...at.origin);ctx.rotate(at.angle);ctx.scale(a.scale??1,a.scale??1);

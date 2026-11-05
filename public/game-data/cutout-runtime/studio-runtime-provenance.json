@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "source": "cutout-runtime.zip",
+  "sha256": {
+    "README.md": "a9812ba33fcc3268d54b9de808a84e6dfa6defdbfed45be125e9436b5cc646e2",
+    "runtime/accessory-runtime.mjs": "1a2f333c312a2c8bef78249ad72497d7bca22ddf012cc0d97dfb3d2508430ed3",
+    "runtime/animation-identity.mjs": "ffa8620de0afa3ebcc057cc8942a4ff69d353870b23da5a1ff490e4e72f6455e",
+    "runtime/attachments.mjs": "af1f6bd7c92d5a01811c6db766b4c4708f2023399b32fce2df8c1d606e14f290",
+    "runtime/avatar.js": "d2f85bdc1804b3d12eba8854dbf332081183e43aaf7d26ee3b63da725c335b85",
+    "runtime/bootstrap.js": "7f9038fe809274fb82790d0b8ff7150f428cb5dd0ab4179b8ab9601a15b666d0",
+    "runtime/equipment.mjs": "2b783832c561a09eddad49fbeb31dbbb58ec467d1396aecd27597b878c0c4ce1",
+    "runtime/model.mjs": "bed27da432c65bc0661ca4731c2fa74088006995d529ffb681067fa4e5dc16e9",
+    "runtime/mount-profiles.mjs": "89e29416e7544f772f65e8c576c2bad2df66e4f93c62b939c5020ca853551100",
+    "runtime/pets/rig-authoring.mjs": "825f2e159f484d5ec19a3c582e37440f902b2803b1f3fb4c66ddef74099960e8",
+    "runtime/pets/runtime.mjs": "4553338ebf0225d0d85ca739cc28e56f3bb3cdf9ab0f24b63e57c352267c95ae",
+    "runtime/player.mjs": "a8dfa191d0c98689fac05fab9c11827cac283403a40ffd8ebd9f5687a9aafcf4",
+    "runtime/wings.mjs": "c75622fe9acb4d43f63e1754f4fa0357b8bc85494ed9f56e3b29b10afc68e642"
+  }
+}

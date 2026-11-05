@@ -171,7 +171,14 @@
       "type": "character",
       "path": "characters/traveler/traveler.character.json",
       "rig": "traveler-rig",
-      "studioBundle": "characters/studio/traveler-v8.cutout.json"
+      "studioBundle": "characters/studio/traveler-v8.cutout.json",
+      "animationIds": {
+        "idle": "nightcamp-animation-idle-4cd85783-v1",
+        "walk": "nightcamp-animation-walk-ee063896-v1",
+        "run": "nightcamp-animation-run-908d1b98-v1",
+        "attack": "nightcamp-animation-attack-d9129f6d-v1",
+        "my_walk": "animation-legacy-7e71784c"
+      }
     },
     {
       "id": "traveler-original",
@@ -201,17 +208,20 @@
             "idel"
           ],
           "loop": true,
-          "rate": 1
+          "rate": 1,
+          "animationId": "nightcamp-animation-idle-4cd85783-v1"
         },
         "walk": {
           "clip": "walk",
           "loop": true,
-          "rate": 1.24
+          "rate": 1.24,
+          "animationId": "nightcamp-animation-walk-ee063896-v1"
         },
         "run": {
           "clip": "run",
           "loop": true,
-          "rate": 0.97826087
+          "rate": 0.97826087,
+          "animationId": "nightcamp-animation-run-908d1b98-v1"
         },
         "attack": {
           "clip": "attack",
@@ -219,7 +229,8 @@
             "atack"
           ],
           "loop": false,
-          "rate": 1
+          "rate": 1,
+          "animationId": "nightcamp-animation-attack-d9129f6d-v1"
         }
       }
     },
@@ -229,7 +240,14 @@
       "path": "characters/traveler/traveler.character.json",
       "studioBundle": "characters/studio/shadow_knight.game-bundle.json",
       "animationSourceRig": "traveler",
-      "rig": "shadow-knight-rig"
+      "rig": "shadow-knight-rig",
+      "animationIds": {
+        "idle": "nightcamp-animation-idle-4cd85783-v1",
+        "walk": "nightcamp-animation-walk-ee063896-v1",
+        "run": "nightcamp-animation-run-908d1b98-v1",
+        "attack": "nightcamp-animation-attack-d9129f6d-v1",
+        "Cú đá tử thần": "animation-legacy-7bb14443"
+      }
     },
     {
       "id": "shadow-knight-actions",
@@ -244,17 +262,20 @@
             "idel"
           ],
           "loop": true,
-          "rate": 1
+          "rate": 1,
+          "animationId": "nightcamp-animation-idle-4cd85783-v1"
         },
         "walk": {
           "clip": "walk",
           "loop": true,
-          "rate": 1.24
+          "rate": 1.24,
+          "animationId": "nightcamp-animation-walk-ee063896-v1"
         },
         "run": {
           "clip": "run",
           "loop": true,
-          "rate": 0.97826087
+          "rate": 0.97826087,
+          "animationId": "nightcamp-animation-run-908d1b98-v1"
         },
         "attack": {
           "clip": "attack",
@@ -262,7 +283,8 @@
             "atack"
           ],
           "loop": false,
-          "rate": 1
+          "rate": 1,
+          "animationId": "nightcamp-animation-attack-d9129f6d-v1"
         }
       }
     },
@@ -275,8 +297,12 @@
         "mining": {
           "clip": "my_walk",
           "loop": true,
-          "rate": 1
+          "rate": 1,
+          "animationId": "animation-legacy-cace91b5"
         }
+      },
+      "animationIds": {
+        "my_walk": "animation-legacy-cace91b5"
       }
     },
     {
@@ -323,5 +349,6 @@
       "channelConvention": "nightcamp-six-part-angles-v1",
       "attachmentResourceId": "traveler-tools"
     }
-  ]
+  ],
+  "runtimeVersion": 2
 }
