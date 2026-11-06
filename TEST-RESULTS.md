@@ -226,3 +226,8 @@ Cụm cuối là **cung tròn ôm nút**, không dùng bố cục bậc thang/ha
 
 - Kiểm tra bản xuất phát hiện vệt mảnh do blend alpha trên hai lượt tile vốn overdraw.2px. Bản cuối blend vào tile **opaque trước khi vẽ**, giữ một lượt ghép terrain; ground image có alpha dùng nguyên ảnh. Harness mới so toàn frame chuyển sáng với renderer gốc ở n=.5, tắt details để đo mép: **max delta1/255**, endpoint0; không còn double-alpha grid. Raw tile/road builds64/2 không tăng trong240 mẫu, max color step2. Draw median1ms/P951.5ms trong harness. Bố cục5 ô/size/HUD được giữ nguyên trong sửa này.
 - Trace dist sau sửa seam:406 frame/11 giây, max hour step~.000833h; tile236→236/road2→2. RAF P50~33.3ms/P95~33.4ms ở lượt đo cuối; không có nhịp tạo lại texture5 giây. Ảnh `dawn-continuous.png` cập nhật cảnh thật ở6:06 AM, không còn đường ghép dark-alpha.
+
+## Dịch tâm điều khiển theo dấu đỏ, giữ độ cao — 2026-11-06
+
+- Chỉ đổi inset ngang ở landscape: tâm joystick15.5vw, Attack87.2vw khi đủ chỗ; ở1280px x≈198.4/1116.2. Safe area dùng max thay cho cộng dồn; màn rất hẹp chừa45px bên phải để không cắt ô ngoài cung. Bottom, margin-bottom, size,5 ô và HUD giữ nguyên.
+- `npm run build`: PASS. `LAYOUT_ONLY=1 node tests/bow-layout-browser.cjs` trên dist: PASS10 viewport, đo lại tâm X, tạm áp inset cũ để so sánh trực tiếp Y/width/height của hai nút (sai khác<.02px), cung5 ô vẫn chung tâm/khoảng cách, không tràn/đè nút; joystick thả ngoài/đánh/phi kiếm/hạ/reload giữ hoạt động. Ảnh `bow-controls-landscape.png` cập nhật. Safe-area CDP không khả dụng, chưa test Safari/iPhone vật lý.

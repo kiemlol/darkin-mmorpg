@@ -16,7 +16,7 @@ Các ảnh UI đính kèm là JPEG RGB có nền trắng và pixel antialias đ�
 
 Theo yêu cầu cập nhật cuối, **HUD avatar/tên/HP giữ nguyên kích thước/vị trí trước đợt sửa này**. Chỉ dọn matte ở ảnh HUD. Túi màn ngang lớn hơn nhờ dành ít khoảng trống dọc hơn; không phóng camera/nhân vật hoặc áp DPR hai lần.
 
-Ở1280×589, joystick~176px (trái128px, dưới~36.5px), nút đánh~141px (phải96px, dưới~13px), gần ảnh tham khảo. CSS co giãn theo viewport/safe area. Màn ngang rất thấp dời menu/zoom xuống bên trái dưới HUD để tránh vùng kỹ năng, giữ hình học HUD nguyên.
+Ở1280×589, joystick~176px (tâm x198.4px, trái110.4px, dưới~36.5px), nút đánh~141px (tâm x1116.2px, phải93.4px, dưới~13px), theo dấu đỏ mới. CSS co giãn theo viewport/safe area. Màn ngang rất thấp dời menu/zoom xuống bên trái dưới HUD để tránh vùng kỹ năng, giữ hình học HUD nguyên.
 
 `index.html`: `#skill-slot-1`..`#skill-slot-4` là4 ô trống, không focus/handler/network command. Nút `#sword-flight` đang hoạt động là ô thứ5. Các ô giữ kích thước đã dùng (44–62px, ~61.4px ở1280px), **không thu nhỏ**. Tất cả nằm trên cùng một đường tròn có tâm tại tâm Attack, góc chia đều: ngang -36/-72/-108/-144/-180°, cách viền Attack8px; dọc dùng cung -60..-210° để vừa màn hình. Phi kiếm ở cuối/thấp nhất. Không còn bố cục bậc thang hoặc hai hàng rời. Clip hình tròn cho vùng bấm Attack/Phi kiếm tránh góc hộp trong suốt ăn nhầm tap. Ô trống pointer-events:none, chưa có skill, MP, sát thương hay phím mới.
 
@@ -33,3 +33,5 @@ Theo yêu cầu cập nhật cuối, **HUD avatar/tên/HP giữ nguyên kích th
 Chưa có backend WSS công khai. Chưa QA Safari/iPhone/Android vật lý, GPU yếu hoặc mạng Internet mất gói; số FPS bên trên chỉ là phép đo ở môi trường kiểm thử này.
 
 Kiểm tra bổ sung bản cuối: cảnh chuyển sáng không vật thể/chi tiết khớp renderer gốc với sai khác tối đa1/255 trên toàn frame, gồm đường ghép tile. Ảnh nền tải lên có alpha dùng nguyên texture, không blend hai lần. Cache cặp tile và WeakMap canvas blend có giới hạn theo cache gốc.
+
+Cập nhật vị trí theo dấu đỏ: ở màn ngang tâm joystick tại15.5% chiều rộng, tâm Attack tại87.2% khi đủ chỗ (1280px: x≈198.4 và1116.2). Chỉ đổi left/right, giữ nguyên bottom/margin-bottom và kích thước. Dùng max với safe area thay vì cộng dồn để không đẩy cả hai tâm vào giữa; màn rất hẹp giữ tối thiểu45px bên phải cho ô ngoài cùng của cung không bị cắt. Cung5 ô đi cùng Attack, không đổi bán kính/góc.
