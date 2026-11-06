@@ -7,9 +7,15 @@ from collections import deque
 from pathlib import Path
 import json,hashlib
 root=Path('public/game-data/inventory-ui')
-sheets={'layout':'layout-and-slots.jpg','states':'states.jpg','reference':'layout-reference.jpg'}
-rects={'frame':('layout',[0,0,1280,450]),'head':('layout',[470,465,89,88]),'body':('layout',[470,554,89,87]),'hands':('layout',[470,643,89,88]),'feet':('layout',[471,733,88,87]),'weapon':('layout',[719,465,90,88]),'shield':('layout',[719,554,90,88]),'ring':('layout',[719,643,90,88]),'neck':('layout',[719,733,90,88]),'statActive':('states',[21,19,316,54]),'statIdle':('states',[20,84,316,49]),'itemActive':('states',[542,0,125,126]),'itemIdle':('states',[396,4,119,119])}
-result={'version':1,'width':1280,'height':450,'sheets':{},'sprites':{}}
+sheets={'layout':'layout-and-slots.jpg','states':'states.jpg','reference':'layout-reference.jpg','frame':'frame-v2.jpg','pagination':'pagination-v2.jpg','categories':'categories-v2.jpg'}
+rects={'frame':('frame',[0,0,1280,448]),'head':('layout',[470,465,89,88]),'body':('layout',[470,554,89,87]),'hands':('layout',[470,643,89,88]),'feet':('layout',[471,733,88,87]),'weapon':('layout',[719,465,90,88]),'shield':('layout',[719,554,90,88]),'ring':('layout',[719,643,90,88]),'neck':('layout',[719,733,90,88]),'statActive':('states',[21,19,316,54]),'statIdle':('states',[20,84,316,49]),'itemActive':('states',[542,0,125,126]),'itemIdle':('states',[396,4,119,119])}
+for i,name in enumerate(['Bag','Equipment','Outfit','Material','Currency']):
+ left,right=[(40,282),(286,524),(525,764),(766,1003),(1005,1243)][i]
+ rects['tab'+name+'Idle']=('categories',[left,170,right-left,165])
+ left,right=[(17,276),(276,522),(522,769),(769,1014),(1014,1265)][i]
+ rects['tab'+name+'Active']=('categories',[left,382,right-left,176])
+rects.update({'pagePrevious':('pagination',[43,121,148,180]),'pageNext':('pagination',[1094,121,145,180]),'pageActive':('pagination',[286,158,120,118]),'pageIdle':('pagination',[464,160,102,106])})
+result={'version':2,'width':1280,'height':448,'sheets':{},'sprites':{}}
 for key,name in sheets.items():
  p=root/name;im=Image.open(p);result['sheets'][key]={'path':name,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'width':im.width,'height':im.height}
 for key,(sheet,r)in rects.items():

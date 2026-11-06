@@ -2,6 +2,10 @@
 
 Vào game → **Menu → Nhân vật / Túi đồ**, hoặc phím **I**. Đóng bằng X/Escape/I. Màn rộng hiện chỉ số bên trái, nhân vật thật ở giữa và hành trang bên phải. Trên điện thoại dọc dùng ba nút Chỉ số/Nhân vật/Túi đồ hoặc vuốt ngang cùng khung; không thu chữ và ô xuống quá nhỏ. 8 ô trang bị nằm quanh nhân vật theo ảnh2.
 
+## Khung giao diện mới
+
+Bản cập nhật dùng nguyên ảnh mới: `frame-v2.jpg` (ảnh1,1280×448), `pagination-v2.jpg` (ảnh2), `categories-v2.jpg` (ảnh3). Năm nút Tất cả/Trang bị/Trang phục/Nguyên liệu/Tiền tệ dùng sprite nâu khi chưa chọn và vàng khi chọn, nằm trên túi. Mũi tên và bốn chấm ở dưới túi; hiện chỉ có trang1/1 nên mũi tên khóa, không tự mở thêm ô. Tám icon trang bị và hàng chỉ số/ô vật phẩm từ ảnh cũ được giữ và ghép quanh nhân vật như bố cục trước. `inventory-layout.ts` là nguồn tọa độ chung cho canvas, clip, chữ và hitbox; cụm danh mục dừng trước nút đóng gốc. Số ô/sức chứa hiển thị trong hàng thông tin để không đè viền vàng.
+
 ## Dữ liệu và thao tác
 
 - Mặc định **4 ô dùng được**, mỗi chồng cùng itemId tối đa **10**. 12 ô tối chỉ là vị trí khóa, chưa có cơ chế mở rộng. Ba phụ kiện đã phát hành từ trước (kiếm chắp vá, kính vuông, kính tròn) được chuyển vào túi, mỗi loại1; không tạo vật phẩm mới theo mỗi lần mở túi/reload.
@@ -15,7 +19,7 @@ Vào game → **Menu → Nhân vật / Túi đồ**, hoặc phím **I**. Đóng 
 
 `src/client/inventory-preview.ts` dùng `AssetRegistry.acquire` và `CutoutPlayer.fork()` của game; mọi nhân vật/clips/phụ kiện dùng chính dữ liệu đang phát hành. Preview idle riêng, chia sẻ ảnh bất biến, không chia sẻ con trỏ animation; không tạo World/GameSession hoặc RAF khác. Nạp xong mới thay, generation guard chống tải cũ ghi đè; đóng túi giải phóng player/lease. Preview dùng ngoại hình/trang bị đã chọn, không đưa búa công cụ tạm/phi kiếm vào trạng thái sở hữu.
 
-`public/game-data/inventory-ui/` chứa nguyên byte 3 JPG đính kèm. Ảnh1 là khung và 8 icon; ảnh2 chỉ đối chiếu bố cục; ảnh3 là trạng thái selected/idle của hàng chỉ số và ô vật phẩm. JPG không có alpha: `atlas.json` lưu crop và mask vector chỉ loại nền ngoài liên thông, giữ hoa/chi tiết sáng bên trong. `inventory-art.ts` vẽ trực tiếp ảnh gốc qua Path2D, không chạy chỉnh màu/cắt ảnh nhân vật. Có thể tái tạo atlas bằng `python3 scripts/inventory-atlas.py` (Pillow/numpy chỉ dùng khi phát triển; runtime không cần Python).
+`public/game-data/inventory-ui/` chứa nguyên byte 3 JPG đính kèm. Bộ cũ: ảnh1 cung cấp 8 icon trang bị; ảnh2 chỉ đối chiếu bố cục; ảnh3 cung cấp trạng thái selected/idle của hàng chỉ số và ô vật phẩm. Khung/danh mục/phân trang nay lấy từ ba ảnh mới nêu trên. JPG không có alpha: `atlas.json` lưu crop và mask vector chỉ loại nền ngoài liên thông, giữ hoa/chi tiết sáng bên trong. `inventory-art.ts` vẽ trực tiếp ảnh gốc qua Path2D, không chạy chỉnh màu/cắt ảnh nhân vật. Có thể tái tạo atlas bằng `python3 scripts/inventory-atlas.py` (Pillow/numpy chỉ dùng khi phát triển; runtime không cần Python).
 
 `inventory-ui.ts`/`inventory.css` quản lý lựa chọn, hitbox, thông báo, layout và DPR. Scale canvas/text/hitbox chung; canvas preview nằm trong cùng khung. Offline tạm dừng mô phỏng khi mở; Online tiếp tục tick và vẫn có thể nhận sát thương. Mở/đóng xóa input và nhả capture, không kẹt joystick/đánh; M không mở thêm panel bản đồ phía sau túi.
 
