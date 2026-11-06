@@ -8,6 +8,8 @@ import {normalizeWallet,addReward,type Wallet} from '../shared/resources';
 import {activeNodes,type InteractionIntent,type MiningBook,type Transaction} from '../shared/interactions';
 import {validSwordFlight} from '../shared/sword-flight';
 import {validAnimationPreview} from '../shared/animation-previews';
+import {normalizeCharacterProfile,profileRecord} from '../shared/character-profile';
+import {validInventory,type InventoryMove} from '../shared/inventory';
 export interface GameSession {
     id: string;
     characterId: string;
@@ -15,6 +17,8 @@ export interface GameSession {
     status: string;
     dataWarnings?:string[];
     interactionMessage:string;
+    inventoryMessage:string;
+    moveInventory(command:InventoryMove):void;
     flightMessage:string;
     previewMessage:string;
     previewAnimation(actionId:string):void;
@@ -37,6 +41,7 @@ export class LocalGameSession implements GameSession {
     status = 'Offline';
     dataWarnings:string[]=[];
     interactionMessage='';
+    inventoryMessage='';
     previewMessage='';previewSeq=0;
     flightMessage='';flightSeq=0;
     interactionMaps:Record<string,MiningBook>={};
@@ -62,6 +67,7 @@ export class LocalGameSession implements GameSession {
         try {
             const s = saved;
             const profile=normalizeRealm(s),balance=normalizeWallet(s?.wallet);this.world.setRealm(this.id,profile.state);a.wallet=balance.wallet;this.dataWarnings=[...profile.warnings,...balance.warnings];migrate=!!s&&(s.version!==3||profile.migrated||!s.wallet);
+            try{const profile=normalizeCharacterProfile(s);Object.assign(a,profile.state);this.dataWarnings.push(...profile.warnings);migrate ||= profile.migrated}catch(e){this.dataWarnings.push(String(e)+' · Đã giữ bản lỗi trong inventoryRecovery.');this.savedExtras.inventoryRecovery=s?.inventory;migrate=true}
             if (s?.map === p.id) {
                 if (Number.isFinite(s.clockSeconds))
                     this.world.clockBaseSeconds = s.clockSeconds;
@@ -100,14 +106,15 @@ export class LocalGameSession implements GameSession {
     } }
     clock() { return { gameSeconds: this.world.clockBaseSeconds + (this.world.time + this.acc) * CLOCK_RATE, rate: CLOCK_RATE }; }
     renderActors() { return interpolateSnapshot(this.world.p, this.previous, this.snapshot, this.acc / STEP); }
-    private record(wallet?:Wallet,book?:MiningBook){const a=this.world.actors.get(this.id)!;return{...this.savedExtras,version:3,characterId:this.characterId,realmId:a.realmId,realmStageId:a.realmStageId,wallet:wallet||a.wallet,map:this.world.p.id,x:a.x,y:a.y,hp:a.hp,kills:a.kills,clockSeconds:this.clock().gameSeconds,interactionMaps:{...this.interactionMaps,[this.world.p.id]:book||this.world.interactions.durable()}}}
+    private record(wallet?:Wallet,book?:MiningBook){const a=this.world.actors.get(this.id)!;return{...this.savedExtras,version:3,...profileRecord(a),characterId:this.characterId,realmId:a.realmId,realmStageId:a.realmStageId,wallet:wallet||a.wallet,map:this.world.p.id,x:a.x,y:a.y,hp:a.hp,kills:a.kills,clockSeconds:this.clock().gameSeconds,interactionMaps:{...this.interactionMaps,[this.world.p.id]:book||this.world.interactions.durable()}}}
     private commitMining(tx:Transaction){const a=this.world.actors.get(this.id)!,book=this.world.interactions.durable();if(book.ledger[tx.key])return{wallet:structuredClone(a.wallet)};const wallet=tx.resourceId?addReward(a.wallet,tx.resourceId,tx.amount):structuredClone(a.wallet);book.nodes[tx.objectId]=structuredClone(tx.node);book.ledger[tx.key]=structuredClone(tx);localStorage.setItem(SAVE+':'+this.characterId,JSON.stringify(this.record(wallet,book)));return{wallet}}
     save() { saveExploration(this.exploration); try {
         localStorage.setItem(SAVE + ':' + this.characterId, JSON.stringify(this.record()));
     }
     catch { } }
-    setAppearance(id: string) { this.world.setAppearance(this.id, id); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; }
-    cosmetic(command: CosmeticCommand) { this.world.cosmetic(this.id, command); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; }
+    setAppearance(id: string) { this.world.setAppearance(this.id, id); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; this.save(); }
+    moveInventory(command:InventoryMove){try{this.world.moveInventory(this.id,command);this.inventoryMessage='';this.snapshot=this.world.snapshot();this.previous=this.snapshot;this.save()}catch(e){this.inventoryMessage=String(e)}}
+    cosmetic(command: CosmeticCommand) { this.world.cosmetic(this.id, command); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; this.save(); }
     respawn() { this.world.respawn(this.id); const a = this.world.actors.get(this.id)!; this.exploration.visit(a.x, a.y, this.world.time, a.teleportSeq); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; }
     interact(intent:InteractionIntent){try{this.world.interactions.start(this.id,intent);this.interactionMessage='';this.snapshot=this.world.snapshot()}catch(e){this.interactionMessage=String(e)}}
     cancelInteraction(){this.world.interactions.cancel(this.id);this.snapshot=this.world.snapshot();this.previous=this.snapshot}
@@ -126,8 +133,9 @@ export class NetworkGameSession implements GameSession {
     status = 'Đang kết nối…';
     dataWarnings:string[]=[];
     interactionMessage='';
+    inventoryMessage='';
     previewMessage='';previewSeq=0;
-    flightMessage='';flightSeq=0;flightSupported=false;previewSupported=false;
+    flightMessage='';flightSeq=0;flightSupported=false;previewSupported=false;inventorySupported=false;
     snapshot: Snapshot = { time: 0, actors: [], events: [] };
     socket: WebSocket;
     pending: {
@@ -151,7 +159,7 @@ export class NetworkGameSession implements GameSession {
         throw Error('Trang HTTPS yêu cầu địa chỉ wss://');this.tokenKey='darkin-frontier:online-guest:v1:'+encodeURIComponent(u.href)+':'+encodeURIComponent(name);try{const tabToken=sessionStorage.getItem(this.tokenKey);this.resumeSession=!!tabToken;this.resumeToken=tabToken||localStorage.getItem(this.tokenKey)||''}catch{} this.socket = new WebSocket(u); this.socket.onopen = () => this.socket.send(JSON.stringify({ type: 'join', name,resumeToken:this.resumeToken,resume:this.resumeSession })); this.socket.onmessage = e => { try {
         const m = JSON.parse(e.data);
         if (m.type === 'welcome') {
-            this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
+            this.inventorySupported=m.inventoryProtocol===1;this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
             if(m.interactionProtocol!==1){this.status='Server cần cập nhật tương tác/ví';this.socket.close();return}
             if (m.map !== p.id) {
                 this.status = 'Server dùng map khác';
@@ -168,10 +176,12 @@ export class NetworkGameSession implements GameSession {
         if (m.type === 'error')
             this.status = m.message;
         if(m.type==='interactionError')this.interactionMessage=m.message;
+        if(m.type==='inventoryError')this.inventoryMessage=String(m.message);
         if(m.type==='previewError')this.previewMessage=String(m.message);
         if(m.type==='flightError')this.flightMessage=String(m.message);
         if(m.type==='exploration'&&this.exploration)this.exploration.restore(m.record);
         if (m.type === 'snapshot') {
+            if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.kind==='player'&&a.inventory!==undefined&&!validInventory(a.inventory))){this.status='Server gửi túi đồ không hợp lệ';this.socket.close();return}
             if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.animationPreview!==undefined&&!validAnimationPreview(a.animationPreview))){this.status='Server gửi dữ liệu hoạt ảnh không hợp lệ';this.socket.close();return}
             if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.swordFlight!==undefined&&!validSwordFlight(a.swordFlight))){this.status='Server gửi dữ liệu phi kiếm không hợp lệ';this.socket.close();return}
             if(!Array.isArray(m.actors)||m.actors.some((a:any)=>a.kind==='player'&&!validRealmState(a))){this.status='Dữ liệu cảnh giới server không hợp lệ';return}
@@ -210,6 +220,7 @@ export class NetworkGameSession implements GameSession {
     renderActors() { return this.timeline.sample(this.p, this.snapshot).map(a => a.id === this.id && this.predicted ? this.motion.sample(this.p, { ...a, dir: this.predicted.dir }) : a); }
     setAppearance(id: string) { if (this.socket.readyState === 1)
         this.socket.send(JSON.stringify({ type: 'appearance', appearanceId: id })); }
+    moveInventory(command:InventoryMove){if(!this.inventorySupported){this.inventoryMessage='Server chưa hỗ trợ túi đồ; hãy cập nhật backend.';return}if(this.socket.readyState===1){this.inventoryMessage='';this.socket.send(JSON.stringify({type:'inventoryMove',command}))}}
     cosmetic(command: CosmeticCommand) { if (this.socket.readyState === 1)
         this.socket.send(JSON.stringify({ type: 'cosmetic', command })); }
     respawn() { if (this.socket.readyState === 1)

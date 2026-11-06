@@ -23,7 +23,7 @@ export class EquipmentUI{
    const selected=loaded.prototype.spec.attachments.find((a:any)=>(a.accessoryId||a.id)===command.accessoryId);
    if(command.operation==='equip'&&(!selected||selected.visible===false)){assets.release(loaded);throw Error(loaded.warnings.join(' · ')||'Phụ kiện không có cấu hình hiển thị phù hợp')}
    if(this.lease)assets.release(this.lease);this.lease=loaded;
-   session.cosmetic({operation:'set',headId:next.headId,bodyId:next.bodyId,accessoryIds:next.accessories.filter(a=>a.visible).map(a=>a.accessoryId)});this.note.textContent=loaded.warnings.length?loaded.warnings.join(' · '):'Đã nạp ảnh và cấu hình. Bấm Tiếp tục để xem trên nhân vật.';
+   session.cosmetic({operation:'set',headId:next.headId,bodyId:next.bodyId,accessoryIds:next.accessories.filter(a=>a.visible).map(a=>a.accessoryId)});this.note.textContent=loaded.warnings.length?loaded.warnings.join(' · '):'Đã áp dụng trang bị lên nhân vật.';
   }catch(e){if(generation===this.generation){this.draft=null;this.note.textContent=String(e)+' · Giữ phụ kiện đang dùng.';this.last=''}}
  }
  update(committedKey?:string){const s=this.session(),a=s?.snapshot.actors.find(a=>a.id===s.id);if(!a)return;if(this.lease&&this.lease.key===committedKey){assets.release(this.lease);this.lease=null}

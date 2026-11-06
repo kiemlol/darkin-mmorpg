@@ -6,6 +6,7 @@ import {InteractionSystem,type Definition,type MiningBook,type Transaction,type 
 import {normalizeWallet,type Wallet} from './resources';
 import {previewDefinition,type AnimationPreview} from './animation-previews';
 import {COMBAT_SECONDS,MELEE_RANGE,nearestMeleeTarget} from './combat';
+import {starterInventory,emptyInventory,ownsItem,moveItems,addItems,type Inventory,type InventoryMove} from './inventory';
 import {equippedFlightWeapon,flightConfig,phaseAt,smooth,JUMP_AT,JUMP_SECONDS,type SwordFlight} from './sword-flight';
 import { validateMap, canWalk as mapCanWalk, moveActor } from '../../public/game-data/maps/map-runtime.mjs';
 export { moveActor };
@@ -24,6 +25,8 @@ export type Actor = EquipmentState & RealmState & {
     swordFlight?:SwordFlight;
     animationPreview?:AnimationPreview;
     wallet:Wallet;
+    inventory:Inventory;
+    potentialPoints:number;
     combatUntil:number;
     toolId:'combat'|'mining_hammer';
     interactionTarget?:{objectId:string;actionId:string;type:string;label:string;cycle:number};
@@ -63,6 +66,7 @@ export type Hit = {
     target: string;
     time: number;
 };
+export const PLAYER_DAMAGE=22, MOB_DAMAGE=9;
 export const SPEED = 155, RUN_SPEED = 225, COOLDOWN = .55, RANGE = MELEE_RANGE;
 export const CORPSE_SECONDS = 1.5, MOB_RESPAWN_SECONDS = 8;
 export function validIntent(v: any): v is Intent { return v && Number.isSafeInteger(v.seq) && v.seq >= 0 && v.seq < 1e12 && Number.isFinite(v.dx) && Math.abs(v.dx) <= 1 && Number.isFinite(v.dy) && Math.abs(v.dy) <= 1 && typeof v.run === 'boolean' && typeof v.attack === 'boolean'; }
@@ -97,7 +101,7 @@ export class World {
     make(id: string, name: string, kind: Actor['kind'], h: {
         x: number;
         y: number;
-    }): Actor { return { wallet:normalizeWallet(null).wallet,combatUntil:0,toolId:'combat',...DEFAULT_REALM,teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
+    }): Actor { return { inventory:kind==='player'?starterInventory():emptyInventory(),potentialPoints:0,wallet:normalizeWallet(null).wallet,combatUntil:0,toolId:'combat',...DEFAULT_REALM,teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
     // Internal simulation operation only. There is deliberately no client message/API for this.
     setRealm(id:string,state:RealmState){if(!validRealmState(state))throw Error('Cảnh giới/bậc không hợp lệ');const a=this.actors.get(id);if(a?.kind==='player'){a.realmId=state.realmId;a.realmStageId=state.realmStageId}}
     inCombat(a:Actor){return a.combatUntil-this.time>1e-9}
@@ -153,7 +157,10 @@ export class World {
     setAppearance(id: string, appearanceId: string) { if (!allowedAppearance(appearanceId))
         throw Error('Ngoại hình không được phép'); const a = this.actors.get(id); if (a?.kind === 'player')
         {const next=defaultEquipment(appearanceId);next.accessories=structuredClone(a.accessories);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);Object.assign(a,next,{appearanceId,equipmentWarnings:resolveInventory(next).warnings});} }
-    cosmetic(id:string,command:CosmeticCommand){const a=this.actors.get(id);if(a?.kind!=='player')return;const next=changeEquipment(a,command);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);Object.assign(a,next,{equipmentWarnings:resolveInventory(next).warnings})}
+    cosmetic(id:string,command:CosmeticCommand){const a=this.actors.get(id);if(a?.kind!=='player')return;const next=changeEquipment(a,command);if(next.accessories.some(i=>i.visible&&!ownsItem(a.inventory,i.accessoryId)))throw Error('Vật phẩm không có trong túi');this.cancelAnimationPreview(a);this.cancelSwordFlight(a);Object.assign(a,next,{equipmentWarnings:resolveInventory(next).warnings})}
+    moveInventory(id:string,command:InventoryMove){const a=this.actors.get(id);if(a?.kind!=='player')throw Error('Không có phiên túi đồ');a.inventory=moveItems(a.inventory,command)}
+    // Trusted gameplay hook for future drops; deliberately no client grant endpoint.
+    giveItem(id:string,itemId:string,quantity:number){const a=this.actors.get(id);if(a?.kind!=='player')throw Error('Không có nhân vật');a.inventory=addItems(a.inventory,itemId,quantity)}
     join(id: string, name: string) { if ([...this.actors.values()].filter(a => a.kind === 'player').length >= 32)
         throw Error('Map đầy (32 người)'); const a = this.make(id, name, 'player', this.findSpawn(this.p.spawn.x, this.p.spawn.y)); this.actors.set(id, a); return a; }
     leave(id: string) { this.previewCommands.delete(id);this.flightCommands.delete(id);this.interactions.cancel(id,'Mất kết nối / rời map');this.interactions.errors.delete(id);this.actors.delete(id); this.inputs.delete(id); }
@@ -174,7 +181,7 @@ export class World {
         if (d > RANGE || Math.cos(Math.atan2(dy, dx) - a.dir) < .3)
             continue;
         if (this.clearLine(a,b))
-            this.hit(a, b, a.kind === 'mob' ? 9 : 22);
+            this.hit(a, b, a.kind === 'mob' ? MOB_DAMAGE : PLAYER_DAMAGE);
     } }
     step(dt = .05) { this.time += dt; for (const a of this.actors.values()) {
         if(a.animationPreview){const preview=a.animationPreview;preview.elapsed+=dt;if(a.hp<=0||this.inCombat(a)||preview.elapsed>=previewDefinition(preview.actionId,a.appearanceId)!.dur)this.cancelAnimationPreview(a)}
@@ -223,6 +230,6 @@ export class World {
             this.attack(a);
         if(a.swordFlight){a.swordFlight.heading=a.dir;if(Math.abs(Math.cos(a.dir))>.15)a.swordFlight.facing=Math.cos(a.dir)<0?-1:1;a.action='idle'}
     }this.interactions.step();for(const a of this.actors.values())if(a.kind==='player'){const c=this.interactions.channels.get(a.id),d=c?this.interactions.definitions.get(c.intent.objectId):this.interactions.nearest(a);a.interactionTarget=d?{objectId:d.objectId,actionId:d.actionId,type:d.type,label:d.label,cycle:this.interactions.states.get(d.objectId)!.cycle}:undefined;a.toolId=d&&a.hp>0?this.interactions.presentation(d).toolId:'combat'} this.events = this.events.filter(e => this.time - e.time < 1.2); }
-    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, animationPreview:a.animationPreview?{...a.animationPreview}:undefined,swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
+    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, inventory:structuredClone(a.inventory),animationPreview:a.animationPreview?{...a.animationPreview}:undefined,swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
 }
 export type Snapshot = ReturnType<World['snapshot']>;

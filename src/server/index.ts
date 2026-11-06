@@ -7,6 +7,7 @@ import { World, validIntent } from '../shared/world.ts';
 import {GuestStore} from './guest-store';
 import {WORLD_ID,CLOCK_RATE,mapRevision,type ExplorationStore} from '../shared/map-state';
 import {validateInteractionBundle} from '../shared/interactions';
+import {normalizeCharacterProfile} from '../shared/character-profile';
 const root = resolve('dist'), data = resolve('public/game-data/maps');
 const catalog = JSON.parse(await readFile(resolve(data, 'index.json'), 'utf8'));
 const b = JSON.parse(await readFile(resolve(data, catalog[0].bundle), 'utf8'));
@@ -47,7 +48,7 @@ const peers = new Map<WebSocket, {
     guest:any;
     sentVersion:number;
 }>();
-function detachPeer(ws:WebSocket){const q=peers.get(ws);if(q?.joined){if(q.exploration)persistence.capture(q.guest,q.exploration);world.leave(q.id);q.joined=false}peers.delete(ws)}
+function detachPeer(ws:WebSocket){const q=peers.get(ws);if(q?.joined){if(q.exploration)persistence.capture(q.guest,q.exploration);const actor=world.actors.get(q.id);if(actor)persistence.captureCharacter(q.guest,actor);world.leave(q.id);q.joined=false}peers.delete(ws)}
 wss.on('connection', ws => { ws.on('error', () => { }); if (peers.size >= 64) {
     ws.close(1013, 'Server full');
     return;
@@ -64,10 +65,11 @@ wss.on('connection', ws => { ws.on('error', () => { }); if (peers.size >= 64) {
             throw Error('Tên 1–24 ký tự');
         if(m.resume===true){const guest=persistence.findGuest(m.resumeToken);if(guest)for(const [oldSocket,oldPeer]of peers)if(oldSocket!==ws&&oldPeer.joined&&oldPeer.id===guest.id){detachPeer(oldSocket);oldSocket.close(1000,'Phiên đã kết nối lại')}}
         const name=m.name.replace(/[<>\x00-\x1f]/g,'').slice(0,24),identity=persistence.identify(m.resumeToken,name,id=>world.actors.has(id));q.id=identity.guest.id;q.guest=identity.guest;
-        const actor=world.join(q.id,name);world.setRealm(q.id,q.guest);actor.wallet=structuredClone(q.guest.wallet);q.exploration=persistence.exploration(q.guest,b.project);q.exploration.visit(actor.x,actor.y,world.time,actor.teleportSeq);persistence.capture(q.guest,q.exploration);
+        const actor=world.join(q.id,name);world.setRealm(q.id,q.guest);actor.wallet=structuredClone(q.guest.wallet);Object.assign(actor,normalizeCharacterProfile(q.guest).state);q.exploration=persistence.exploration(q.guest,b.project);q.exploration.visit(actor.x,actor.y,world.time,actor.teleportSeq);persistence.capture(q.guest,q.exploration);
         q.joined = true;
-        ws.send(JSON.stringify({ type: 'welcome',interactionProtocol:1,swordFlightProtocol:1,animationPreviewProtocol:1,profileWarnings:identity.warnings, id: q.id,characterId:q.id,resumeToken:identity.resumeToken,worldId:WORLD_ID,mapRevision:revision, map: b.project.id,exploration:q.exploration.record() }));q.sentVersion=q.exploration.version;
+        ws.send(JSON.stringify({ type: 'welcome',interactionProtocol:1,swordFlightProtocol:1,animationPreviewProtocol:1,inventoryProtocol:1,profileWarnings:identity.warnings, id: q.id,characterId:q.id,resumeToken:identity.resumeToken,worldId:WORLD_ID,mapRevision:revision, map: b.project.id,exploration:q.exploration.record() }));q.sentVersion=q.exploration.version;
     }
+    else if(q.joined&&m.type==='inventoryMove'){try{world.moveInventory(q.id,m.command);persistence.captureCharacter(q.guest,world.actors.get(q.id)!)}catch(e){ws.send(JSON.stringify({type:'inventoryError',message:String(e)}))}}
     else if(q.joined&&m.type==='animationPreview'){try{world.previewAnimation(q.id,m.actionId,m.seq)}catch(e){ws.send(JSON.stringify({type:'previewError',message:String(e)}))}}
     else if(q.joined&&m.type==='swordFlight'){try{world.swordFlight(q.id,m.enabled,m.seq)}catch(e){ws.send(JSON.stringify({type:'flightError',message:String(e)}))}}
     else if(q.joined&&m.type==='interact'){try{world.interactions.start(q.id,m.intent)}catch(e){ws.send(JSON.stringify({type:'interactionError',message:String(e)}))}}
@@ -87,6 +89,7 @@ wss.on('connection', ws => { ws.on('error', () => { }); if (peers.size >= 64) {
         world.respawn(q.id);
     else
         throw Error('Message không hợp lệ');
+    if(q.joined){const actor=world.actors.get(q.id);if(actor)persistence.captureCharacter(q.guest,actor)}
 }
 catch (e) {
     ws.send(JSON.stringify({ type: 'error', message: String(e) }));

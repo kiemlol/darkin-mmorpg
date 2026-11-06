@@ -4,6 +4,8 @@ Game riêng, không thay đổi Studio. Nhân vật hiện dùng parts từ bund
 
 ## Chơi và chạy
 
+**Menu → Nhân vật / Túi đồ** hoặc **I** mở khung mới dùng ảnh đã gửi: chỉ số trái, nhân vật thật giữa, túi phải; 8 ô trang bị quanh nhân vật. Túi4 ô, tối đa10/chồng, đeo/tháo/chuyển ô và lưu Offline/Online. Mobile dọc vuốt hoặc chọn ba vùng. Điểm tiềm năng0 và cộng điểm khóa chờ quy tắc. Xem [INVENTORY.md](INVENTORY.md).
+
 Giao tranh hiện hết sau **1,5 giây từ sát thương thật cuối cùng**; đánh hụt hoặc quái đứng gần không gia hạn. Đánh/Space tự aim về quái sống gần nhất trong tầm76 có LOS, giữ hồi chiêu/sát thương cũ. Nút ưu tiên Đánh khi có quái trong tầm, thả/bấm lại để đào sau khi hết combat. Xem [COMBAT-AIM.md](COMBAT-AIM.md).
 
 Nhân vật tăng thêm **8%** (scale .7452), zoom mặc định **110%**. Điều khiển ngang lùi vào khỏi mép/safe area, nút phi kiếm đặt cạnh nút đánh. **Menu → Hoạt ảnh → Thử hoạt ảnh bắn cung** phát clip bow1 mới, tạm ẩn kiếm; chưa có cung/tên hoặc sát thương tầm xa. Xem [BOW-LAYOUT.md](BOW-LAYOUT.md).
