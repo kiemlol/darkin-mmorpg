@@ -1,4 +1,5 @@
 import {loadMap} from '../src/client/map';
+import {SmoothMapRenderer} from '../src/client/smooth-map-renderer';
 import {MapRenderer} from '../public/game-data/maps/map-runtime.mjs';
 import {InventoryArt} from '../src/client/inventory-art';
 import {hudArt} from '../src/client/hud-art';
@@ -14,11 +15,12 @@ const check=(condition:unknown,message:string)=>{if(!condition)throw Error(messa
  const {player}=await loadMap(),p=player.project,renderer=player.renderer as any,reference=new MapRenderer(structuredClone(p),renderer.images),canvas=document.createElement('canvas'),ref=document.createElement('canvas');canvas.width=ref.width=800;canvas.height=ref.height=450;const c=canvas.getContext('2d')!,rc=ref.getContext('2d')!,road=p.roads[0].points[1],view={x:road.x-400,y:road.y-225,width:800,height:450,zoom:1,time:0,actor:null,actors:[]} as any;
  let endpointDelta=0;
  for(const hour of [12,0]){p.lighting={...p.lighting,mode:'time',hour};reference.project.lighting={...p.lighting};renderer.draw(c,view);reference.draw(rc,view);const a=c.getImageData(0,0,800,450).data,b=rc.getImageData(0,0,800,450).data;for(let i=0;i<a.length;i++)endpointDelta=Math.max(endpointDelta,Math.abs(a[i]-b[i]))}check(endpointDelta<=2,'day/night endpoint images match original Studio runtime');
+ const flat=structuredClone(p);flat.objects=[];flat.roads=[];flat.lighting={...flat.lighting,mode:'time',hour:6,details:false};const smoothFlat=new SmoothMapRenderer(flat,renderer.images),referenceFlat=new MapRenderer(structuredClone(flat),renderer.images);smoothFlat.draw(c,view);referenceFlat.draw(rc,view);const midA=c.getImageData(0,0,800,450).data,midB=rc.getImageData(0,0,800,450).data;let transitionDelta=0;for(let i=0;i<midA.length;i++)transitionDelta=Math.max(transitionDelta,Math.abs(midA[i]-midB[i]));check(transitionDelta<=2,'opaque terrain blending leaves no alpha-overlap grid seams');
  const warm=renderer.diagnostics(),times:number[]=[];let last:number[]|null=null,maxStep=0;
  for(let i=0;i<240;i++){p.lighting.hour=5.5+i/240;const start=performance.now();renderer.draw(c,view);times.push(performance.now()-start);const pixel=Array.from(c.getImageData(400,225,1,1).data);if(last)for(let j=0;j<3;j++)maxStep=Math.max(maxStep,Math.abs(pixel[j]-last[j]));last=pixel}
  check(renderer.diagnostics().tileBuilds===warm.tileBuilds,'no terrain recompiles during dawn');check(renderer.diagnostics().roadBuilds===warm.roadBuilds,'no procedural road recompiles during dawn');check(maxStep<=3,'no visible light jump at former 5-minute boundary');
  // Sunset and overview cache must also reuse both endpoint palettes.
  for(const hour of [17.5,18,18.5,19,19.5]){p.lighting.hour=hour;renderer.draw(c,view)}check(renderer.diagnostics().tileBuilds===warm.tileBuilds,'sunset also uses existing tiles');
  renderer.draw(c,{...view,zoom:.1});const overviewWarm=renderer.diagnostics();for(const hour of [5,5.5,6,6.5,7]){p.lighting.hour=hour;renderer.draw(c,{...view,zoom:.1})}check(renderer.diagnostics().tileBuilds===overviewWarm.tileBuilds,'zoomed-out endpoint cache stable');
- times.sort((a,b)=>a-b);return{translucent,brightFringe,endpointDelta,maxStep,drawMedianMs:times[120],drawP95Ms:times[228],warm,after:renderer.diagnostics()};
+ times.sort((a,b)=>a-b);return{translucent,brightFringe,endpointDelta,transitionDelta,maxStep,drawMedianMs:times[120],drawP95Ms:times[228],warm,after:renderer.diagnostics()};
 };

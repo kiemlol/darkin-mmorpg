@@ -4,7 +4,7 @@
 
 Trước đây `main.ts` làm tròn giờ thành bước5 phút game (~5 giây thực). `MapRenderer.tile/roadTexture` dùng nightness trong cache key nên mỗi bước vừa đổi màu rõ vừa tạo lại noise ảnh. Bản này dùng nguyên giờ phân số từ `GameSession.clock()`; Offline/Online vẫn một clock có thẩm quyền như trước. Không dùng giờ máy để quyết định ánh sáng.
 
-`SmoothMapRenderer` (`src/client/smooth-map-renderer.ts`) là adapter của chính `MapRenderer` Studio. Nó lưu hai bộ terrain ngày/đêm rồi blend bằng nightness liên tục. Road giữ đường Bézier/softness gốc, hai texture endpoint được cache và trộn lại bằng Canvas, không chạy lại noise theo giờ. Cache road blend ở1024 mức nightness, sai khác nhỏ hơn một đơn vị màu8-bit; tránh cấp phát CanvasPattern theo từng RAF. Ảnh terrain tải lên được giữ nguyên; actor/object/depth/collision/shadow/lighting đi cùng renderer gốc, không vẽ hai lần actor.
+`SmoothMapRenderer` (`src/client/smooth-map-renderer.ts`) là adapter của chính `MapRenderer` Studio. Nó lưu hai bộ terrain ngày/đêm rồi blend vào tile đục trước khi ghép cảnh theo nightness. Nhờ vậy phần overdraw.2px gốc không nhận alpha hai lần và không lộ đường lưới ở bình minh. Road giữ đường Bézier/softness gốc, hai texture endpoint được cache và trộn lại bằng Canvas, không chạy lại noise theo giờ. Cache tile/road blend ở1024 mức nightness, sai khác nhỏ hơn một đơn vị màu8-bit; tránh cấp phát CanvasPattern theo từng RAF. Ảnh terrain tải lên được giữ nguyên; actor/object/depth/collision/shadow/lighting đi cùng renderer gốc, không vẽ hai lần actor.
 
 Runtime chỉ thêm hook `drawTerrain` và tái sử dụng kích thước light canvas khi viewport không đổi. API cũ, class/format, map bundle, đường cong, vị trí và collider giữ nguyên. Light buffer reset composite mode rõ ràng trước mỗi lần dùng. Không thay gameplay, time rate, AI, rewards, clock server, minimap hoặc fog.
 
@@ -31,3 +31,5 @@ Theo yêu cầu cập nhật cuối, **HUD avatar/tên/HP giữ nguyên kích th
 - Online dùng backend Node của dự án với hai browser thật; bài combat Online kiểm giờ ánh sáng/HUD từ cùng server ngay cả khi một client sửa Date.now, cùng quái/attack/authority/disconnect.
 
 Chưa có backend WSS công khai. Chưa QA Safari/iPhone/Android vật lý, GPU yếu hoặc mạng Internet mất gói; số FPS bên trên chỉ là phép đo ở môi trường kiểm thử này.
+
+Kiểm tra bổ sung bản cuối: cảnh chuyển sáng không vật thể/chi tiết khớp renderer gốc với sai khác tối đa1/255 trên toàn frame, gồm đường ghép tile. Ảnh nền tải lên có alpha dùng nguyên texture, không blend hai lần. Cache cặp tile và WeakMap canvas blend có giới hạn theo cache gốc.
