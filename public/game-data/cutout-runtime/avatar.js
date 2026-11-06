@@ -860,7 +860,7 @@ function drawPet(ctx,p,pose,images,base=[1,0,0,1,0,0],{bones=false,selected=null
     const drawAttached=(socket,layer)=>{
       for(const raw of (NC.ITEMS[equip.top]?.attachments||NC.RIG_ATTACHMENTS?.[rig.name]||[])){
         const a=NC.resolveAttachment(raw,P);
-        if(a.visible===false||a.socket!==socket||a.layer!==layer||(o.hideAttachedWeapons&&socket.startsWith('hand')))continue;
+        if(a.visible===false||a.socket!==socket||a.layer!==layer||(o.hideAttachedWeapons&&(a.category==='weapon'||socket.startsWith('hand'))))continue;
         const at=attachmentLocal(S,rig,equip,P,a);
         ctx.save();ctx.translate(...at.origin);ctx.rotate(at.angle);ctx.scale(a.scale??1,a.scale??1);
         if(a.wingRig){

@@ -132,7 +132,7 @@ export class World {
         if(!enabled){this.flightCommands.set(id,{seq,time:prior?.time??this.time});if(a.swordFlight?.phase==='riding'){a.swordFlight.phase='landing';a.swordFlight.landingElapsed=0}else this.cancelSwordFlight(a);return}
         if(prior&&this.time-prior.time<.35)throw Error('Hãy chờ kiếm ổn định');
         const weaponId=equippedFlightWeapon(a),appearance=gameCatalog.appearances.find(p=>p.id===a.appearanceId);
-        if(a.hp<=0||!weaponId||!appearance||!flightConfig.compatibleRigs.includes(appearance.rig))throw Error('Cần còn sống và đeo kiếm tương thích');
+        if(a.hp<=0||!weaponId||!ownsItem(a.inventory,weaponId)||!appearance||!flightConfig.compatibleRigs.includes(appearance.rig))throw Error('Cần còn sống và đeo vũ khí tương thích');
         if(this.inCombat(a))throw Error('Hãy rời giao chiến trước khi gọi phi kiếm');
         if(this.interactions.channels.get(id)?.transaction)throw Error('Đang lưu lượt đào, hãy đợi');
         if(!this.canStand(a))throw Error('Vị trí chân không hợp lệ');

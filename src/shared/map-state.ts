@@ -4,7 +4,8 @@ export type ClockState={gameSeconds:number;rate:number};
 export function initialClock(p:any){return Number.isFinite(p.lighting?.hour)?p.lighting.hour*3600:23*3600}
 export function clockHour(c:ClockState){return ((c.gameSeconds/3600)%24+24)%24}
 export function daylight(hour:number){const h=((hour%24)+24)%24;return h<5||h>=19.5?0:h<7?(h-5)/2:h>=17.5?(19.5-h)/2:1}
-export function mapRevision(p:any){let h=2166136261;for(const c of JSON.stringify(p)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return 'map-'+(h>>>0).toString(16).padStart(8,'0')}
+// Portable alpha masks are render-only: updating them must not erase exploration.
+export function mapRevision(p:any){let h=2166136261;for(const c of JSON.stringify(p,(key,value)=>key==='occlusionMask'?undefined:value)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return 'map-'+(h>>>0).toString(16).padStart(8,'0')}
 export type ExplorationScope={characterId:string;worldId:string;mapId:string;mapRevision:string};
 export type ExplorationRecord={version:1;scope:ExplorationScope;cols:number;rows:number;cellSize:number;radius:number;bits:string};
 export function explorationConfig(p:any){return{cellSize:p.cell*.5,radius:p.cell*2}}

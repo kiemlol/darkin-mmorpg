@@ -23,7 +23,7 @@ Renderer vẫn dùng CutoutPlayer và accessory-runtime hiện có. Lá cờ và
 
 `src/shared/weapons.ts` chọn combat theo ID vũ khí đã phát hành, quyền sở hữu trong túi và rig hợp lệ; `World` quyết định aim, thời gian, đường bay, va chạm, HP và cooldown. Client chỉ gửi input/cosmetic ID, không gửi sát thương hoặc kết quả va chạm. Snapshot bổ sung ID linh hồn, owner/target, vị trí và thời gian; không truyền ảnh/bundle/pose. Có giới hạn số linh hồn/owner/toàn world. Đổi vũ khí, chết, teleport/rời map hoặc disconnect hủy các linh hồn của người đó. Linh hồn không là vật phẩm hay phần thưởng.
 
-Online welcome thêm `rangedCombatProtocol:1`; frontend từ chối trang bị cờ với backend cũ chưa hỗ trợ. Cần triển khai lại Node backend cùng source. Các server cũ không được xem là đã có chức năng chỉ vì frontend hiển thị ảnh. Cờ không phải kiếm và chưa hỗ trợ phi kiếm; đổi lại kiếm chắp vá để dùng phi kiếm.
+Online welcome thêm `rangedCombatProtocol:1`; frontend từ chối trang bị cờ với backend cũ chưa hỗ trợ. Cần triển khai lại Node backend cùng source. Các server cũ không được xem là đã có chức năng chỉ vì frontend hiển thị ảnh. Tôn Hồn Phiên đã hỗ trợ cùng cơ chế phi kiếm; xem [MAP7-UPDATE.md](MAP7-UPDATE.md). Backend cần thêm `weaponFlightProtocol:1` để frontend bật bay cho vũ khí mới.
 
 ## Chạy và kiểm tra
 

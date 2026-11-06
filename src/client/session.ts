@@ -8,7 +8,7 @@ import { World, movement, validIntent, type Intent, type Snapshot, type Actor } 
 import {normalizeRealm,validRealmState} from '../shared/realms';
 import {normalizeWallet,addReward,type Wallet} from '../shared/resources';
 import {activeNodes,type InteractionIntent,type MiningBook,type Transaction} from '../shared/interactions';
-import {validSwordFlight} from '../shared/sword-flight';
+import {validSwordFlight,equippedFlightWeapon,flightConfig} from '../shared/sword-flight';
 import {validAnimationPreview} from '../shared/animation-previews';
 import {normalizeCharacterProfile,profileRecord} from '../shared/character-profile';
 import {validInventory,type InventoryMove} from '../shared/inventory';
@@ -137,7 +137,7 @@ export class NetworkGameSession implements GameSession {
     interactionMessage='';
     inventoryMessage='';
     previewMessage='';previewSeq=0;
-    flightMessage='';flightSeq=0;flightSupported=false;previewSupported=false;inventorySupported=false;rangedCombatSupported=false;
+    flightMessage='';flightSeq=0;flightSupported=false;previewSupported=false;allWeaponFlightSupported=false;inventorySupported=false;rangedCombatSupported=false;
     snapshot: Snapshot = { time: 0, actors: [], events: [] };
     socket: WebSocket;
     pending: {
@@ -161,7 +161,7 @@ export class NetworkGameSession implements GameSession {
         throw Error('Trang HTTPS yêu cầu địa chỉ wss://');this.tokenKey='darkin-frontier:online-guest:v1:'+encodeURIComponent(u.href)+':'+encodeURIComponent(name);try{const tabToken=sessionStorage.getItem(this.tokenKey);this.resumeSession=!!tabToken;this.resumeToken=tabToken||localStorage.getItem(this.tokenKey)||''}catch{} this.socket = new WebSocket(u); this.socket.onopen = () => this.socket.send(JSON.stringify({ type: 'join', name,resumeToken:this.resumeToken,resume:this.resumeSession })); this.socket.onmessage = e => { try {
         const m = JSON.parse(e.data);
         if (m.type === 'welcome') {
-            this.rangedCombatSupported=m.rangedCombatProtocol===1;this.inventorySupported=m.inventoryProtocol===1;this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
+            this.allWeaponFlightSupported=m.weaponFlightProtocol===1;this.rangedCombatSupported=m.rangedCombatProtocol===1;this.inventorySupported=m.inventoryProtocol===1;this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
             if(m.interactionProtocol!==1){this.status='Server cần cập nhật tương tác/ví';this.socket.close();return}
             if (m.map !== p.id) {
                 this.status = 'Server dùng map khác';
@@ -231,6 +231,6 @@ export class NetworkGameSession implements GameSession {
     interact(intent:InteractionIntent){if(this.socket.readyState===1){this.interactionMessage='';this.socket.send(JSON.stringify({type:'interact',intent}))}}
     cancelInteraction(){if(this.socket.readyState===1)this.socket.send(JSON.stringify({type:'cancelInteraction'}))}
     previewAnimation(actionId:string){if(!this.previewSupported){this.previewMessage='Backend cần cập nhật hoạt ảnh';return}if(this.socket.readyState===1){this.previewMessage='';this.socket.send(JSON.stringify({type:'animationPreview',actionId,seq:++this.previewSeq}))}}
-    setSwordFlight(enabled:boolean){if(!this.flightSupported){this.flightMessage='Backend cần cập nhật phi kiếm';return}if(this.socket.readyState===1){this.flightMessage='';this.socket.send(JSON.stringify({type:'swordFlight',enabled,seq:++this.flightSeq}))}}
+    setSwordFlight(enabled:boolean){const a=this.snapshot.actors.find(a=>a.id===this.id),id=a&&equippedFlightWeapon(a);if(enabled&&id&&!this.allWeaponFlightSupported&&!flightConfig.weapons.some(w=>w.accessoryId===id)){this.flightMessage='Backend cần cập nhật phi kiếm cho mọi vũ khí';return}if(!this.flightSupported){this.flightMessage='Backend cần cập nhật phi kiếm';return}if(this.socket.readyState===1){this.flightMessage='';this.socket.send(JSON.stringify({type:'swordFlight',enabled,seq:++this.flightSeq}))}}
     destroy() { this.closed = true; this.socket.onclose = null; this.socket.onmessage = null; this.socket.close(); this.pending = []; }
 }

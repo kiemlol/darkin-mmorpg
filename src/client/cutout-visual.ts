@@ -30,7 +30,7 @@ export class CutoutCharacterVisual implements CharacterVisual{
  missingAnimations=new Set<string>();
  playAnimation(action:string,restart=false){const b=this.loaded?.actions[action];if(!this.player||!this.loaded)return false;try{if(!b?.animationId)throw Error('Chưa đăng ký animationId cho '+action);this.player.play(b.animationId,{restart});return true}catch(e){if(!this.missingAnimations.has(action)){this.missingAnimations.add(action);assetWarning(String(e)+' · Dùng idle.')}this.player.play(this.loaded.actions.idle.animationId);return false}}
  update(a:Actor,dt:number){this.actor=a;this.fallback.update(a,dt);if(a.appearanceId&&assets.key(a.appearanceId,a)!==this.requested)void this.setAppearance(a.appearanceId,a);if(!this.player||!this.loaded)return;
-  this.flight.update(a,dt);
+  this.flight.idleAnimationId=this.loaded.actions.idle.animationId!;this.flight.update(a,dt);
   if(Math.abs(Math.cos(a.dir))>.15)this.player.face=Math.cos(a.dir)<0?-1:1;
   if(a.hp<=0)return; // Demo has no death/hurt clips: retain real rig, no invented animation.
   if(a.swordFlight&&this.flight.frame){

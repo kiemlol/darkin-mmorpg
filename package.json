@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && npm run check:assets && vite build",
     "start": "tsx src/server/index.ts",
     "test": "tsx --test tests/*.test.ts",
-    "check:assets": "tsx scripts/merge-patchwork.ts --check && tsx scripts/check-soul-banner.ts && tsx scripts/check-assets.ts",
+    "check:assets": "tsx scripts/merge-patchwork.ts --check && tsx scripts/check-map7.ts && tsx scripts/check-soul-banner.ts && tsx scripts/check-assets.ts",
     "register:character": "tsx scripts/register-character.ts",
     "merge:patchwork": "tsx scripts/merge-patchwork.ts"
   },

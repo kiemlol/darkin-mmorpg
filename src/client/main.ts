@@ -147,8 +147,9 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
             visuals.delete(id);
         }
     if(session){sceneHour=clockHour(session.clock());player.project.lighting??={};player.project.lighting.mode='time';player.project.lighting.hour=sceneHour;}
+    const occlusionActor=actors.find(a=>a.id===session?.id),occlusionVisual=occlusionActor&&visuals.get(occlusionActor.id);const bodyHeight=occlusionVisual instanceof CutoutCharacterVisual?160*(occlusionVisual.loaded?.appearance.scale||.7452)+(occlusionVisual.flight.frame?.riderHeight||0):32;const focus=occlusionActor?{...occlusionActor,occlusionHeight:bodyHeight}:null;
     const souls=soulEffects.update(session instanceof NetworkGameSession&&session.socket.readyState!==WebSocket.OPEN?null:session?.snapshot||null,actors,visuals,dt)||[];
-    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: actors.find(a => a.id === session?.id) || { x: camera.x, y: camera.y }, actors:[...actors,...souls], objectState:(id:string)=>{const n=session?.snapshot.nodes?.find(n=>n.objectId===id);return n?{hidden:n.hidden,shakeX:n.status==='mining'?Math.sin(now/1000*36)*1.5:0,shakeAngle:n.status==='mining'?Math.sin(now/1000*31)*.008:0}:undefined},drawActor: (ctx: CanvasRenderingContext2D,a:any) => a.kind==='soul'?soulEffects.draw(ctx,a):visuals.get(a.id)?.draw(ctx) } as any);
+    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: focus, dt, actors:[...actors,...souls], objectState:(id:string)=>{const n=session?.snapshot.nodes?.find(n=>n.objectId===id);return n?{hidden:n.hidden,shakeX:n.status==='mining'?Math.sin(now/1000*36)*1.5:0,shakeAngle:n.status==='mining'?Math.sin(now/1000*31)*.008:0}:undefined},drawActor: (ctx: CanvasRenderingContext2D,a:any) => a.kind==='soul'?soulEffects.draw(ctx,a):visuals.get(a.id)?.draw(ctx) } as any);
     if (session) {
         c.save();
         c.scale(zoom, zoom);

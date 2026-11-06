@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "map": "forest.map-bundle.json",
+  "runtime": "studio/map-runtime.mjs",
+  "sourceFiles": {
+    "2-map-runtime-4.mjs": "c2b36fd6f69fb36cc2a91f504c205cbd29a4a816473db88652e0d027e551bffe",
+    "1-spawn_map.map-bundle-7.json": "ab5e76a243122a32db4143bc0ff1479836171ccb83cada41a04b7f80bba0934e"
+  }
+}
