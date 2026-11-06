@@ -144,7 +144,7 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
             v.destroy();
             visuals.delete(id);
         }
-    if(session){const hour=Math.floor(clockHour(session.clock())*12)/12;if(hour!==sceneHour){sceneHour=hour;player.project.lighting={...player.project.lighting,mode:'time',hour}}}
+    if(session){sceneHour=clockHour(session.clock());player.project.lighting.mode='time';player.project.lighting.hour=sceneHour;}
     player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: actors.find(a => a.id === session?.id) || { x: camera.x, y: camera.y }, actors, objectState:(id:string)=>{const n=session?.snapshot.nodes?.find(n=>n.objectId===id);return n?{hidden:n.hidden,shakeX:n.status==='mining'?Math.sin(now/1000*36)*1.5:0,shakeAngle:n.status==='mining'?Math.sin(now/1000*31)*.008:0}:undefined},drawActor: (ctx: CanvasRenderingContext2D,a:any) => visuals.get(a.id)?.draw(ctx) } as any);
     if (session) {
         c.save();
@@ -167,4 +167,4 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
 } requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
 // Read-only diagnostics for acceptance tests; no gameplay authority.
-Object.defineProperty(window, 'darkinDebug', { get: () => ({ inventoryUI:inventoryUI.debug(),playerUI:playerHUD.debug(),mapUI:mapHUD.debug(),exploration:session?.exploration?{scope:session.exploration.scope,count:session.exploration.count(),version:session.exploration.version,seen:Array.from(session.exploration.seen)}:null,characterId:session?.characterId,input: input?.sample(), mode, status: session?.status, id: session?.id, snapshot: session?.snapshot, zoom, camera: { x: camera.x, y: camera.y }, map: player?.project.id, visuals: [...visuals.entries()].map(([id, v]) => ({ id, ...(v instanceof CutoutCharacterVisual ? v.debug() : { type: 'placeholder' }) })) }) });
+Object.defineProperty(window, 'darkinDebug', { get: () => ({ lighting:player?.renderer?.diagnostics?.(),inventoryUI:inventoryUI.debug(),playerUI:playerHUD.debug(),mapUI:mapHUD.debug(),exploration:session?.exploration?{scope:session.exploration.scope,count:session.exploration.count(),version:session.exploration.version,seen:Array.from(session.exploration.seen)}:null,characterId:session?.characterId,input: input?.sample(), mode, status: session?.status, id: session?.id, snapshot: session?.snapshot, zoom, camera: { x: camera.x, y: camera.y }, map: player?.project.id, visuals: [...visuals.entries()].map(([id, v]) => ({ id, ...(v instanceof CutoutCharacterVisual ? v.debug() : { type: 'placeholder' }) })) }) });

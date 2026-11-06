@@ -4,6 +4,8 @@ Game riêng, không thay đổi Studio. Nhân vật hiện dùng parts từ bund
 
 ## Chơi và chạy
 
+Ánh sáng cập nhật liên tục theo clock game/server, cache palette ngày/đêm để tránh tạo lại terrain mỗi5 giây; viền UI JPEG dùng alpha mềm khử quầng trắng. Màn ngang dùng joystick/nút đánh theo ảnh tham khảo và5 ô chung cung quanh Attack:4 ô trống, Phi kiếm thấp nhất, giữ kích thước ô. HUD avatar/HP giữ nguyên, túi ngang lớn hơn. Xem [LIGHTING-UI-POLISH.md](LIGHTING-UI-POLISH.md).
+
 **Menu → Nhân vật / Túi đồ** hoặc **I** mở khung mới dùng ảnh đã gửi: chỉ số trái, nhân vật thật giữa, túi phải; 8 ô trang bị quanh nhân vật. Túi4 ô, tối đa10/chồng, đeo/tháo/chuyển ô và lưu Offline/Online. Mobile dọc vuốt hoặc chọn ba vùng. Điểm tiềm năng0 và cộng điểm khóa chờ quy tắc. Xem [INVENTORY.md](INVENTORY.md).
 
 Giao tranh hiện hết sau **1,5 giây từ sát thương thật cuối cùng**; đánh hụt hoặc quái đứng gần không gia hạn. Đánh/Space tự aim về quái sống gần nhất trong tầm76 có LOS, giữ hồi chiêu/sát thương cũ. Nút ưu tiên Đánh khi có quái trong tầm, thả/bấm lại để đào sau khi hết combat. Xem [COMBAT-AIM.md](COMBAT-AIM.md).
