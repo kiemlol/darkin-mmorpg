@@ -348,6 +348,13 @@
           "hideWeapon": true
         }
       }
+    },
+    {
+      "id": "soul-banner",
+      "type": "accessory",
+      "rig": "traveler-rig",
+      "path": "accessories/studio/soul-banner/merged.accessory-pack.json",
+      "slot": "handF"
     }
   ],
   "appearances": [

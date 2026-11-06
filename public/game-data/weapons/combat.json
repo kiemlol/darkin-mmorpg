@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "default": {
+    "id": "melee",
+    "kind": "melee",
+    "range": 76,
+    "damage": 22,
+    "cooldown": 0.55,
+    "visualAction": "attack"
+  },
+  "weapons": [
+    {
+      "id": "soul_banner",
+      "accessoryId": "attachment_1793960988158_2",
+      "kind": "soul",
+      "range": 300,
+      "damage": 22,
+      "cooldown": 0.8,
+      "speed": 420,
+      "lifetime": 1.8,
+      "minFlightSeconds": 0.24,
+      "visualAction": "idle",
+      "compatibleRigs": [
+        "traveler-rig",
+        "shadow-knight-rig"
+      ],
+      "visual": {
+        "sourceUV": [
+          0.52,
+          0.42
+        ],
+        "impactHeight": 36
+      }
+    }
+  ]
+}

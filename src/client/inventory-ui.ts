@@ -1,9 +1,10 @@
 import './inventory.css';
+import {combatWeapon} from '../shared/weapons';
 import {InventoryArt} from './inventory-art';
 import {INVENTORY_LAYOUT as L} from './inventory-layout';
 import {InventoryPreview} from './inventory-preview';
 import {itemDefinition,MAX_STACK,type Inventory} from '../shared/inventory';
-import {SPEED,RUN_SPEED,RANGE,PLAYER_DAMAGE,type Actor} from '../shared/world';
+import {SPEED,RUN_SPEED,type Actor} from '../shared/world';
 import {realmLabels} from '../shared/realms';
 import {mountCatalog,resolveInventory} from '../shared/equipment';
 import {assets} from './assets';
@@ -44,7 +45,7 @@ export class InventoryUI{
  layout(){this.compact=innerWidth<700;this.panel.classList.toggle('compact',this.compact);this.scale=this.compact?.82:Math.min(1.05,(innerWidth-24)/L.width,(innerHeight-(innerWidth>innerHeight?100:145))/L.height);this.scale=Math.max(.3,this.scale);const width=L.width*this.scale,height=L.height*this.scale;this.surface.style.width=width+'px';this.surface.style.height=height+'px';this.stage.style.transform=`scale(${this.scale})`;this.panel.style.width=(this.compact?innerWidth-12:width)+'px';this.viewport.style.height=Math.min(height,innerHeight-(this.compact?220:innerWidth>innerHeight?95:140))+'px';this.detailKey='';if(this.compact)this.scroll(1)}
  scroll(i:number){const center=[280,635,998][i]-L.origin.x;this.viewport.scrollLeft=center*this.scale-this.viewport.clientWidth/2}
  selectSlot(i:number){const bag=this.lastActor?.inventory;if(!bag||i>=bag.capacity)return;if(this.moveFrom>=0){this.session()?.moveInventory({from:this.moveFrom,to:i,quantity:this.quantity,revision:bag.revision});this.moveFrom=-1;this.message='';this.detailKey=''}this.selected=i;this.stat=-1;this.gear=-1;this.detailKey=''}
- stats(a:Actor){return['HP  '+a.hp+' / '+a.maxHp,'Cận chiến: '+PLAYER_DAMAGE,`Tốc độ  ${SPEED} / ${RUN_SPEED}`,`Tầm đánh  ${RANGE}`,'MP  Chưa kích hoạt',realmLabels(a).realm,'Tiềm năng: '+(a.potentialPoints??0)]}
+ stats(a:Actor){return['HP  '+a.hp+' / '+a.maxHp,'Sát thương: '+combatWeapon(a).damage,`Tốc độ  ${SPEED} / ${RUN_SPEED}`,`Tầm đánh  ${combatWeapon(a).range}`,'MP  Chưa kích hoạt',realmLabels(a).realm,'Tiềm năng: '+(a.potentialPoints??0)]}
  worn(a:Actor,id:string){return resolveInventory(a).inventory.some(s=>(s.accessoryId||s.id)===id&&s.visible!==false)}
  drawImage(c:CanvasRenderingContext2D,id:string,x:number,y:number,size:number){const img=this.preview.itemImage(id);if(!img)return;const k=Math.min(size/img.width,size/img.height);c.drawImage(img,x+(size-img.width*k)/2,y+(size-img.height*k)/2,img.width*k,img.height*k)}
  update(dt:number){if(!this.open)return;const session=this.session(),a=session?.snapshot.actors.find(a=>a.id===session.id);if(!a||!session)return;this.lastActor=a;this.stage.querySelector('.bag-character-name')!.textContent=a.name;void this.preview.show(a);this.preview.update(dt);

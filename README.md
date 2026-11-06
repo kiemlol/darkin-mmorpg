@@ -59,3 +59,5 @@ Map này: 24×16 ô 128px, 111 vật thể, 3 roads Bézier, night lighting, 10 
 ## Phạm vi và giới hạn
 
 MVP một map, sáu quái tạm, không phải MMORPG hoàn chỉnh hoặc đã kiểm thử tải lớn. Chưa có nhiệm vụ, inventory, tài khoản, PvP, kinh tế, cửa hàng asset. Mob dùng steering + va chạm, chưa pathfinding nên có thể mắc sau cây. Online khôi phục guest/exploration qua token trên cùng trình duyệt; chưa có tài khoản để khôi phục token đã mất hoặc chuyển thiết bị. Chưa thử mạng latency cao/loss dài hạn hoặc thiết bị iOS/Android thật. Frontend Sites tĩnh không chạy tiến trình Node thường trú; backend cần host riêng, không có dịch vụ trả phí bắt buộc.
+
+Tôn Hồn Phiên: [cách đeo, dữ liệu/neo Studio, cấu hình đòn đánh, migration và kiểm thử](TON-HON-PHIEN.md). Vũ khí có sẵn trong túi, không thay kiếm đang đeo tự động; chọn món → Đeo. Online cần backend mới có `rangedCombatProtocol:1`; hiện chưa có WSS công khai.

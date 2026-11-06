@@ -1,12 +1,13 @@
 import mounts from '../../public/game-data/accessories/studio/mount-data.json';
 import square from '../../public/game-data/accessories/studio/glasses_square.accessory-pack.json';
 import round from '../../public/game-data/accessories/studio/glasses_round.accessory-pack.json';
+import soulBanner from '../../public/game-data/accessories/studio/soul-banner/merged.accessory-pack.json';
 import patchwork from '../../public/game-data/accessories/studio/patchwork/merged.accessory-pack.json';
 import {gameCatalog} from './catalog';
 import {validateAccessoryPack,resolveAccessory,equipAccessory} from '../../public/game-data/accessories/studio/accessory-runtime.mjs';
 export {validateAccessoryPack,resolveAccessory,equipAccessory};
 export const mountCatalog=mounts;
-export const accessoryItems=[...validateAccessoryPack(square).items,...validateAccessoryPack(round).items,...validateAccessoryPack(patchwork).items];
+export const accessoryItems=[...validateAccessoryPack(square).items,...validateAccessoryPack(round).items,...validateAccessoryPack(patchwork).items,...validateAccessoryPack(soulBanner).items.map((a:any)=>({...a,name:'Tôn Hồn Phiên'}))];
 if(new Set(accessoryItems.map(a=>a.accessoryId)).size!==accessoryItems.length)throw Error('Trùng accessoryId giữa các gói');
 if(gameCatalog.defaults.weaponId&&!accessoryItems.some(a=>a.accessoryId===gameCatalog.defaults.weaponId&&a.category==='weapon'))throw Error('Vũ khí mặc định chưa được đăng ký');
 for(const w of gameCatalog.swordFlight?.weapons||[])if(!accessoryItems.some(a=>a.accessoryId===w.accessoryId&&a.category==='weapon'))throw Error('Kiếm cho phép bay chưa được đăng ký: '+w.accessoryId);

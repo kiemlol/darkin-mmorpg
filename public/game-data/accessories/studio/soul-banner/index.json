@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "accessoryId": "attachment_1793960988158_2",
+  "name": "Tôn Hồn Phiên",
+  "compatibleRigs": [
+    "traveler-rig",
+    "shadow-knight-rig"
+  ],
+  "sources": [
+    {
+      "path": "accessories/studio/soul-banner/source-1.accessory-pack.json",
+      "sha256": "2fb4742c79ddcf7a54e891b9c7db50a5569ec27b675acf52dae92fb791684583",
+      "animationIds": [
+        "nightcamp-animation-idle-4cd85783-v1"
+      ]
+    },
+    {
+      "path": "accessories/studio/soul-banner/source-2.accessory-pack.json",
+      "sha256": "2114d0fffe4cd5f8631e369c48df23f3235ea83b251e402e8fb77e1d7a013151",
+      "animationIds": [
+        "nightcamp-animation-idle-4cd85783-v1",
+        "nightcamp-animation-walk-ee063896-v1"
+      ]
+    },
+    {
+      "path": "accessories/studio/soul-banner/source-3.accessory-pack.json",
+      "sha256": "16722b877c552a7cc16c02d75e23e0e22ce67746bda15be9e196b2bb20f0ab33",
+      "animationIds": [
+        "nightcamp-animation-idle-4cd85783-v1",
+        "nightcamp-animation-walk-ee063896-v1",
+        "nightcamp-animation-run-908d1b98-v1"
+      ]
+    }
+  ],
+  "output": "accessories/studio/soul-banner/merged.accessory-pack.json"
+}

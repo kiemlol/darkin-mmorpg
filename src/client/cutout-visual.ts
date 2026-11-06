@@ -1,3 +1,4 @@
+import {combatWeapon} from '../shared/weapons';
 import type {Actor} from '../shared/world';
 import type {CharacterVisual} from './visual';
 import {PlaceholderCharacterVisual} from './visual';
@@ -46,6 +47,7 @@ export class CutoutCharacterVisual implements CharacterVisual{
    this.attacking=false;this.lastAttack=a.attackSeq;
    this.playAnimation(preview.actionId);this.player.time=Math.min(this.player.spec.clips[this.player.name].dur,this.previewAge);this.player.blend=null;this.player.update(0,undefined,dt);return;
   }
+  const weapon=combatWeapon(a);if(weapon.kind==='soul'){this.attacking=false;this.lastAttack=a.attackSeq;const action=a.action==='attack'&&this.loaded.actions[weapon.visualAction]?weapon.visualAction:this.loaded.actions[a.action]?a.action:'idle';const dir=a.action==='attack'?a.attackDir??a.dir:a.dir;if(Math.abs(Math.cos(dir))>.15)this.player.face=Math.cos(dir)<0?-1:1;this.playAnimation(action);this.player.update(dt*this.loaded.actions[action].rate,undefined,dt);return}
   const attack=a.attackSeq??0;
   if(attack!==this.lastAttack){this.lastAttack=attack;if(a.action==='attack'||a.cooldown>0)this.attacking=this.playAnimation('attack',true)}
   const action=this.attacking?'attack':this.loaded.actions[a.action]?a.action:'idle';
@@ -66,6 +68,7 @@ export class CutoutCharacterVisual implements CharacterVisual{
   // UI only; no old body, weapon, shadow or temporary attack geometry is drawn.
   c.save();const y=a.y-(flight?.riderHeight||0)-160*this.loaded.appearance.scale-10;c.textAlign='center';c.font='600 12px system-ui';c.strokeStyle='#12201d';c.lineWidth=3;c.strokeText(a.name,a.x,y);c.fillStyle=a.color;c.fillText(a.name,a.x,y);c.fillStyle='#101923';c.fillRect(a.x-23,y+6,46,5);c.fillStyle='#a5ca9c';c.fillRect(a.x-22,y+7,44*a.hp/a.maxHp,3);c.restore();
  }
+ emissionPoint(accessoryId:string,uv:number[]){if(!this.player||!this.loaded||!this.actor)return null;const nc=(window as any).NC,raw=nc.ITEMS[this.player.equip.top]?.attachments.find((a:any)=>a.accessoryId===accessoryId);if(!raw)return null;const pose=this.player.renderPose(),a=nc.resolveAttachment(raw,pose);if(a.visible===false)return null;const m=nc.attachmentMatrix(this.player.equip,pose,a,this.actor.x,this.actor.y,this.loaded.appearance.scale),x=(uv[0]-a.anchor[0])*a.w,y=(uv[1]-a.anchor[1])*a.h;return{x:m.a*x+m.c*y+m.e,y:m.b*x+m.d*y+m.f}}
  destroy(){this.disposed=true;this.generation++;this.player?.dispose();if(this.loaded)assets.release(this.loaded);this.player=null;this.loaded=null;this.fallback.destroy()}
  debug(){const nc=(window as any).NC;return{type:'cutout',flight:this.flight.frame?{...this.flight.frame,weaponId:this.actor.swordFlight?.weaponId,bodyOrigin:this.player&&this.loaded?this.flight.bodyOrigin(this.player,this.actor,this.loaded.appearance.scale):null}:null,key:this.loaded?.key,headId:this.player?.spec.headId,bodyId:this.player?.spec.bodyId,mountSignatures:this.player?.spec.mountSignatures,attachments:this.player?(nc.ITEMS[this.player.equip.top]?.attachments||[]).map((raw:any)=>{const a=nc.resolveAttachment(raw,this.player.renderPose());return({accessoryId:a.accessoryId||a.id,visible:a.visible,socket:a.socket,layer:a.layer,w:a.w,h:a.h,scale:a.scale,x:a.x,y:a.y,rotation:a.rotation,anchor:a.anchor,loaded:a.wingRig?a.wingRig.spriteOrder.every((id:string)=>!!nc.SPR[a.wingRig.sprites[id].sprite]?.img):!!nc.SPR[a.sprite]?.img,matrix:nc.attachmentMatrix(this.player.equip,this.player.renderPose(),a,this.actor?.x||0,this.actor?.y||0,this.loaded?.appearance.scale)})}):[],appearance:this.loaded?.appearance.id,scale:this.loaded?.appearance.scale,clip:this.player?.name,animationId:this.player?.animationId,time:this.player?.time,attachmentTime:this.player?.attachmentTime,face:this.player?.face,foot:this.actor?{x:this.actor.x,y:this.actor.y}:null}}
 }

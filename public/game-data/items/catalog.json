@@ -1,12 +1,46 @@
 {
-  "format":"darkin-item-catalog-v1",
-  "version":1,
-  "initialCapacity":4,
-  "maxStack":10,
-  "starterItems":["sw_patchwork","glasses_square","glasses_round"],
-  "items":[
-    {"id":"sw_patchwork","name":"Kiếm chắp vá","category":"equipment","accessoryId":"sw_patchwork","slot":"weapon","description":"Kiếm đang dùng trong game. Có thể đeo, tháo và sử dụng phi kiếm."},
-    {"id":"glasses_square","name":"Kính gọng vuông","category":"equipment","accessoryId":"glasses_square","slot":"head","description":"Phụ kiện Studio. Chỉ đeo được khi có cấu hình khớp đúng đầu và hình học."},
-    {"id":"glasses_round","name":"Kính gọng tròn","category":"equipment","accessoryId":"glasses_round","slot":"head","description":"Phụ kiện Studio. Chỉ đeo được khi có cấu hình khớp đúng đầu và hình học."}
+  "format": "darkin-item-catalog-v1",
+  "version": 1,
+  "initialCapacity": 4,
+  "maxStack": 10,
+  "starterItems": [
+    "sw_patchwork",
+    "glasses_square",
+    "glasses_round",
+    "attachment_1793960988158_2"
+  ],
+  "items": [
+    {
+      "id": "sw_patchwork",
+      "name": "Kiếm chắp vá",
+      "category": "equipment",
+      "accessoryId": "sw_patchwork",
+      "slot": "weapon",
+      "description": "Kiếm đang dùng trong game. Có thể đeo, tháo và sử dụng phi kiếm."
+    },
+    {
+      "id": "glasses_square",
+      "name": "Kính gọng vuông",
+      "category": "equipment",
+      "accessoryId": "glasses_square",
+      "slot": "head",
+      "description": "Phụ kiện Studio. Chỉ đeo được khi có cấu hình khớp đúng đầu và hình học."
+    },
+    {
+      "id": "glasses_round",
+      "name": "Kính gọng tròn",
+      "category": "equipment",
+      "accessoryId": "glasses_round",
+      "slot": "head",
+      "description": "Phụ kiện Studio. Chỉ đeo được khi có cấu hình khớp đúng đầu và hình học."
+    },
+    {
+      "id": "attachment_1793960988158_2",
+      "name": "Tôn Hồn Phiên",
+      "category": "equipment",
+      "accessoryId": "attachment_1793960988158_2",
+      "slot": "weapon",
+      "description": "Bắn linh hồn vào quái gần nhất trong tầm 300. Sát thương22 khi chạm; hồi chiêu0,8 giây. Đánh bằng tư thế idle. Không dùng để phi kiếm."
+    }
   ]
 }

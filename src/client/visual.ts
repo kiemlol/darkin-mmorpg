@@ -8,6 +8,7 @@ export interface CharacterVisual {
     update(actor: Actor, dt: number): void;
     playAnimation(action: string): void;
     draw(ctx: CanvasRenderingContext2D): void;
+    emissionPoint?(accessoryId:string,uv:number[]):{x:number;y:number}|null;
     destroy(): void;
 }
 export class PlaceholderCharacterVisual implements CharacterVisual {

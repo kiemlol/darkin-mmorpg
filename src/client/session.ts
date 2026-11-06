@@ -1,3 +1,5 @@
+import {validSoulProjectiles} from '../shared/weapons';
+import {SOUL_BANNER_ID} from '../shared/inventory';
 import { STEP, interpolateSnapshot, PredictedPresentation, SnapshotTimeline } from './presentation';
 import type { CosmeticCommand } from '../shared/equipment';
 import { createExploration, offlineCharacter, loadExploration, saveExploration, EXPLORE_PREFIX } from './map-session';
@@ -135,7 +137,7 @@ export class NetworkGameSession implements GameSession {
     interactionMessage='';
     inventoryMessage='';
     previewMessage='';previewSeq=0;
-    flightMessage='';flightSeq=0;flightSupported=false;previewSupported=false;inventorySupported=false;
+    flightMessage='';flightSeq=0;flightSupported=false;previewSupported=false;inventorySupported=false;rangedCombatSupported=false;
     snapshot: Snapshot = { time: 0, actors: [], events: [] };
     socket: WebSocket;
     pending: {
@@ -159,7 +161,7 @@ export class NetworkGameSession implements GameSession {
         throw Error('Trang HTTPS yêu cầu địa chỉ wss://');this.tokenKey='darkin-frontier:online-guest:v1:'+encodeURIComponent(u.href)+':'+encodeURIComponent(name);try{const tabToken=sessionStorage.getItem(this.tokenKey);this.resumeSession=!!tabToken;this.resumeToken=tabToken||localStorage.getItem(this.tokenKey)||''}catch{} this.socket = new WebSocket(u); this.socket.onopen = () => this.socket.send(JSON.stringify({ type: 'join', name,resumeToken:this.resumeToken,resume:this.resumeSession })); this.socket.onmessage = e => { try {
         const m = JSON.parse(e.data);
         if (m.type === 'welcome') {
-            this.inventorySupported=m.inventoryProtocol===1;this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
+            this.rangedCombatSupported=m.rangedCombatProtocol===1;this.inventorySupported=m.inventoryProtocol===1;this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
             if(m.interactionProtocol!==1){this.status='Server cần cập nhật tương tác/ví';this.socket.close();return}
             if (m.map !== p.id) {
                 this.status = 'Server dùng map khác';
@@ -181,6 +183,7 @@ export class NetworkGameSession implements GameSession {
         if(m.type==='flightError')this.flightMessage=String(m.message);
         if(m.type==='exploration'&&this.exploration)this.exploration.restore(m.record);
         if (m.type === 'snapshot') {
+            if(m.projectiles!==undefined&&!validSoulProjectiles(m.projectiles)){this.status='Server gửi linh hồn không hợp lệ';this.socket.close();return}
             if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.kind==='player'&&a.inventory!==undefined&&!validInventory(a.inventory))){this.status='Server gửi túi đồ không hợp lệ';this.socket.close();return}
             if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.animationPreview!==undefined&&!validAnimationPreview(a.animationPreview))){this.status='Server gửi dữ liệu hoạt ảnh không hợp lệ';this.socket.close();return}
             if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.swordFlight!==undefined&&!validSwordFlight(a.swordFlight))){this.status='Server gửi dữ liệu phi kiếm không hợp lệ';this.socket.close();return}
@@ -221,7 +224,7 @@ export class NetworkGameSession implements GameSession {
     setAppearance(id: string) { if (this.socket.readyState === 1)
         this.socket.send(JSON.stringify({ type: 'appearance', appearanceId: id })); }
     moveInventory(command:InventoryMove){if(!this.inventorySupported){this.inventoryMessage='Server chưa hỗ trợ túi đồ; hãy cập nhật backend.';return}if(this.socket.readyState===1){this.inventoryMessage='';this.socket.send(JSON.stringify({type:'inventoryMove',command}))}}
-    cosmetic(command: CosmeticCommand) { if (this.socket.readyState === 1)
+    cosmetic(command: CosmeticCommand) { if(!this.rangedCombatSupported&&(command.accessoryId===SOUL_BANNER_ID||command.accessoryIds?.includes(SOUL_BANNER_ID)))throw Error('Server cần cập nhật Tôn Hồn Phiên trước khi trang bị');if (this.socket.readyState === 1)
         this.socket.send(JSON.stringify({ type: 'cosmetic', command })); }
     respawn() { if (this.socket.readyState === 1)
         this.socket.send(JSON.stringify({ type: 'respawn' })); }

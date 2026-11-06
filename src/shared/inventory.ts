@@ -5,6 +5,7 @@ export type ItemDefinition={id:string;name:string;category:string;accessoryId?:s
 export type ItemStack={itemId:string;quantity:number};
 export type Inventory={version:1;capacity:number;revision:number;slots:(ItemStack|null)[]};
 export type InventoryMove={from:number;to:number;quantity?:number;revision:number};
+export const SOUL_BANNER_ID='attachment_1793960988158_2',SOUL_RELEASE='soul_banner_release_v1';
 export const BAG_CAPACITY=4,MAX_STACK=10;
 export const itemDefinitions=manifest.items as ItemDefinition[];
 if(manifest.format!=='darkin-item-catalog-v1'||manifest.version!==1||manifest.initialCapacity!==BAG_CAPACITY||manifest.maxStack!==MAX_STACK||new Set(itemDefinitions.map(i=>i.id)).size!==itemDefinitions.length||itemDefinitions.some(i=>!accessoryItems.some(a=>a.accessoryId===i.accessoryId)))throw Error('Danh mục vật phẩm không hợp lệ');

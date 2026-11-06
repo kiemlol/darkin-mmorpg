@@ -5,9 +5,10 @@ import {DEFAULT_REALM,validRealmState,type RealmState} from './realms';
 import {InteractionSystem,type Definition,type MiningBook,type Transaction,type Receipt} from './interactions';
 import {normalizeWallet,type Wallet} from './resources';
 import {previewDefinition,type AnimationPreview} from './animation-previews';
-import {COMBAT_SECONDS,MELEE_RANGE,nearestMeleeTarget} from './combat';
-import {starterInventory,emptyInventory,ownsItem,moveItems,addItems,type Inventory,type InventoryMove} from './inventory';
+import {COMBAT_SECONDS,MELEE_RANGE,nearestTarget} from './combat';
+import {starterInventory,emptyInventory,ownsItem,moveItems,addItems,type Inventory,type InventoryMove,SOUL_RELEASE} from './inventory';
 import {equippedFlightWeapon,flightConfig,phaseAt,smooth,JUMP_AT,JUMP_SECONDS,type SwordFlight} from './sword-flight';
+import {combatWeapon,weaponCombat,segmentContact,type SoulProjectile} from './weapons';
 import { validateMap, canWalk as mapCanWalk, moveActor } from '../../public/game-data/maps/map-runtime.mjs';
 export { moveActor };
 // Keep full character artwork inside terrain when the camera reaches a hard map edge.
@@ -22,6 +23,7 @@ export type Intent = {
     attack: boolean;
 };
 export type Actor = EquipmentState & RealmState & {
+    contentGrants?:string[];
     swordFlight?:SwordFlight;
     animationPreview?:AnimationPreview;
     wallet:Wallet;
@@ -65,6 +67,7 @@ export type Hit = {
     damage: number;
     target: string;
     time: number;
+    projectileId?:string;
 };
 export const PLAYER_DAMAGE=22, MOB_DAMAGE=9;
 export const SPEED = 155, RUN_SPEED = 225, COOLDOWN = .55, RANGE = MELEE_RANGE;
@@ -86,6 +89,7 @@ export class World {
     time = 0;
     clockBaseSeconds=0;
     events: Hit[] = [];
+    projectiles:SoulProjectile[]=[];
     serial = 0;
     constructor(p: any,options:{instanceId?:string;book?:MiningBook;epochSeconds?:number;nowSeconds?:()=>number;random?:()=>number;commit?:(tx:Transaction)=>Receipt|Promise<Receipt>}={}) { this.p = validateMap(p);this.clockBaseSeconds=initialClock(p);this.interactions=new InteractionSystem(this,options.instanceId||'darkin-frontier-v1:'+p.id,options); for (let k = 0; k < 6; k++) {
         const h = this.findSpawn(p.spawn.x + Math.cos(k * 2.4) * (150 + k * 75), p.spawn.y + Math.sin(k * 2.4) * (150 + k * 75),true);
@@ -101,11 +105,11 @@ export class World {
     make(id: string, name: string, kind: Actor['kind'], h: {
         x: number;
         y: number;
-    }): Actor { return { inventory:kind==='player'?starterInventory():emptyInventory(),potentialPoints:0,wallet:normalizeWallet(null).wallet,combatUntil:0,toolId:'combat',...DEFAULT_REALM,teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
+    }): Actor { return { contentGrants:kind==='player'?[SOUL_RELEASE]:[],inventory:kind==='player'?starterInventory():emptyInventory(),potentialPoints:0,wallet:normalizeWallet(null).wallet,combatUntil:0,toolId:'combat',...DEFAULT_REALM,teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
     // Internal simulation operation only. There is deliberately no client message/API for this.
     setRealm(id:string,state:RealmState){if(!validRealmState(state))throw Error('Cảnh giới/bậc không hợp lệ');const a=this.actors.get(id);if(a?.kind==='player'){a.realmId=state.realmId;a.realmStageId=state.realmStageId}}
     inCombat(a:Actor){return a.combatUntil-this.time>1e-9}
-    nearestAttackTarget(a:Actor){return nearestMeleeTarget(a,this.actors.values(),b=>this.clearLine(a,b))}
+    nearestAttackTarget(a:Actor){return nearestTarget(a,this.actors.values(),b=>this.clearLine(a,b),combatWeapon(a).range)}
     clearLine(a:Actor,b:Actor){const steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/4));for(let k=1;k<steps;k++){const t=k/steps;if(!canWalk(this.p,a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,2))return false}return true}
     canStand(a:Actor){return canWalk(this.p,a.x,a.y,a.radius)}
     previewCommands=new Map<string,{seq:number;time:number}>();
@@ -157,16 +161,16 @@ export class World {
     setAppearance(id: string, appearanceId: string) { if (!allowedAppearance(appearanceId))
         throw Error('Ngoại hình không được phép'); const a = this.actors.get(id); if (a?.kind === 'player')
         {const next=defaultEquipment(appearanceId);next.accessories=structuredClone(a.accessories);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);Object.assign(a,next,{appearanceId,equipmentWarnings:resolveInventory(next).warnings});} }
-    cosmetic(id:string,command:CosmeticCommand){const a=this.actors.get(id);if(a?.kind!=='player')return;const next=changeEquipment(a,command);if(next.accessories.some(i=>i.visible&&!ownsItem(a.inventory,i.accessoryId)))throw Error('Vật phẩm không có trong túi');this.cancelAnimationPreview(a);this.cancelSwordFlight(a);Object.assign(a,next,{equipmentWarnings:resolveInventory(next).warnings})}
+    cosmetic(id:string,command:CosmeticCommand){const a=this.actors.get(id);if(a?.kind!=='player')return;const previousWeapon=combatWeapon(a).id;const next=changeEquipment(a,command);if(next.accessories.some(i=>i.visible&&!ownsItem(a.inventory,i.accessoryId)))throw Error('Vật phẩm không có trong túi');this.cancelAnimationPreview(a);this.cancelSwordFlight(a);Object.assign(a,next,{equipmentWarnings:resolveInventory(next).warnings});if(combatWeapon(a).id!==previousWeapon)this.projectiles=this.projectiles.filter(p=>p.ownerId!==id)}
     moveInventory(id:string,command:InventoryMove){const a=this.actors.get(id);if(a?.kind!=='player')throw Error('Không có phiên túi đồ');a.inventory=moveItems(a.inventory,command)}
     // Trusted gameplay hook for future drops; deliberately no client grant endpoint.
     giveItem(id:string,itemId:string,quantity:number){const a=this.actors.get(id);if(a?.kind!=='player')throw Error('Không có nhân vật');a.inventory=addItems(a.inventory,itemId,quantity)}
     join(id: string, name: string) { if ([...this.actors.values()].filter(a => a.kind === 'player').length >= 32)
         throw Error('Map đầy (32 người)'); const a = this.make(id, name, 'player', this.findSpawn(this.p.spawn.x, this.p.spawn.y)); this.actors.set(id, a); return a; }
-    leave(id: string) { this.previewCommands.delete(id);this.flightCommands.delete(id);this.interactions.cancel(id,'Mất kết nối / rời map');this.interactions.errors.delete(id);this.actors.delete(id); this.inputs.delete(id); }
+    leave(id: string) { this.projectiles=this.projectiles.filter(p=>p.ownerId!==id); this.previewCommands.delete(id);this.flightCommands.delete(id);this.interactions.cancel(id,'Mất kết nối / rời map');this.interactions.errors.delete(id);this.actors.delete(id); this.inputs.delete(id); }
     input(id: string, i: Intent) { const a = this.actors.get(id); if (!a || !validIntent(i) || i.seq <= Math.max(a.ack, this.inputs.get(id)?.i.seq ?? -1))
         return false; if(Math.hypot(i.dx,i.dy)>.01||i.attack){this.cancelAnimationPreview(a);this.interactions.cancel(id);}this.inputs.set(id, { i, time: this.time }); return true; }
-    respawn(id: string) { const a = this.actors.get(id); if (a && a.hp <= 0) {this.cancelAnimationPreview(a);this.cancelSwordFlight(a);
+    respawn(id: string) { const a = this.actors.get(id); if (a && a.hp <= 0) {this.projectiles=this.projectiles.filter(p=>p.ownerId!==id);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);
         Object.assign(a, this.findSpawn(this.p.spawn.x, this.p.spawn.y), { hp: a.maxHp, action: 'idle', anim: 0,teleportSeq:a.teleportSeq+1 });
         this.inputs.delete(id);
     } }
@@ -174,7 +178,7 @@ export class World {
         return; this.cancelAnimationPreview(a);this.cancelAnimationPreview(b);this.cancelSwordFlight(a);this.cancelSwordFlight(b);a.combatUntil=b.combatUntil=this.time+COMBAT_SECONDS;this.interactions.cancel(a.id,'Đang giao chiến');this.interactions.cancel(b.id,'Bị tấn công');b.hp = Math.max(0, b.hp - damage); b.action = b.hp ? 'hurt' : 'death'; b.anim = b.hp ? .22 : 0; b.deadAt = this.time; if (!b.hp && a.kind === 'player')
         a.kills++; this.events.push({ id: ++this.serial, x: b.x, y: b.y - 50, damage, target: b.id, time: this.time }); }
     attack(a: Actor) { if (a.cooldown > 0 || a.hp <= 0)
-        return; this.cancelAnimationPreview(a);this.cancelSwordFlight(a);this.interactions.cancel(a.id,'Đang đánh');const target=this.nearestAttackTarget(a);a.attackTargetId=target?.id;if(target)a.dir=Math.atan2(target.y-a.y,target.x-a.x);a.attackDir=a.dir;a.attackSeq++; a.cooldown = a.kind === 'mob' ? .95 : COOLDOWN; a.action = 'attack'; a.anim = .24; for (const b of this.actors.values()) {
+        return; const weapon=combatWeapon(a);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);this.interactions.cancel(a.id,'Đang đánh');const target=this.nearestAttackTarget(a);a.attackTargetId=target?.id;if(target)a.dir=Math.atan2(target.y-a.y,target.x-a.x);a.attackDir=a.dir;a.attackSeq++; a.cooldown = a.kind === 'mob' ? .95 : weapon.cooldown; a.action = 'attack'; a.anim = .24; if(a.kind==='player'&&weapon.kind==='soul'){if(this.projectiles.filter(p=>p.ownerId===a.id).length<4&&this.projectiles.length<128)this.projectiles.push({id:'soul:'+a.id+':'+a.attackSeq,ownerId:a.id,weaponId:weapon.accessoryId!,attackSeq:a.attackSeq,targetId:target?.id,x:a.x,y:a.y,startX:a.x,startY:a.y,angle:a.dir,travelled:0,launchDistance:target?Math.max(1,Math.hypot(target.x-a.x,target.y-a.y)):weapon.range,bornAt:this.time,epoch:a.teleportSeq});return} for (const b of this.actors.values()) {
         if (b.kind === a.kind || b.hp <= 0)
             continue;
         const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
@@ -183,6 +187,18 @@ export class World {
         if (this.clearLine(a,b))
             this.hit(a, b, a.kind === 'mob' ? MOB_DAMAGE : PLAYER_DAMAGE);
     } }
+    private advanceSouls(dt:number){
+      const next:SoulProjectile[]=[];
+      for(const p of this.projectiles){const owner=this.actors.get(p.ownerId),w=weaponCombat.find(w=>w.accessoryId===p.weaponId);if(!owner||owner.hp<=0||owner.teleportSeq!==p.epoch||!w||combatWeapon(owner).accessoryId!==p.weaponId||this.time-p.bornAt>w.lifetime!)continue;
+       if(this.time<=p.bornAt+1e-9){next.push(p);continue}const target=p.targetId?this.actors.get(p.targetId):null;if(p.targetId&&(!target||target.hp<=0||target.kind!=='mob'))continue;
+       if(target)p.angle=Math.atan2(target.y-p.y,target.x-p.x);const distance=Math.min(w.speed!*Math.max(0,dt),w.range-p.travelled);if(distance<=0)continue;
+       const x=p.x+Math.cos(p.angle)*distance,y=p.y+Math.sin(p.angle)*distance;let wall=Infinity;for(let k=0;k<=Math.ceil(distance/4);k++){const t=k/Math.max(1,Math.ceil(distance/4));if(!canWalk(this.p,p.x+(x-p.x)*t,p.y+(y-p.y)*t,2)){wall=t;break}};
+       let victim:Actor|undefined,first=Infinity;for(const b of this.actors.values()){if(b.kind!=='mob'||b.hp<=0||Math.hypot(b.x-p.startX,b.y-p.startY)>w.range)continue;const t=segmentContact(p.x,p.y,x,y,b.x,b.y,b.radius+4);if(t!==null&&t<first){first=t;victim=b}}
+       if(Number.isFinite(wall)&&wall<=first)continue;
+       if(victim){p.x+=(x-p.x)*first;p.y+=(y-p.y)*first;p.travelled+=distance*first;if(this.time-p.bornAt+1e-9>=w.minFlightSeconds!){this.hit(owner,victim,w.damage);this.events.at(-1)!.projectileId=p.id;continue}}
+       else{p.x=x;p.y=y;p.travelled+=distance}if(p.travelled<=w.range)next.push(p);
+      }this.projectiles=next;
+    }
     step(dt = .05) { this.time += dt; for (const a of this.actors.values()) {
         if(a.animationPreview){const preview=a.animationPreview;preview.elapsed+=dt;if(a.hp<=0||this.inCombat(a)||preview.elapsed>=previewDefinition(preview.actionId,a.appearanceId)!.dur)this.cancelAnimationPreview(a)}
         a.cooldown = Math.max(0, a.cooldown - dt);
@@ -229,7 +245,7 @@ export class World {
         if (i.attack)
             this.attack(a);
         if(a.swordFlight){a.swordFlight.heading=a.dir;if(Math.abs(Math.cos(a.dir))>.15)a.swordFlight.facing=Math.cos(a.dir)<0?-1:1;a.action='idle'}
-    }this.interactions.step();for(const a of this.actors.values())if(a.kind==='player'){const c=this.interactions.channels.get(a.id),d=c?this.interactions.definitions.get(c.intent.objectId):this.interactions.nearest(a);a.interactionTarget=d?{objectId:d.objectId,actionId:d.actionId,type:d.type,label:d.label,cycle:this.interactions.states.get(d.objectId)!.cycle}:undefined;a.toolId=d&&a.hp>0?this.interactions.presentation(d).toolId:'combat'} this.events = this.events.filter(e => this.time - e.time < 1.2); }
-    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, inventory:structuredClone(a.inventory),animationPreview:a.animationPreview?{...a.animationPreview}:undefined,swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
+    }this.advanceSouls(dt);this.interactions.step();for(const a of this.actors.values())if(a.kind==='player'){const c=this.interactions.channels.get(a.id),d=c?this.interactions.definitions.get(c.intent.objectId):this.interactions.nearest(a);a.interactionTarget=d?{objectId:d.objectId,actionId:d.actionId,type:d.type,label:d.label,cycle:this.interactions.states.get(d.objectId)!.cycle}:undefined;a.toolId=d&&a.hp>0?this.interactions.presentation(d).toolId:'combat'} this.events = this.events.filter(e => this.time - e.time < 1.2); }
+    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;projectiles?:SoulProjectile[];nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { projectiles:this.projectiles.map(p=>({...p})),nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, inventory:structuredClone(a.inventory),animationPreview:a.animationPreview?{...a.animationPreview}:undefined,swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
 }
 export type Snapshot = ReturnType<World['snapshot']>;
