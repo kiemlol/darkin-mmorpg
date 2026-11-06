@@ -5,6 +5,7 @@ import {DEFAULT_REALM,validRealmState,type RealmState} from './realms';
 import {InteractionSystem,type Definition,type MiningBook,type Transaction,type Receipt} from './interactions';
 import {normalizeWallet,type Wallet} from './resources';
 import {previewDefinition,type AnimationPreview} from './animation-previews';
+import {COMBAT_SECONDS,MELEE_RANGE,nearestMeleeTarget} from './combat';
 import {equippedFlightWeapon,flightConfig,phaseAt,smooth,JUMP_AT,JUMP_SECONDS,type SwordFlight} from './sword-flight';
 import { validateMap, canWalk as mapCanWalk, moveActor } from '../../public/game-data/maps/map-runtime.mjs';
 export { moveActor };
@@ -31,6 +32,8 @@ export type Actor = EquipmentState & RealmState & {
     corpseOpacity?: number;
     appearanceId: string;
     attackSeq: number;
+    attackDir?:number;
+    attackTargetId?:string;
     id: string;
     name: string;
     kind: 'player' | 'mob';
@@ -60,7 +63,7 @@ export type Hit = {
     target: string;
     time: number;
 };
-export const SPEED = 155, RUN_SPEED = 225, COOLDOWN = .55, RANGE = 76;
+export const SPEED = 155, RUN_SPEED = 225, COOLDOWN = .55, RANGE = MELEE_RANGE;
 export const CORPSE_SECONDS = 1.5, MOB_RESPAWN_SECONDS = 8;
 export function validIntent(v: any): v is Intent { return v && Number.isSafeInteger(v.seq) && v.seq >= 0 && v.seq < 1e12 && Number.isFinite(v.dx) && Math.abs(v.dx) <= 1 && Number.isFinite(v.dy) && Math.abs(v.dy) <= 1 && typeof v.run === 'boolean' && typeof v.attack === 'boolean'; }
 export function movement(p: any, a: Actor, i: Intent, dt: number) { if (a.hp <= 0)
@@ -97,8 +100,9 @@ export class World {
     }): Actor { return { wallet:normalizeWallet(null).wallet,combatUntil:0,toolId:'combat',...DEFAULT_REALM,teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
     // Internal simulation operation only. There is deliberately no client message/API for this.
     setRealm(id:string,state:RealmState){if(!validRealmState(state))throw Error('Cảnh giới/bậc không hợp lệ');const a=this.actors.get(id);if(a?.kind==='player'){a.realmId=state.realmId;a.realmStageId=state.realmStageId}}
-    inCombat(a:Actor){if(a.combatUntil>this.time)return true;return [...this.actors.values()].some(b=>b.kind!==a.kind&&b.hp>0&&Math.hypot(a.x-b.x,a.y-b.y)<116&&this.clearLine(a,b))}
-    clearLine(a:Actor,b:Actor){for(let t=.1;t<1;t+=.1)if(!canWalk(this.p,a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,2))return false;return true}
+    inCombat(a:Actor){return a.combatUntil-this.time>1e-9}
+    nearestAttackTarget(a:Actor){return nearestMeleeTarget(a,this.actors.values(),b=>this.clearLine(a,b))}
+    clearLine(a:Actor,b:Actor){const steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/4));for(let k=1;k<steps;k++){const t=k/steps;if(!canWalk(this.p,a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,2))return false}return true}
     canStand(a:Actor){return canWalk(this.p,a.x,a.y,a.radius)}
     previewCommands=new Map<string,{seq:number;time:number}>();
     cancelAnimationPreview(a:Actor){delete a.animationPreview}
@@ -121,7 +125,7 @@ export class World {
         if(prior&&this.time-prior.time<.35)throw Error('Hãy chờ kiếm ổn định');
         const weaponId=equippedFlightWeapon(a),appearance=gameCatalog.appearances.find(p=>p.id===a.appearanceId);
         if(a.hp<=0||!weaponId||!appearance||!flightConfig.compatibleRigs.includes(appearance.rig))throw Error('Cần còn sống và đeo kiếm tương thích');
-        if(this.inCombat(a)||a.anim>0)throw Error('Hãy rời giao chiến trước khi gọi phi kiếm');
+        if(this.inCombat(a))throw Error('Hãy rời giao chiến trước khi gọi phi kiếm');
         if(this.interactions.channels.get(id)?.transaction)throw Error('Đang lưu lượt đào, hãy đợi');
         if(!this.canStand(a))throw Error('Vị trí chân không hợp lệ');
         const x=a.x+Math.cos(a.dir)*flightConfig.mountDistance,y=a.y+Math.sin(a.dir)*flightConfig.mountDistance;
@@ -159,23 +163,17 @@ export class World {
         Object.assign(a, this.findSpawn(this.p.spawn.x, this.p.spawn.y), { hp: a.maxHp, action: 'idle', anim: 0,teleportSeq:a.teleportSeq+1 });
         this.inputs.delete(id);
     } }
-    hit(a: Actor, b: Actor, damage: number) { if (b.hp <= 0)
-        return; this.cancelAnimationPreview(a);this.cancelAnimationPreview(b);this.cancelSwordFlight(a);this.cancelSwordFlight(b);a.combatUntil=b.combatUntil=this.time+3;this.interactions.cancel(a.id,'Đang giao chiến');this.interactions.cancel(b.id,'Bị tấn công');b.hp = Math.max(0, b.hp - damage); b.action = b.hp ? 'hurt' : 'death'; b.anim = b.hp ? .22 : 0; b.deadAt = this.time; if (!b.hp && a.kind === 'player')
+    hit(a: Actor, b: Actor, damage: number) { if (b.hp <= 0||!Number.isFinite(damage)||damage<=0)
+        return; this.cancelAnimationPreview(a);this.cancelAnimationPreview(b);this.cancelSwordFlight(a);this.cancelSwordFlight(b);a.combatUntil=b.combatUntil=this.time+COMBAT_SECONDS;this.interactions.cancel(a.id,'Đang giao chiến');this.interactions.cancel(b.id,'Bị tấn công');b.hp = Math.max(0, b.hp - damage); b.action = b.hp ? 'hurt' : 'death'; b.anim = b.hp ? .22 : 0; b.deadAt = this.time; if (!b.hp && a.kind === 'player')
         a.kills++; this.events.push({ id: ++this.serial, x: b.x, y: b.y - 50, damage, target: b.id, time: this.time }); }
     attack(a: Actor) { if (a.cooldown > 0 || a.hp <= 0)
-        return; this.cancelAnimationPreview(a);this.cancelSwordFlight(a);this.interactions.cancel(a.id,'Đang đánh');a.combatUntil=this.time+3;a.attackSeq++; a.cooldown = a.kind === 'mob' ? .95 : COOLDOWN; a.action = 'attack'; a.anim = .24; for (const b of this.actors.values()) {
+        return; this.cancelAnimationPreview(a);this.cancelSwordFlight(a);this.interactions.cancel(a.id,'Đang đánh');const target=this.nearestAttackTarget(a);a.attackTargetId=target?.id;if(target)a.dir=Math.atan2(target.y-a.y,target.x-a.x);a.attackDir=a.dir;a.attackSeq++; a.cooldown = a.kind === 'mob' ? .95 : COOLDOWN; a.action = 'attack'; a.anim = .24; for (const b of this.actors.values()) {
         if (b.kind === a.kind || b.hp <= 0)
             continue;
         const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
         if (d > RANGE || Math.cos(Math.atan2(dy, dx) - a.dir) < .3)
             continue;
-        let clear = true;
-        for (let t = .15; t < 1; t += .15)
-            if (!canWalk(this.p, a.x + dx * t, a.y + dy * t, 2)) {
-                clear = false;
-                break;
-            }
-        if (clear)
+        if (this.clearLine(a,b))
             this.hit(a, b, a.kind === 'mob' ? 9 : 22);
     } }
     step(dt = .05) { this.time += dt; for (const a of this.actors.values()) {

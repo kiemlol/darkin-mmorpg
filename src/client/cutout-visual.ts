@@ -49,6 +49,7 @@ export class CutoutCharacterVisual implements CharacterVisual{
   const attack=a.attackSeq??0;
   if(attack!==this.lastAttack){this.lastAttack=attack;if(a.action==='attack'||a.cooldown>0)this.attacking=this.playAnimation('attack',true)}
   const action=this.attacking?'attack':this.loaded.actions[a.action]?a.action:'idle';
+  if(action==='attack'){const dir=Number.isFinite(a.attackDir)?a.attackDir!:a.dir;if(Math.abs(Math.cos(dir))>.15)this.player.face=Math.cos(dir)<0?-1:1}
   if(!this.attacking)this.playAnimation(action);
   const finished=this.player.update(dt*this.loaded.actions[action].rate,undefined,dt); // wing clock uses real seconds
   if(this.attacking&&finished){this.attacking=false;this.playAnimation(['walk','run'].includes(a.action)?a.action:'idle')}

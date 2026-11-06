@@ -1,3 +1,15 @@
+# Giao tranh 1,5s / tự aim — 2026-11-06
+
+- Combat chỉ bắt đầu/gia hạn khi có damage dương thực sự: **1,5 giây** cho cả hai bên. Bỏ gia hạn khi ra đòn hụt và bỏ cờ gần quái 116 cũ. Hụt có thể gọi phi kiếm ngay, không reset cooldown đòn đánh. World Offline/server cùng dùng COMBAT_SECONDS từ `shared/combat.ts`.
+- Đánh/Space tự xoay về quái sống gần nhất **trong range76 và LOS**; bỏ qua corpse, người chơi, ngoài tầm, collider mỏng; tie ID ổn định. Server tự quyết target/attackDir/damage, bỏ qua extra target/player/damage client tự khai. Giữ cone damage nhiều quái cũ, cooldown .55, damage22/9 và không PvP. Clip giữ hướng aim khi đang di chuyển để không lật lại giữa tick.
+- Nút Đánh ưu tiên quái đánh được khi gần mỏ; đây là action priority, không phải combat flag. Quái cách85 không khóa đào chỉ vì ở gần. Giữ nút đánh hụt khi vào range mỏ không tự đào, phải thả/bấm lại.
+- `npm test`: **80/80 PASS**, `npm run build`: **PASS**. Bao gồm mốc 1,499/1,5s, refresh khi hit/receive, miss/cooldown/spam/0/NaN/dead/wall không refresh; nearest sau lưng/tie/LOS/thin wall/range/PvP/cleave; mining/flight đúng sau 1,5 khi còn quái sống ở85; quái trong76 chỉ chọn ưu tiên nút mà không tạo cờ.
+- `combat-browser.cjs` trên **dist tĩnh4173**: **PASS Offline không backend**. Giữ Space nhiều nhát hụt vẫn combatUntil=0, lên phi kiếm ngay; tiếp đó dùng quái thật từ map đang phát hành, sai hướng ban đầu → auto aim, damage22, rig flip/attackDir và timer≤1,5s. Không sửa quái hoặc thêm một world khác để dựng cảnh. Zero WS/pageerror/request asset lỗi; ví/save và zoom110 giữ nguyên.
+- `combat-online.cjs`: **PASS hai tiến trình Chromium thật** và Node/WebSocket local3002 trên map nguyên bản/mob AI thật. Client kia thấy hướng/clip aim, damage22, timer1,5; giả mạo ID người chơi/target/damage trên input không tác động nhân vật khác hoặc tạo PvP. Actor mất kết nối bị xóa. Ảnh `tests/combat-online-auto-aim.png`.
+- `patchwork-harness.cjs`: **PASS drawImage/anchor/clip cũ trên hai rig**, thêm kiểm server attackDir thắng movement facing và không lật lại giữa frame; input held Đánh→node không đào tự động, fresh press mới bắt đầu. `sword-flight-browser.cjs`: **PASS** đã đổi kỳ vọng hụt không combat, lên/hạ/gọi lại/menu/đổi trang bị/viewport/save. `mining-browser.cjs`: **PASS** flow hủy/đủ3giây/thưởng một lần/reload/chờ30s hồi node/minimap/fog/zoom.
+
+Giới hạn: Online mới kiểm ở local, chưa có backend WSS công khai; Sites host frontend/Offline. Chưa kiểm điện thoại vật lý hoặc tải lớn. Auto aim không tự chạy tới mục tiêu và không tạo chiến đấu tầm xa. Chi tiết [COMBAT-AIM.md](COMBAT-AIM.md).
+
 # Bow1 / scale / điều khiển ngang — 2026-11-05
 
 - Clip bow1 upload giữ nguyên byte/ID `nightcamp-animation-bow1-767a8744-v1`, .3 giây/kind attack/hit .15/10 keys. Catalog đăng ký action `bow_shoot` trên hai rig, Menu thử động tác ngay trên nhân vật đang chơi; kiếm/búa tạm ẩn rồi trả lại. Chưa có phụ kiện cung, tên hoặc sát thương tầm xa; không tự biến preview thành đòn melee.

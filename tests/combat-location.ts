@@ -1,0 +1,3 @@
+import {readFileSync} from 'node:fs';import {World,canWalk} from '../src/shared/world';
+const project=JSON.parse(readFileSync('public/game-data/maps/forest.map-bundle.json','utf8')).project,w=new World(project),a=w.join('fixture','Fixture'),target=w.actors.get('mob0')!;
+for(const angle of [Math.PI,Math.PI*.85,-Math.PI*.85,0,Math.PI/2,-Math.PI/2]){const x=target.home.x-Math.cos(angle)*50,y=target.home.y-Math.sin(angle)*50;Object.assign(a,{x,y});if(canWalk(w.p,x,y,a.radius)&&w.nearestAttackTarget(a)?.id===target.id){console.log(JSON.stringify({x,y,targetId:target.id,face:Math.cos(angle)<0?-1:1}));process.exit(0)}}throw Error('No valid real-map combat fixture');
