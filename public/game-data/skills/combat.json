@@ -39,6 +39,38 @@
         },
         "trackTarget": true
       }
+    },
+    "spirit_book": {
+      "damage": 3,
+      "target": "single_mob",
+      "impact": {
+        "eventId": "book",
+        "frameIndex": 8,
+        "point": {
+          "x": 157,
+          "y": 157
+        },
+        "trackTarget": true
+      },
+      "volley": {
+        "waves": 2,
+        "count": 4,
+        "interval": 0.5,
+        "lanes": [
+          -20,
+          -12,
+          12,
+          20
+        ],
+        "speed": 270,
+        "lifetime": 3,
+        "minFlight": 0.25,
+        "closeSeconds": 0.4,
+        "holdTime": 1.2,
+        "soulEffectId": "spirit_book_souls",
+        "scale": 0.16,
+        "impactHeight": 26
+      }
     }
   }
 }

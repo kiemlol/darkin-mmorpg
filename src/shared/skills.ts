@@ -1,3 +1,4 @@
+import spiritBook from '../../public/game-data/skills/spirit-book.skill-pack.json';
 import kiemLai from '../../public/game-data/skills/kiem-lai.skill-pack.json';
 import coThanChiLo from '../../public/game-data/skills/co-than-chi-lo.skill-pack.json';
 import combat from '../../public/game-data/skills/combat.json';
@@ -11,22 +12,24 @@ export class SkillRegistry{
  get(id:string):any{return Object.hasOwn(this.project.skills,id)?this.project.skills[id]:null}
 }
 export const skills=new SkillRegistry();skills.register(source);
-const imports={'kiem-lai.skill-pack.json':kiemLai,'co-than-chi-lo.skill-pack.json':coThanChiLo};for(const entry of manifest.imports)if(Object.hasOwn(imports,entry.file))skills.registerMapped((imports as any)[entry.file],entry.sourceSkillId,entry.skillId);
+const imports={'spirit-book.skill-pack.json':spiritBook,'kiem-lai.skill-pack.json':kiemLai,'co-than-chi-lo.skill-pack.json':coThanChiLo};for(const entry of manifest.imports)if(Object.hasOwn(imports,entry.file))skills.registerMapped((imports as any)[entry.file],entry.sourceSkillId,entry.skillId);
 export const skillManifest=manifest;
 export type LearnedSkills={version:1;learned:string[];slots:(string|null)[];readyAt:Record<string,number>};
 export const emptySkills=():LearnedSkills=>({version:1,learned:[],slots:[null,null,null,null],readyAt:{}});
 export function normalizeSkills(raw:any):LearnedSkills{if(raw===undefined)return emptySkills();if(raw?.version!==1||!Array.isArray(raw.learned)||raw.learned.length>256||!raw.learned.every(skillId)||new Set(raw.learned).size!==raw.learned.length||!Array.isArray(raw.slots)||raw.slots.length!==4||raw.slots.some((id:any)=>id!==null&&(!skillId(id)||!raw.learned.includes(id)))||!raw.readyAt||typeof raw.readyAt!=='object'||Array.isArray(raw.readyAt)||Object.keys(raw.readyAt).length>256||Object.entries(raw.readyAt).some(([id,n])=>!skillId(id)||!Number.isFinite(n)||(n as number)<0))throw Error('Dữ liệu kỹ năng không hợp lệ');return structuredClone(raw)}
-export type SkillCast={id:string;skillId:string;casterId:string;targetId?:string;mapId:string;instanceId:string;startedAt:number;x:number;y:number;tx:number;ty:number;direction:number;epoch:number;resolved?:boolean};
-export function validSkillCasts(v:any):v is SkillCast[]{return Array.isArray(v)&&v.length<=128&&new Set(v.map(e=>e?.id)).size===v.length&&v.every(e=>e&&skills.get(e.skillId)&&[e.id,e.casterId,e.mapId,e.instanceId].every(s=>typeof s==='string'&&s.length>0&&s.length<=180)&&(!e.targetId||typeof e.targetId==='string'&&e.targetId.length<=128)&&[e.startedAt,e.x,e.y,e.tx,e.ty,e.direction,e.epoch].every(n=>Number.isFinite(n)&&Math.abs(n)<1e12)&&(e.resolved===undefined||typeof e.resolved==='boolean')&&Number.isSafeInteger(e.epoch)&&e.epoch>=0)}
+export type SkillCast={id:string;skillId:string;casterId:string;targetId?:string;mapId:string;instanceId:string;startedAt:number;x:number;y:number;tx:number;ty:number;direction:number;epoch:number;resolved?:boolean;wavesEmitted?:number;closeAt?:number};
+export function validSkillCasts(v:any):v is SkillCast[]{return Array.isArray(v)&&v.length<=128&&new Set(v.map(e=>e?.id)).size===v.length&&v.every(e=>e&&skills.get(e.skillId)&&[e.id,e.casterId,e.mapId,e.instanceId].every(s=>typeof s==='string'&&s.length>0&&s.length<=180)&&(!e.targetId||typeof e.targetId==='string'&&e.targetId.length<=128)&&[e.startedAt,e.x,e.y,e.tx,e.ty,e.direction,e.epoch].every(n=>Number.isFinite(n)&&Math.abs(n)<1e12)&&(e.resolved===undefined||typeof e.resolved==='boolean')&&(e.wavesEmitted===undefined||Number.isInteger(e.wavesEmitted)&&e.wavesEmitted>=0&&e.wavesEmitted<=2)&&(e.closeAt===undefined||Number.isFinite(e.closeAt)&&e.closeAt>=e.startedAt)&&Number.isSafeInteger(e.epoch)&&e.epoch>=0)}
 
-export type SkillCombatRule={damage:number;target:'single_mob';impact:{eventId:string;frameIndex:number;point:{x:number;y:number};trackTarget:true}};
+export type SkillVolley={waves:number;count:number;interval:number;lanes:number[];speed:number;lifetime:number;minFlight:number;closeSeconds:number;holdTime:number;soulEffectId:string;scale:number;impactHeight:number};
+export type SkillCombatRule={volley?:SkillVolley;damage:number;target:'single_mob';impact:{eventId:string;frameIndex:number;point:{x:number;y:number};trackTarget:true}};
 export const skillCombat:Record<string,SkillCombatRule>=combat.skills as Record<string,SkillCombatRule>;
 
 // Combat metadata belongs to the game, never to an untrusted client or visual marker.
 // Every damaging skill needs an explicit contact frame and point; no hitAt fallback.
 export function validateSkillCombat(id:string,rule:any,project:any=skills.project):asserts rule is SkillCombatRule{
  const s=project.skills[id],i=rule?.impact,e=s?.events.find((e:any)=>e.id===i?.eventId),frames=e&&project.effects[e.effectId]?.frames;
- if(!s||!Number.isSafeInteger(rule?.damage)||rule.damage<=0||rule.damage>1000000||rule.target!=='single_mob'||!i||i.trackTarget!==true||!frames||!Number.isInteger(i.frameIndex)||i.frameIndex<0||i.frameIndex>=frames.length||!i.point||![i.point.x,i.point.y].every(Number.isFinite)||e.anchor!=='target'||e.motion!=='still')throw Error('Thiếu hoặc sai cấu hình va chạm skill: '+id);
+ if(!s||!Number.isSafeInteger(rule?.damage)||rule.damage<=0||rule.damage>1000000||rule.target!=='single_mob'||!i||i.trackTarget!==true||!frames||!Number.isInteger(i.frameIndex)||i.frameIndex<0||i.frameIndex>=frames.length||!i.point||![i.point.x,i.point.y].every(Number.isFinite)||e.anchor!==(rule.volley?'caster':'target')||e.motion!=='still')throw Error('Thiếu hoặc sai cấu hình va chạm skill: '+id);
+ if(rule.volley){const v=rule.volley;if(v.waves!==2||v.count!==4||!Array.isArray(v.lanes)||v.lanes.length!==v.count||!v.lanes.every((n:number)=>Number.isFinite(n)&&Math.abs(n)<=24)||![v.interval,v.speed,v.lifetime,v.minFlight,v.closeSeconds,v.holdTime,v.scale,v.impactHeight].every(n=>Number.isFinite(n)&&n>0)||v.speed>600||v.lifetime>3||v.minFlight>v.lifetime||v.holdTime>=e.duration||v.closeSeconds>e.duration-v.holdTime+1e-8||!project.effects[v.soulEffectId]?.frames)throw Error('Cấu hình đợt linh hồn không hợp lệ: '+id)}
  const time=contactTime(e,frames,i.frameIndex);
  if(!Number.isFinite(time)||time<=0||time>=s.duration||e.at+e.duration>s.duration+1e-8)throw Error('Mốc va chạm ngoài timeline skill: '+id);
 }
@@ -42,7 +45,7 @@ function contactDefinition(id:string){
 export function skillImpactTime(id:string):number{const {impact,e,frames}=contactDefinition(id);return contactTime(e,frames,impact.frameIndex)}
 // Frame pixels before native anchor, scale, rotation and offset; camera is applied later.
 export function skillVisualTarget(id:string,foot:{x:number;y:number}){
- const {impact,e,frames}=contactDefinition(id),f=frames[impact.frameIndex];
+ if(skillCombat[id]?.volley)return {...foot};const {impact,e,frames}=contactDefinition(id),f=frames[impact.frameIndex];
  const x=(impact.point.x-f.ax*f.w)*e.scale,y=(impact.point.y-f.ay*f.h)*e.scale,r=e.rotation*Math.PI/180;
  return {x:foot.x-e.x-(x*Math.cos(r)-y*Math.sin(r)),y:foot.y-e.y-(x*Math.sin(r)+y*Math.cos(r))};
 }

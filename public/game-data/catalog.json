@@ -355,6 +355,21 @@
       "rig": "traveler-rig",
       "path": "accessories/studio/soul-banner/merged.accessory-pack.json",
       "slot": "handF"
+    },
+    {
+      "id": "spirit-book-cast",
+      "type": "animation",
+      "path": "animations/spirit-book/spell.animation-pack.json",
+      "rig": "traveler-rig",
+      "actions": {
+        "spirit_book_cast": {
+          "clip": "Phù phép",
+          "animationId": "animation-80c08418-b778-48a3-b874-714f5467d54a",
+          "loop": false,
+          "rate": 1,
+          "hideWeapon": true
+        }
+      }
     }
   ],
   "appearances": [
@@ -425,6 +440,14 @@
   "actionPacks": [
     {
       "resourceId": "bow-actions",
+      "compatibleRigs": [
+        "traveler-rig",
+        "shadow-knight-rig"
+      ],
+      "mode": "preview"
+    },
+    {
+      "resourceId": "spirit-book-cast",
       "compatibleRigs": [
         "traveler-rig",
         "shadow-knight-rig"

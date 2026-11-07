@@ -1,10 +1,12 @@
-import {SkillPlayer,loadSkillImages} from '../../public/game-data/skills/skill-runtime.mjs';
+import {missilePosition} from '../shared/skill-missiles';
+import {SkillPlayer,loadSkillImages,skillFrame} from '../../public/game-data/skills/skill-runtime.mjs';
 import {skills,skillCombat,skillImpactTime,skillVisualTarget,skillPlaybackProject} from '../shared/skills';import type {Snapshot,Actor} from '../shared/world';import type {CharacterVisual} from './visual';import {CutoutCharacterVisual} from './cutout-visual';import {assetWarning} from './assets';
 export class SkillVisuals{
+ missileFrame:any[]=[];origins=new Map<string,{x:number;y:number}>();missileAges=new Map<string,number>();
  animationOwners=new Map<string,CutoutCharacterVisual>();
  images=new Map();loaded=false;error='';mapKey='';seen=new Set<string>();players=new Map<string,{player:any;caster:{x:number;y:number};cast:any;age:number;updates:number}>();pending=new Map<string,{casterId:string;animation:string;direction:number}>();
  async load(){try{this.images=await loadSkillImages(skills.project);this.loaded=true}catch(e){this.error='Không tải được Skill & VFX: '+String(e);assetWarning(this.error)}}
- clear(){for(const[id,v]of this.animationOwners)v.cancelSkillAnimation(id);this.animationOwners.clear();for(const p of this.players.values())p.player.clear();this.players.clear();this.pending.clear();this.seen.clear();this.mapKey=''}
+ clear(){this.missileFrame=[];this.origins.clear();this.missileAges.clear();for(const[id,v]of this.animationOwners)v.cancelSkillAnimation(id);this.animationOwners.clear();for(const p of this.players.values())p.player.clear();this.players.clear();this.pending.clear();this.seen.clear();this.mapKey=''}
  update(snapshot:Snapshot|null,actors:Actor[],visuals:Map<string,CharacterVisual>,dt:number){
   if(!snapshot){this.clear();return}const key=(snapshot.instanceId||'')+':'+(snapshot.skillCasts?.[0]?.mapId||'');
   if(this.mapKey&&key.split(':').slice(0,-1).join(':')!==this.mapKey.split(':').slice(0,-1).join(':'))this.clear();this.mapKey=key;
@@ -12,16 +14,22 @@ export class SkillVisuals{
   if(this.loaded)for(const c of snapshot.skillCasts||[]){if(this.seen.has(c.id))continue;this.seen.add(c.id);const age=Math.max(0,snapshot.time-c.startedAt);if(age>=skills.get(c.skillId).duration)continue;
    const caster={x:c.x,y:c.y};const player=new SkillPlayer(skillPlaybackProject(),{onEvent:(e?:any)=>{if(e.type==='cast'&&e.animation)this.pending.set(c.id,{casterId:c.casterId,animation:e.animation,direction:c.direction})}});player.cast(c.skillId,{caster,target:skillVisualTarget(c.skillId,{x:c.tx,y:c.ty})});this.players.set(c.id,{player,caster,cast:c,age:-1,updates:0});
   }
-  for(const [id,p]of this.players){p.cast=records.get(id)||p.cast;const owner=actors.find(a=>a.id===p.cast.casterId);if(!owner||owner.hp<=0||owner.teleportSeq!==p.cast.epoch){p.player.clear();this.players.delete(id);this.pending.delete(id);this.animationOwners.get(id)?.cancelSkillAnimation(id);this.animationOwners.delete(id);continue}p.caster.x=owner.x;p.caster.y=owner.y;
+  for(const [id,p]of this.players){p.cast=records.get(id)||p.cast;const owner=actors.find(a=>a.id===p.cast.casterId);if(!owner||owner.hp<=0||owner.teleportSeq!==p.cast.epoch||skillCombat[p.cast.skillId]?.volley&&(!records.has(id)||!!owner?.swordFlight)){p.player.clear();this.players.delete(id);this.pending.delete(id);this.animationOwners.get(id)?.cancelSkillAnimation(id);this.animationOwners.delete(id);continue}p.caster.x=owner.x;p.caster.y=owner.y;
    const authorityAge=Math.max(0,snapshot.time-p.cast.startedAt);if(authorityAge>=skills.get(p.cast.skillId).duration){p.player.clear();this.players.delete(id);this.pending.delete(id);this.animationOwners.get(id)?.cancelSkillAnimation(id);this.animationOwners.delete(id);continue}let desired=p.age<0?authorityAge:Math.min(authorityAge+.15,Math.max(authorityAge,p.age+dt));const impact=skillCombat[p.cast.skillId]?.impact;
-   if(impact){const c=p.cast,mob=actors.find(a=>a.id===c.targetId),foot=!c.resolved&&mob&&mob.hp>0?mob:{x:c.tx,y:c.ty};const target=skillVisualTarget(c.skillId,foot);if(p.player.instances[0])Object.assign(p.player.instances[0].target,target);
+   const volley=skillCombat[p.cast.skillId]?.volley;
+   if(volley){const point=visuals.get(owner.id)?.handCenter?.();if(point)Object.assign(p.caster,point);else p.caster.y-=70;desired=p.cast.closeAt===undefined?Math.min(authorityAge,volley.holdTime-.00001):volley.holdTime+Math.max(0,snapshot.time-p.cast.closeAt);}
+   else if(impact){const c=p.cast,mob=actors.find(a=>a.id===c.targetId),foot=!c.resolved&&mob&&mob.hp>0?mob:{x:c.tx,y:c.ty};const target=skillVisualTarget(c.skillId,foot);if(p.player.instances[0])Object.assign(p.player.instances[0].target,target);
     // Do not show contact before the authority has resolved this cast.
     if(!c.resolved)desired=Math.min(desired,skillImpactTime(c.skillId)-.00001);
    }
    const step=Math.max(0,desired-p.player.time);p.player.update(step);p.updates++;p.age=p.player.time;if(!p.player.instances.length){this.players.delete(id);this.pending.delete(id);this.animationOwners.get(id)?.cancelSkillAnimation(id);this.animationOwners.delete(id)}
   }
-  for(const[id,p]of this.pending){const v=visuals.get(p.casterId);if(v instanceof CutoutCharacterVisual&&v.loaded){v.castAnimation(p.animation,id,p.direction);this.animationOwners.set(id,v);this.pending.delete(id)}}
+  for(const[id,p]of this.pending){const v=visuals.get(p.casterId);if(v instanceof CutoutCharacterVisual&&v.loaded){v.castAnimation(p.animation,id,p.direction,!!skillCombat[this.players.get(id)?.cast.skillId]?.volley);this.animationOwners.set(id,v);this.pending.delete(id)}}
+ this.updateMissiles(snapshot,actors,visuals,dt);
  }
- draw(c:CanvasRenderingContext2D,layer:'low'|'high'|'glow'){for(const p of this.players.values())p.player.draw(c,this.images,{layer})}
- debug(){return{loaded:this.loaded,images:this.images.size,error:this.error,instances:[...this.players.values()].map(p=>({id:p.cast.id,skillId:p.cast.skillId,age:p.age,updates:p.updates,caster:{...p.caster},target:p.player.instances[0]?.target,aimFoot:{x:p.cast.tx,y:p.cast.ty},resolved:!!p.cast.resolved}))}}
+ draw(c:CanvasRenderingContext2D,layer:'low'|'high'|'glow'){for(const p of this.players.values())if(!skillCombat[p.cast.skillId]?.volley)p.player.draw(c,this.images,{layer})}
+ drawCaster(c:CanvasRenderingContext2D,id:string){for(const p of this.players.values())if(p.cast.casterId===id&&skillCombat[p.cast.skillId]?.volley)p.player.draw(c,this.images,{layer:'high'})}
+ updateMissiles(snapshot:Snapshot,actors:Actor[],visuals:Map<string,CharacterVisual>,dt:number){this.missileFrame=[];const live=new Set<string>();for(const p of snapshot.skillMissiles||[]){live.add(p.id);let origin=this.origins.get(p.id);if(!origin){origin=visuals.get(p.ownerId)?.handCenter?.()||{x:p.startX,y:p.startY-70};this.origins.set(p.id,origin)}const target=actors.find(a=>a.id===p.targetId),v=skillCombat[p.skillId].volley!,serverAge=Math.max(0,snapshot.time-p.bornAt),age=this.missileAges.has(p.id)?Math.min(serverAge+.1,Math.max(serverAge,this.missileAges.get(p.id)!+dt)):serverAge;this.missileAges.set(p.id,age);const visualAge=Math.min(age,p.flightSeconds*.95),q=target?missilePosition(p,target,p.bornAt+visualAge):p,u=q.progress;this.missileFrame.push({...p,kind:'skill_soul',x:q.x,y:q.y,progress:u,drawX:q.x+(origin.x-p.startX)*(1-u),drawY:q.y+(origin.y-p.startY)*(1-u)-v.impactHeight*u,age})}for(const id of this.origins.keys())if(!live.has(id)){this.origins.delete(id);this.missileAges.delete(id)}}
+ drawMissile(c:CanvasRenderingContext2D,p:any){const v=skillCombat[p.skillId].volley!,fx=skills.project.effects[v.soulEffectId],total=fx.frames.reduce((n:number,f:any)=>n+f.duration,0),age=p.age%total,f=skillFrame(fx,age),img=this.images.get(f.src);if(!img)return;const index=fx.frames.indexOf(f),heading=[-.4,-.4,-.5,-.4,-.6,-.6,-.1,-.1,-.1,-.1,-.1,-.2,-.1,0,.2,.6,1.1,1.6,2,1.6,1.1,.7,.2,-.2][index]||0;c.save();c.translate(p.drawX,p.drawY);c.rotate(p.angle-heading);c.scale(v.scale,v.scale);c.drawImage(img,-f.ax*f.w,-f.ay*f.h,f.w,f.h);c.restore()}
+ debug(){return{loaded:this.loaded,missiles:this.missileFrame.map(p=>({id:p.id,castId:p.castId,progress:p.progress,wave:p.wave,index:p.index,x:p.drawX,y:p.drawY})),images:this.images.size,error:this.error,instances:[...this.players.values()].map(p=>({id:p.cast.id,skillId:p.cast.skillId,age:p.age,updates:p.updates,caster:{...p.caster},target:p.player.instances[0]?.target,aimFoot:{x:p.cast.tx,y:p.cast.ty},resolved:!!p.cast.resolved}))}}
 }

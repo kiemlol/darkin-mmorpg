@@ -3,7 +3,8 @@
   "packs": [
     "my_skills.skill-pack.json",
     "kiem-lai.skill-pack.json",
-    "co-than-chi-lo.skill-pack.json"
+    "co-than-chi-lo.skill-pack.json",
+    "spirit-book.skill-pack.json"
   ],
   "offlineDemo": {
     "skillId": "skill_1",
@@ -12,7 +13,8 @@
   "labels": {
     "skill_1": "Cổ thần chỉ",
     "kiem_lai": "Kiếm lai",
-    "co_than_chi_lo": "Cổ thần chi lộ"
+    "co_than_chi_lo": "Cổ thần chi lộ",
+    "spirit_book": "Linh Hồn Thư"
   },
   "imports": [
     {
@@ -32,6 +34,12 @@
       "sourceSkillId": "skill_1",
       "skillId": "co_than_chi_lo",
       "slot": 3
+    },
+    {
+      "file": "spirit-book.skill-pack.json",
+      "sourceSkillId": "spirit_book",
+      "skillId": "spirit_book",
+      "slot": 4
     }
   ],
   "offlineDemos": [
@@ -46,6 +54,10 @@
     {
       "skillId": "co_than_chi_lo",
       "slot": 3
+    },
+    {
+      "skillId": "spirit_book",
+      "slot": 4
     }
   ]
 }

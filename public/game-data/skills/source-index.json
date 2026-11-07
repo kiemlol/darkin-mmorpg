@@ -4,6 +4,9 @@
     "my_skills.skill-pack.json": "30ae1f55b80d37f3ee5066cd9fa0cf8f3072b3922f00d198c2771f784828551e",
     "skill-runtime.mjs": "8a4e16d3952fb7e06a4eb980da690a2d4be834d4ec0975199ec4298d2a437486",
     "kiem-lai.skill-pack.json": "74d2907c9d1242be94d9a086cf2f4ea616bdc579995e0d03a68000dd9c75af6e",
-    "co-than-chi-lo.skill-pack.json": "a5530f1e7ad39441504a36de707ebea88371902c219c365b5c7da9aba5ca9401"
+    "co-than-chi-lo.skill-pack.json": "a5530f1e7ad39441504a36de707ebea88371902c219c365b5c7da9aba5ca9401",
+    "spirit-book.skill-pack.json": "877c0c348401cfd5178d9c79927c0b972749a16950803f4c5c6192216ac14ca7",
+    "spirit-book/source/book.jpg": "9ac525d850e64ff1a72077dd79a6ad61feb01a690cdbe032eb83ad1adfd436d6",
+    "spirit-book/source/souls.jpg": "30d4318769cdc34872b6afde4d16f29befb731c4c23a6a1e0eda0fba569e58a4"
   }
 }

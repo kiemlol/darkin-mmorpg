@@ -1,6 +1,6 @@
 # Skill & VFX — Cổ thần chỉ, ô2
 
-Offline: vào game, bấm **ô skill thứ2** trong cung nút quanh Đánh hoặc phím **2**. Ba demo hiện có được gắn vào ô1/2/3 khi ô tương ứng còn trống; không tự cấp các skill khác trong registry. Nút đánh thường/Space và Phi kiếm/F giữ nguyên. Khi có quái còn sống trong300 world units và có LOS, server/local authority chọn quái gần nhất. Không có quái thì phát VFX về điểm trên đất phía trước, không gây sát thương cho người chơi.
+Offline: vào game, bấm **ô skill thứ2** trong cung nút quanh Đánh hoặc phím **2**. Bốn demo hiện có được gắn vào ô1/2/3/4 khi ô tương ứng còn trống; không tự cấp các skill khác trong registry. Nút đánh thường/Space và Phi kiếm/F giữ nguyên. Khi có quái còn sống trong300 world units và có LOS, server/local authority chọn quái gần nhất. Không có quái thì phát VFX về điểm trên đất phía trước, không gây sát thương cho người chơi.
 
 Theo yêu cầu cập nhật: **100 damage**, một mục tiêu quái, mốc tiếp xúc **0,52s (frame6 tính từ0)**; cooldown1s, cost0, VFX1.3s từ dữ liệu Studio. Damage100 nằm trong `public/game-data/skills/combat.json` do game quản lý, không thêm trường giả vào file Studio. Quái MVP60HP sẽ bị hạ bằng một lần trúng. Mốc hình ảnh của SkillPlayer không gọi damage/nhận thưởng; World tính giờ và re-check mục tiêu còn sống, range và LOS tại mốc tiếp xúc rồi hit một lần. Target chạy xa, bị tường ngăn, chủ chết/teleport/rời map/disconnect không nhận damage không hợp lệ. Cast lên đất trống không tạo combat; damage thật vẫn dùng timer1.5s cũ. Không PvP, không tạo loot/tiền/MP mới.
 
@@ -51,11 +51,11 @@ Profile lưu `skills: {version:1, learned:[], slots:[null,null,null,null], ready
 
 Hai file mới đều xuất `project.id=my_skills`, `skillId=skill_1`. Gộp trực tiếp sẽ ghi đè Cổ thần chỉ; vì yêu cầu là **hai skill mới**, adapter `registerMapped` dùng bảng `index.json.imports` để định danh riêng trong game. File Studio được giữ **nguyên byte**, không sửa ID trong file; event/effect ID, PNG, frame duration, anchor, offset, scale, animation và runtime giữ nguyên. `sourceSkillId` và `skillId` trong bảng import là ánh xạ tường minh, không sinh ID ngẫu nhiên. Cập nhật lại cùng bảng ánh xạ sẽ cập nhật đúng skill đó, không thay skill cũ.
 
-Nguồn `kiem-lai.skill-pack.json` và `co-than-chi-lo.skill-pack.json` đã thêm vào source-index SHA256. Runtime nhúng của cả hai khớp chính xác runtime MJS hiện dùng; không thực thi chuỗi source trong JSON. Tổng ảnh cache dùng chung là71, không giải mã lại cho từng người/cast.
+Nguồn `kiem-lai.skill-pack.json` và `co-than-chi-lo.skill-pack.json` đã thêm vào source-index SHA256. Runtime nhúng của cả hai khớp chính xác runtime MJS hiện dùng; không thực thi chuỗi source trong JSON. Tổng ảnh cache của ba chiêu này là71 (nay111 khi tính cả sách), không giải mã lại cho từng người/cast.
 
 Cả ba dùng cùng **100 damage**, cooldown1s, range300, cost0 và animation `attack`. Mốc va chạm riêng được mô tả bên dưới. Chỉ một hit server mỗi lần cast; cooldown riêng từng ID. Giữ đúng khoảng trống cuối timeline của Kiếm lai (~0.667s) và Cổ thần chi lộ (0.5s), không kéo VFX cho khớp toàn skill hoặc sửa thời gian frame. Hình Cổ thần trong PNG là lớp VFX, không thay ngoại hình nhân vật đang chơi; scale2/offset lớn có thể vươn ngoài viewport và được giữ theo Studio.
 
-Offline tự bổ sung đúng hai demo vào ô trống1/3; giữ ô2, HP/ví/cảnh giới, các learned ID và cooldown cũ. Không chiếm ô đã có binding khác. Online không tự cấp thêm quyền học: server phải lưu learned ID của từng món; UI khóa món chưa học. Mọi kiểm tra/đồng bộ và giới hạn backend trong phần trên tiếp tục áp dụng. Ô4 còn trống, Phi kiếm giữ vị trí cũ.
+Offline tự bổ sung đúng hai demo vào ô trống1/3; giữ ô2, HP/ví/cảnh giới, các learned ID và cooldown cũ. Không chiếm ô đã có binding khác. Online không tự cấp thêm quyền học: server phải lưu learned ID của từng món; UI khóa món chưa học. Mọi kiểm tra/đồng bộ và giới hạn backend trong phần trên tiếp tục áp dụng. Ô4 nay gắn Linh Hồn Thư; Phi kiếm giữ vị trí cũ.
 
 Kiểm thêm: `tests/skills-additional.test.ts`, `node tests/skills2-harness.cjs` (Vite5173), `node tests/skills2-browser.cjs` (dist4173), `node tests/skills2-online.cjs` (hai lượt, mỗi lượt hai Chromium riêng/local Node cho từng skill mới).
 
@@ -82,3 +82,8 @@ Mọi skill gây sát thương dùng cùng `World.castSkill`/`advanceSkills` và
 5. Muốn cho nhân vật dùng skill phải có rule học/gắn ô riêng; đăng ký tài nguyên không tự cấp quyền Online.
 
 `skillPlaybackProject()` tạo adapter nông cho SkillPlayer: chỉ thay marker hitAt bằng mốc frame đã cấu hình, không sao chép/giải mã ảnh lại, không thay ID và không sửa pack gốc. Client marker vẫn không có quyền gây damage; server tính mốc từ cùng dữ liệu và kiểm lại mục tiêu/range/LOS. Quy tắc bám chân đến va chạm, khóa sau xử lý và chỉ100 một lần áp dụng cho cả Cổ thần chỉ, hai skill trước và skill mới dùng profile này. Giá trị damage của skill mới được khai báo rõ trong profile do game quản lý.
+
+
+## Skill sách — ô4
+
+Xem [SPIRIT-BOOK.md](SPIRIT-BOOK.md). `spirit_book` mở rộng profile bằng `volley`: event neo caster là mốc **phát đạn**, còn damage được quyết định bằng va chạm thật của từng linh hồn. Ba chiêu tác động tại chân quái trước đó giữ nguyên luồng contact-frame. Không có nhánh theo tên/ID skill trong gameplay.

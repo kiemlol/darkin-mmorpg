@@ -1,3 +1,4 @@
+import {validSkillMissiles} from '../shared/skill-missiles';
 import {skillManifest,validSkillCasts,normalizeSkills} from '../shared/skills';
 import {validSoulProjectiles} from '../shared/weapons';
 import {SOUL_BANNER_ID} from '../shared/inventory';
@@ -193,6 +194,7 @@ export class NetworkGameSession implements GameSession {
         if(m.type==='exploration'&&this.exploration)this.exploration.restore(m.record);
         if (m.type === 'snapshot') {
             if(Array.isArray(m.actors))for(const a of m.actors)if(a.kind==='player')normalizeSkills(a.skills);
+            if(m.skillMissiles!==undefined&&!validSkillMissiles(m.skillMissiles)){this.status='Server gửi đạn skill không hợp lệ';this.socket.close();return}
             if(m.skillCasts!==undefined&&!validSkillCasts(m.skillCasts)){this.status='Server gửi skill không hợp lệ';this.socket.close();return}
             if(m.projectiles!==undefined&&!validSoulProjectiles(m.projectiles)){this.status='Server gửi linh hồn không hợp lệ';this.socket.close();return}
             if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.kind==='player'&&a.inventory!==undefined&&!validInventory(a.inventory))){this.status='Server gửi túi đồ không hợp lệ';this.socket.close();return}

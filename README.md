@@ -67,3 +67,6 @@ Map7 + runtime Studio8, occlusionMask theo chân và phi kiếm mọi vũ khí �
 Skill & VFX — [Cổ thần chỉ ở ô skill2](SKILLS-VFX.md): Offline học/gắn sẵn demo, nút2 hoặc phím2;100 damage server tại hitAt0.4s, cooldown1s. Online chỉ cast skill đã học trong profile server; không tự cấp cho người mới. Backend cần `skillProtocol:1`.
 
 Đã thêm **Kiếm lai (ô/phím1)** và **Cổ thần chi lộ (ô/phím3)**, giữ Cổ thần chỉ ở ô2. Cả ba100damage do server tính, cooldown riêng. Hai pack mới trùng source skill_1 nên dùng adapter ID có bảng ánh xạ, giữ file Studio nguyên byte; xem [SKILLS-VFX.md](SKILLS-VFX.md).
+
+
+Skill **Linh Hồn Thư** dùng ô/phím4 trong Offline; xem [nguồn asset, cơ chế hai đợt linh hồn và cách kiểm tra](SPIRIT-BOOK.md). Online cần quyền học do server cấp, không tự nhập tiến trình Offline.
