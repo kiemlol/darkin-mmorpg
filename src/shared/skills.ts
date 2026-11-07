@@ -19,20 +19,40 @@ export function normalizeSkills(raw:any):LearnedSkills{if(raw===undefined)return
 export type SkillCast={id:string;skillId:string;casterId:string;targetId?:string;mapId:string;instanceId:string;startedAt:number;x:number;y:number;tx:number;ty:number;direction:number;epoch:number;resolved?:boolean};
 export function validSkillCasts(v:any):v is SkillCast[]{return Array.isArray(v)&&v.length<=128&&new Set(v.map(e=>e?.id)).size===v.length&&v.every(e=>e&&skills.get(e.skillId)&&[e.id,e.casterId,e.mapId,e.instanceId].every(s=>typeof s==='string'&&s.length>0&&s.length<=180)&&(!e.targetId||typeof e.targetId==='string'&&e.targetId.length<=128)&&[e.startedAt,e.x,e.y,e.tx,e.ty,e.direction,e.epoch].every(n=>Number.isFinite(n)&&Math.abs(n)<1e12)&&(e.resolved===undefined||typeof e.resolved==='boolean')&&Number.isSafeInteger(e.epoch)&&e.epoch>=0)}
 
-export const skillCombat:Record<string,{damage:number;target:string;impact?:{eventId:string;frameIndex:number;point:{x:number;y:number};trackTarget:boolean}}>=combat.skills;
-if(combat.version!==1||Object.entries(skillCombat).some(([id,r])=>!skills.get(id)||!Number.isSafeInteger(r.damage)||r.damage<0||r.damage>1000000||r.target!=='single_mob'))throw Error('Cấu hình sát thương skill không hợp lệ');
+export type SkillCombatRule={damage:number;target:'single_mob';impact:{eventId:string;frameIndex:number;point:{x:number;y:number};trackTarget:true}};
+export const skillCombat:Record<string,SkillCombatRule>=combat.skills as Record<string,SkillCombatRule>;
 
-// Contact pixels are authored-frame coordinates, before the native event transform.
-// Keep original Studio bundles untouched; both simulation and presentation use this adapter.
-export function skillImpactTime(id:string):number{
- const s=skills.get(id),impact=skillCombat[id]?.impact;if(!impact)return s.hitAt;
- const e=s.events.find((e:any)=>e.id===impact.eventId),frames=skills.project.effects[e.effectId].frames;
- const total=frames.reduce((n:number,f:any)=>n+f.duration,0),before=frames.slice(0,impact.frameIndex).reduce((n:number,f:any)=>n+f.duration,0);
+// Combat metadata belongs to the game, never to an untrusted client or visual marker.
+// Every damaging skill needs an explicit contact frame and point; no hitAt fallback.
+export function validateSkillCombat(id:string,rule:any,project:any=skills.project):asserts rule is SkillCombatRule{
+ const s=project.skills[id],i=rule?.impact,e=s?.events.find((e:any)=>e.id===i?.eventId),frames=e&&project.effects[e.effectId]?.frames;
+ if(!s||!Number.isSafeInteger(rule?.damage)||rule.damage<=0||rule.damage>1000000||rule.target!=='single_mob'||!i||i.trackTarget!==true||!frames||!Number.isInteger(i.frameIndex)||i.frameIndex<0||i.frameIndex>=frames.length||!i.point||![i.point.x,i.point.y].every(Number.isFinite)||e.anchor!=='target'||e.motion!=='still')throw Error('Thiếu hoặc sai cấu hình va chạm skill: '+id);
+ const time=contactTime(e,frames,i.frameIndex);
+ if(!Number.isFinite(time)||time<=0||time>=s.duration||e.at+e.duration>s.duration+1e-8)throw Error('Mốc va chạm ngoài timeline skill: '+id);
+}
+function contactTime(e:any,frames:any[],index:number){
+ const total=frames.reduce((n:number,f:any)=>n+f.duration,0),before=frames.slice(0,index).reduce((n:number,f:any)=>n+f.duration,0);
  return e.at+e.duration*before/total;
 }
+function contactDefinition(id:string){
+ const s=skills.get(id),impact=skillCombat[id]?.impact;
+ if(!s||!impact)throw Error('Skill chưa có cấu hình va chạm: '+id);
+ const e=s.events.find((e:any)=>e.id===impact.eventId);return {impact,e,frames:skills.project.effects[e.effectId].frames};
+}
+export function skillImpactTime(id:string):number{const {impact,e,frames}=contactDefinition(id);return contactTime(e,frames,impact.frameIndex)}
+// Frame pixels before native anchor, scale, rotation and offset; camera is applied later.
 export function skillVisualTarget(id:string,foot:{x:number;y:number}){
- const impact=skillCombat[id]?.impact;if(!impact)return {...foot};const s=skills.get(id),e=s.events.find((e:any)=>e.id===impact.eventId),f=skills.project.effects[e.effectId].frames[impact.frameIndex];
+ const {impact,e,frames}=contactDefinition(id),f=frames[impact.frameIndex];
  const x=(impact.point.x-f.ax*f.w)*e.scale,y=(impact.point.y-f.ay*f.h)*e.scale,r=e.rotation*Math.PI/180;
  return {x:foot.x-e.x-(x*Math.cos(r)-y*Math.sin(r)),y:foot.y-e.y-(x*Math.sin(r)+y*Math.cos(r))};
 }
-for(const[id,r]of Object.entries(skillCombat))if(r.impact){const i=r.impact,e=skills.get(id).events.find((e:any)=>e.id===i.eventId),frames=e&&skills.project.effects[e.effectId]?.frames;if(!frames||!Number.isInteger(i.frameIndex)||i.frameIndex<0||i.frameIndex>=frames.length||![i.point.x,i.point.y].every(Number.isFinite)||e.anchor!=='target'||e.motion!=='still'||skillImpactTime(id)>=skills.get(id).duration)throw Error('Cấu hình điểm va chạm skill không hợp lệ: '+id)}
+if(combat.version!==1)throw Error('Sai phiên bản cấu hình combat skill');
+for(const[id,rule]of Object.entries(skillCombat))validateSkillCombat(id,rule);
+
+// Share frame images/specs; override only the runtime marker time in a shallow adapter.
+// World still validates/resolves damage independently. Original Studio exports stay intact.
+let playbackSource:any,playback:any;
+export function skillPlaybackProject(){
+ if(playbackSource!==skills.project){playback={...skills.project,skills:Object.fromEntries(Object.entries(skills.project.skills).map(([id,s]:[string,any])=>[id,{...s,...(skillCombat[id]?{hitAt:skillImpactTime(id)}:{})}]))};playbackSource=skills.project}
+ return playback;
+}

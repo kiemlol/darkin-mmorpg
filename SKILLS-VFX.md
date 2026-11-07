@@ -1,8 +1,8 @@
 # Skill & VFX — Cổ thần chỉ, ô2
 
-Offline: vào game, bấm **ô skill thứ2** trong cung nút quanh Đánh hoặc phím **2**. Chỉ skill demo `skill_1` được học/gắn sẵn, không cấp tất cả skill trong registry. Nút đánh thường/Space và Phi kiếm/F giữ nguyên. Khi có quái còn sống trong300 world units và có LOS, server/local authority chọn quái gần nhất. Không có quái thì phát VFX về điểm trên đất phía trước, không gây sát thương cho người chơi.
+Offline: vào game, bấm **ô skill thứ2** trong cung nút quanh Đánh hoặc phím **2**. Ba demo hiện có được gắn vào ô1/2/3 khi ô tương ứng còn trống; không tự cấp các skill khác trong registry. Nút đánh thường/Space và Phi kiếm/F giữ nguyên. Khi có quái còn sống trong300 world units và có LOS, server/local authority chọn quái gần nhất. Không có quái thì phát VFX về điểm trên đất phía trước, không gây sát thương cho người chơi.
 
-Theo yêu cầu cập nhật: **100 damage**, một mục tiêu quái, mốc `hitAt=0.4s`; cooldown1s, cost0, VFX1.3s từ dữ liệu Studio. Damage100 nằm trong `public/game-data/skills/combat.json` do game quản lý, không thêm trường giả vào file Studio. Quái MVP60HP sẽ bị hạ bằng một lần trúng. Mốc hình ảnh của SkillPlayer không gọi damage/nhận thưởng; World tính giờ và re-check mục tiêu còn sống, range và LOS tại mốc0.4s rồi hit một lần. Target chạy xa, bị tường ngăn, chủ chết/teleport/rời map/disconnect không nhận damage không hợp lệ. Cast lên đất trống không tạo combat; damage thật vẫn dùng timer1.5s cũ. Không PvP, không tạo loot/tiền/MP mới.
+Theo yêu cầu cập nhật: **100 damage**, một mục tiêu quái, mốc tiếp xúc **0,52s (frame6 tính từ0)**; cooldown1s, cost0, VFX1.3s từ dữ liệu Studio. Damage100 nằm trong `public/game-data/skills/combat.json` do game quản lý, không thêm trường giả vào file Studio. Quái MVP60HP sẽ bị hạ bằng một lần trúng. Mốc hình ảnh của SkillPlayer không gọi damage/nhận thưởng; World tính giờ và re-check mục tiêu còn sống, range và LOS tại mốc tiếp xúc rồi hit một lần. Target chạy xa, bị tường ngăn, chủ chết/teleport/rời map/disconnect không nhận damage không hợp lệ. Cast lên đất trống không tạo combat; damage thật vẫn dùng timer1.5s cũ. Không PvP, không tạo loot/tiền/MP mới.
 
 ## Nguồn và schema
 
@@ -18,7 +18,7 @@ Theo yêu cầu cập nhật: **100 damage**, một mục tiêu quái, mốc `hi
 
 ## Vòng lặp / nhân vật
 
-`SkillVisuals` nạp/giải mã PNG bằng **loadSkillImages** một lần, giữ ảnh bất biến chung. Mỗi cast có SkillPlayer riêng để không dùng chung cooldown/cursor giữa hai người; mỗi SkillPlayer update đúng một lần/RAF, ba lượt draw không update timeline. Cast trùng ID không phát lại. Low vẽ ở beforeEntities, high/glow ở afterEntities trước atmosphere của cùng renderer map/camera/DPR. Không có world/camera/RAF riêng cho skill. World XY đều là chân; casterRef cập nhật từ renderActor hiện tại, target ban đầu và các offset/motion giữ theo API runtime.
+`SkillVisuals` nạp/giải mã PNG bằng **loadSkillImages** một lần, giữ ảnh bất biến chung. Mỗi cast có SkillPlayer riêng để không dùng chung cooldown/cursor giữa hai người; mỗi SkillPlayer update đúng một lần/RAF, ba lượt draw không update timeline. Cast trùng ID không phát lại. Low vẽ ở beforeEntities, high/glow ở afterEntities trước atmosphere của cùng renderer map/camera/DPR. Không có world/camera/RAF riêng cho skill. World XY đều là chân; casterRef cập nhật từ renderActor hiện tại; điểm aim bám chân mục tiêu đến va chạm rồi khóa theo server. Adapter bù điểm tiếp xúc qua các offset/anchor/scale/rotation gốc.
 
 Sự kiện `cast` có trường `animation` gọi `CutoutCharacterVisual.castAnimation`: resolve qua action bindings hoặc tên clip thật, dùng animationId đã đăng ký. Clip này phát trên rig/parts/đồ đang mặc, không đổi thành preview của Studio. Thiếu clip thì hiện thông báo cụ thể và giữ nhân vật hợp lệ. Hết clip trả về action phù hợp; đổi map/kết thúc effect/cleanup hủy animation còn thuộc cast đó. Không restart clip mỗi render. Khi skin mới thiếu clip đang dùng, báo và thoát clip an toàn.
 
@@ -65,7 +65,20 @@ Kiểm thêm: `tests/skills-additional.test.ts`, `node tests/skills2-harness.cjs
 - `combat.json.skills.*.impact` là adapter của game, giữ nguyên byte các pack Studio. `frameIndex` tính từ0; thời gian = event.at + event.duration × tổng thời lượng các frame trước / tổng thời lượng frame. Không lấy toàn skill.duration làm thời lượng sprite.
 - Kiếm lai: frame17/24, **1,4167s**, khi cả5 kiếm đã chạm đất; điểm pixel **(128,220)** là chân thanh kiếm thứ3 ở giữa.
 - Cổ thần chi lộ: frame21/32, **0,984375s**, trượng chạm đất; điểm pixel **(156,170)** là tâm vòng dưới đất.
-- Cổ thần chỉ cũ giữ hitAt0,4s. Sát thương được xử lý ở tick20Hz đầu tiên đạt mốc, tối đa trễ50ms, đúng100 một lần/cast.
-- Hai chiêu mới bám chân mục tiêu đã chọn đến va chạm, sau đó khóa điểm hiệu ứng. Snapshot cập nhật tx/ty và resolved; client dùng vị trí chân đã nội suy khi chờ, dùng điểm server khi đã xử lý. Không đổi sang quái khác giữa chiêu.
+- Cổ thần chỉ: frame6/15, **0,52s**, đầu ngón tay chạm đất; điểm pixel **(155,292)**. Sát thương được xử lý ở tick20Hz đầu tiên đạt mốc, tối đa trễ50ms, đúng100 một lần/cast.
+- Cả ba chiêu bám chân mục tiêu đã chọn đến va chạm, sau đó khóa điểm hiệu ứng. Snapshot cập nhật tx/ty và resolved; client dùng vị trí chân đã nội suy khi chờ, dùng điểm server khi đã xử lý. Không đổi sang quái khác giữa chiêu.
 - Adapter bù điểm tiếp xúc qua anchor/scale/rotation/offset gốc, trước camera/DPR, không crop/fit ảnh hay sửa frame gốc. Client giữ frame trước tiếp xúc đến khi authority xác nhận để tránh hình chạm trước sát thương. Vẫn update SkillPlayer đúng1 lần/RAF.
 - Tại va chạm, server kiểm lại chủ còn sống, map/epoch, mục tiêu sống, tầm và LOS. Mất mục tiêu/ngoài tầm thì không gây sát thương; không hồi sinh cast hoặc nhận lại hit khi retry.
+
+
+## Quy ước bắt buộc cho skill thêm sau
+
+Mọi skill gây sát thương dùng cùng `World.castSkill`/`advanceSkills` và `SkillVisuals`; không thêm nhánh theo tên skill. Không lấy `hitAt` mặc định trong pack làm thời điểm gây sát thương nữa.
+
+1. Đăng ký pack trong registry/import manifest với ID ổn định như mục trên; không đổi dữ liệu gốc.
+2. Đăng ký **cùng ID game** trong `public/game-data/skills/combat.json`, gồm damage và target=`single_mob`; impact bắt buộc có eventId, frameIndex (từ0), point.x/y (pixel trên PNG frame gốc), trackTarget=true. Chọn frame chạm thật sau khi xem ảnh, không mặc định frame cuối vì thường đó là frame tàn hiệu ứng.
+3. Event tiếp xúc hiện hỗ trợ anchor=`target`, motion=`still`, PNG frames; point tính trước anchor/scale/rotation/offset. Runtime khác như projectile/procedural cần adapter được kiểm tra riêng, cấu hình không tương thích bị từ chối thay vì đoán điểm chạm.
+4. Chạy `npm run check:assets`, build và các test tiếp xúc. Build từ chối skill active thiếu/sai profile; server cũng từ chối cast chưa có profile trước khi tiêu cooldown. Không fallback0,4s hoặc gây damage ngay lúc xuất hiện.
+5. Muốn cho nhân vật dùng skill phải có rule học/gắn ô riêng; đăng ký tài nguyên không tự cấp quyền Online.
+
+`skillPlaybackProject()` tạo adapter nông cho SkillPlayer: chỉ thay marker hitAt bằng mốc frame đã cấu hình, không sao chép/giải mã ảnh lại, không thay ID và không sửa pack gốc. Client marker vẫn không có quyền gây damage; server tính mốc từ cùng dữ liệu và kiểm lại mục tiêu/range/LOS. Quy tắc bám chân đến va chạm, khóa sau xử lý và chỉ100 một lần áp dụng cho cả Cổ thần chỉ, hai skill trước và skill mới dùng profile này. Giá trị damage của skill mới được khai báo rõ trong profile do game quản lý.

@@ -284,3 +284,16 @@ Cụm cuối là **cung tròn ôm nút**, không dùng bố cục bậc thang/ha
 - `node tests/skills2-online.cjs`: hai trình duyệt Chromium riêng kết nối backend Node cục bộ3002, lần lượt cả hai skill mới. Kiểm tra event.time tại tick đầu sau mốc frame, tx/ty trùng chân quái khi hit và resolved=true, chỉ100 một lần, retry/spoof damage/owner/cost không qua quyền, người chưa học bị từ chối, clip/VFX đồng bộ, restart/reconnect giữ quyền.
 - Sửa phép so sánh snapshot trong test presentation để cố định riêng skillClock khi kiểm bất biến: đây là đồng hồ wall-time chủ động trôi, không phải thay đổi gameplay do render. Không đổi clock game.
 - Chưa có backend WSS công khai; Online xác minh bằng backend cục bộ như trên. Sites vẫn phục vụ Offline và cấu hình kết nối Online, giữ quyền truy cập hiện có.
+
+
+## Cổ thần chỉ ô2 và quy tắc chung cho skill mới — 07/11/2026
+
+- `npm test`: **113/113 pass**. `npm run build`: pass, gồm kiểm nguồn Studio nguyên byte và profile va chạm bắt buộc cho mọi skill active (vẫn có cảnh báo bundle lớn đã tồn tại).
+- Cổ thần chỉ dùng frame6 tính từ0 (frame thứ7), đầu ngón tay chạm đất tại0,52s; điểm PNG(155,292) căn vào chân quái. Cast không gây damage ngay; mục tiêu di chuyển được bám đến va chạm, sau đó điểm VFX khóa theo server. Vẫn100 damage một lần, ô/phím2, cooldown/range/cost cũ.
+- `node tests/skill-aim-browser.cjs`: production dist Offline, map thật; Cổ thần chỉ hit0,55s, Kiếm lai1,45s, trượng1,00s, đúng tick20Hz đầu sau frame tiếp xúc, không có hit sớm. Ảnh canvas thật của chiêu2: `tests/skill-aim-skill_1-impact.png`.
+- `node tests/skill-aim-harness.cjs`: cả3 chiêu căn đúng chân qua native transform + camera/DPR; bám mục tiêu di chuyển, chờ authority trước khi chạm, khóa điểm sau hit, update một lần, dọn timeline. `skill-harness.cjs` và `skills2-harness.cjs`:15/24/32 frame gốc đúng thứ tự, anchor, scale/offset; clip thật, missing-clip warning, map cleanup/layers đúng.
+- `node tests/skill-browser.cjs`: bản đóng gói không backend, nút2/phím2, desktop/mobile dọc/ngang, kill100 một lần, ví/save/attackSeq không bị sửa, hiệu ứng kết thúc, không WebSocket/lỗi trang/tài nguyên.
+- `node tests/skill-online.cjs`: hai Chromium độc lập + backend Node cục bộ3002. Kiểm mốc hit0,52..0,57s và tx/ty bằng chân quái tại hit, resolved=true, remote animation/VFX,100 duy nhất, quyền học/owner/cooldown/seq/damage giả, hết hiệu ứng và restart/reconnect giữ profile; không lỗi trang. Gửi retry/cooldown ngay cùng cast trong fixture, tránh phụ thuộc thời gian Playwright chờ render giữa hai trình duyệt.
+- Fixture skill ID mới chứng minh dùng nguyên luồng gameplay/renderer: thiếu profile từ chối trước cooldown; thêm profile hợp lệ thì tự ngắm, chạm mới hit, chỉ một lần. Profile thiếu/sai frame/point/event/tracking/anchor/timeline bị từ chối; test thời lượng frame không đều và rotation/scale. Không phát hành hoặc cấp skill fixture cho người chơi.
+- Mọi skill active phát hành sau phải có profile tiếp xúc trong combat.json. Không fallback hitAt0,4s. Marker SkillPlayer được adapter đồng bộ theo cùng frame, vẫn không có quyền quyết định damage. Không đổi pack/runtime gốc, map, HUD hoặc dữ liệu save.
+- Online công khai vẫn chưa có backend WSS; kiểm Online ở backend cục bộ như trên. Sites cung cấp Offline và cấu hình Online, giữ nguyên quyền truy cập.

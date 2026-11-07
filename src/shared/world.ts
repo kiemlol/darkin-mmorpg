@@ -117,6 +117,7 @@ export class World {
      if(command.seq<=(this.skillRequests.get(id)??-1))return;this.skillRequests.set(id,command.seq);
      const skillId=a.skills?.slots[command.slot],s=skillId&&skills.get(skillId);if(!s||!a.skills!.learned.includes(skillId!))throw Error('Chưa học hoặc chưa gắn skill vào ô này');
      if(s.kind==='passive'||a.hp<=0||!this.canStand(a))throw Error('Không thể dùng skill ở trạng thái hiện tại');
+     skillImpactTime(skillId!); // Require a published contact profile before spending cooldown or starting a cast.
      const now=this.interactions.now();if((a.skills!.readyAt[skillId!]||0)>now+1e-9)throw Error('Skill đang hồi chiêu');if(s.cost>0)throw Error('Năng lượng chưa kích hoạt; không thể trả chi phí skill');
      if(this.skillCasts.length>=128)throw Error('Quá nhiều hiệu ứng');
      let target:Actor|undefined;

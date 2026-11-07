@@ -1,5 +1,5 @@
 import {SkillPlayer,loadSkillImages} from '../../public/game-data/skills/skill-runtime.mjs';
-import {skills,skillCombat,skillImpactTime,skillVisualTarget} from '../shared/skills';import type {Snapshot,Actor} from '../shared/world';import type {CharacterVisual} from './visual';import {CutoutCharacterVisual} from './cutout-visual';import {assetWarning} from './assets';
+import {skills,skillCombat,skillImpactTime,skillVisualTarget,skillPlaybackProject} from '../shared/skills';import type {Snapshot,Actor} from '../shared/world';import type {CharacterVisual} from './visual';import {CutoutCharacterVisual} from './cutout-visual';import {assetWarning} from './assets';
 export class SkillVisuals{
  animationOwners=new Map<string,CutoutCharacterVisual>();
  images=new Map();loaded=false;error='';mapKey='';seen=new Set<string>();players=new Map<string,{player:any;caster:{x:number;y:number};cast:any;age:number;updates:number}>();pending=new Map<string,{casterId:string;animation:string;direction:number}>();
@@ -10,7 +10,7 @@ export class SkillVisuals{
   if(this.mapKey&&key.split(':').slice(0,-1).join(':')!==this.mapKey.split(':').slice(0,-1).join(':'))this.clear();this.mapKey=key;
   const records=new Map((snapshot.skillCasts||[]).map(c=>[c.id,c]));const live=new Set(records.keys());for(const id of this.seen)if(!live.has(id)&&!this.players.has(id))this.seen.delete(id);
   if(this.loaded)for(const c of snapshot.skillCasts||[]){if(this.seen.has(c.id))continue;this.seen.add(c.id);const age=Math.max(0,snapshot.time-c.startedAt);if(age>=skills.get(c.skillId).duration)continue;
-   const caster={x:c.x,y:c.y};const player=new SkillPlayer(skills.project,{onEvent:(e?:any)=>{if(e.type==='cast'&&e.animation)this.pending.set(c.id,{casterId:c.casterId,animation:e.animation,direction:c.direction})}});player.cast(c.skillId,{caster,target:skillVisualTarget(c.skillId,{x:c.tx,y:c.ty})});this.players.set(c.id,{player,caster,cast:c,age:-1,updates:0});
+   const caster={x:c.x,y:c.y};const player=new SkillPlayer(skillPlaybackProject(),{onEvent:(e?:any)=>{if(e.type==='cast'&&e.animation)this.pending.set(c.id,{casterId:c.casterId,animation:e.animation,direction:c.direction})}});player.cast(c.skillId,{caster,target:skillVisualTarget(c.skillId,{x:c.tx,y:c.ty})});this.players.set(c.id,{player,caster,cast:c,age:-1,updates:0});
   }
   for(const [id,p]of this.players){p.cast=records.get(id)||p.cast;const owner=actors.find(a=>a.id===p.cast.casterId);if(!owner||owner.hp<=0||owner.teleportSeq!==p.cast.epoch){p.player.clear();this.players.delete(id);this.pending.delete(id);this.animationOwners.get(id)?.cancelSkillAnimation(id);this.animationOwners.delete(id);continue}p.caster.x=owner.x;p.caster.y=owner.y;
    const authorityAge=Math.max(0,snapshot.time-p.cast.startedAt);if(authorityAge>=skills.get(p.cast.skillId).duration){p.player.clear();this.players.delete(id);this.pending.delete(id);this.animationOwners.get(id)?.cancelSkillAnimation(id);this.animationOwners.delete(id);continue}let desired=p.age<0?authorityAge:Math.min(authorityAge+.15,Math.max(authorityAge,p.age+dt));const impact=skillCombat[p.cast.skillId]?.impact;

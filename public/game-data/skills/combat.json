@@ -3,7 +3,16 @@
   "skills": {
     "skill_1": {
       "damage": 100,
-      "target": "single_mob"
+      "target": "single_mob",
+      "impact": {
+        "eventId": "event_1",
+        "frameIndex": 6,
+        "point": {
+          "x": 155,
+          "y": 292
+        },
+        "trackTarget": true
+      }
     },
     "kiem_lai": {
       "damage": 100,
