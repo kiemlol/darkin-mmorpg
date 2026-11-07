@@ -17,7 +17,7 @@ export class SoulEffects{
    this.frame.push({kind:'soul',id:p.id,x:groundX,y:groundY,drawX:x,drawY:y,angle:p.angle,age:g.age,alpha:.45+.55*birth});
   }
   for(const id of this.ghosts.keys())if(!live.has(id))this.ghosts.delete(id);
-  for(const e of snapshot.events)if(e.projectileId&&!this.bursts.has(e.projectileId)&&snapshot.time-e.time<.15)this.bursts.set(e.projectileId,{x:e.x,y:e.y+14,age:0});
+  for(const e of snapshot.events)if(e.projectileId?.startsWith('soul:')&&!this.bursts.has(e.projectileId)&&snapshot.time-e.time<.15)this.bursts.set(e.projectileId,{x:e.x,y:e.y+14,age:0});
   for(const [id,b]of this.bursts){b.age+=dt;if(b.age>.35){if(!snapshot.events.some(e=>e.projectileId===id))this.bursts.delete(id);continue}this.frame.push({kind:'soul',id:'burst:'+id,x:b.x,y:b.y+36,drawX:b.x,drawY:b.y,burst:b.age})}
   return this.frame;
  }

@@ -301,10 +301,12 @@ Cụm cuối là **cung tròn ôm nút**, không dùng bố cục bậc thang/ha
 
 ## Linh Hồn Thư — 07/11/2026
 
-- `npm test`: **120/120 pass**. `npm run build`: pass, nguồn map/character/runtime cũ nguyên byte, source-index của JPG/gói mới hợp lệ, clip Phù phép được kiểm trên cả hai rig; cảnh báo chunk lớn vẫn còn (frontend nay có111 PNG VFX cache chung).
+- `npm test`: **121/121 pass**. `npm run build`: pass, nguồn map/character/runtime cũ nguyên byte, source-index của JPG/gói mới hợp lệ, clip Phù phép được kiểm trên cả hai rig; cảnh báo chunk lớn vẫn còn (frontend nay có111 PNG VFX cache chung).
 - `tests/spirit-book.test.ts`: nguồn animationId/duration,16+24 frame, hai đợt4 linh hồn,2 cung trên/2 dưới hẹp, không damage đầu chiêu,8 hit3=24 chỉ một lần/ID, mục tiêu di chuyển, collider/LOS, chết/rời map/disconnect/teleport/phi kiếm, target chết, spoof/retry/cooldown/quyền học, đổi skill/đánh ngắt sách, close/cleanup.
 - `node tests/spirit-book-harness.cjs`: dùng bộ phát rig thật + SkillPlayer thật, sách nằm ở tâm hai grip theo animation, đúng ID clip gốc, giữ pose/ẩn vũ khí, nội suy đạn giữa snapshot, đủ8 hit3 rồi gấp/dọn, alpha góc JPG được chuẩn bị trong suốt. Ảnh `tests/spirit-book-rig.png`.
 - `node tests/spirit-book-browser.cjs`: production dist4173 không backend; save cũ giữ3 skill và ví99, gắn thêm đúng ô4; nút4 mobile và phím4 landscape, clip thật,8 ID đạn/8 hit3, đóng sách, thoát phiên và reload; không socket/lỗi trang/request asset. Ảnh `tests/spirit-book-mobile.png`, `tests/spirit-book-landscape.png`.
 - `node tests/spirit-book-online.cjs`: **hai trình duyệt Chromium riêng** kết nối Node3002 thực. A có học/ô4, B không học bị từ chối kể cả giả owner; cả hai nhận8 đạn,8 hit3 duy nhất/tổng24, hoạt ảnh/VFX thật từ xa, retry/damage/cost giả không thay kết quả, không truyền base64, kết thúc dọn sạch, restart+reconnect giữ quyền. Không lỗi trang. Ảnh `tests/spirit-book-online.png`.
 - Kiểm lại `skill-aim-harness.cjs`, `skill-harness.cjs` và `skills2-browser.cjs`: ba skill trước giữ điểm ngắm/mốc hit, texture/frame/camera/layers, animation thật, mobile và nội suy/cleanup; save/wallet cũ không bị mất khi thêm ô4.
 - Chưa triển khai backend WSS công khai; Online đã kiểm tại backend cục bộ ở trên. Sites được cập nhật để thử Offline và vẫn có cấu hình Online riêng. Chưa kiểm Safari/iPhone/Android vật lý, mạng Internet trễ cao hoặc tải đông người. Chỉ đăng ký resource không tự cấp quyền Online.
+
+Linh Hồn Thư: kiểm bổ sung không phát nổ tím của vũ khí khi đạn sách chạm; hiệu ứng hit của Tôn Hồn Phiên vẫn giữ nguyên.
