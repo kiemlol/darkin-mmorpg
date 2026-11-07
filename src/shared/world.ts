@@ -1,4 +1,4 @@
-import {skills,skillCombat,emptySkills,type LearnedSkills,type SkillCast} from './skills';
+import {skills,skillCombat,skillImpactTime,emptySkills,type LearnedSkills,type SkillCast} from './skills';
 import { gameCatalog, allowedAppearance } from './catalog';
 import {defaultEquipment,changeEquipment,resolveInventory,type EquipmentState,type CosmeticCommand} from './equipment';
 import {CLOCK_RATE,initialClock,type ClockState} from './map-state';
@@ -218,7 +218,9 @@ export class World {
       }this.projectiles=next;
     }
     private advanceSkills(){
-     for(const c of this.skillCasts){if(this.skillHits.has(c.id)||this.time-c.startedAt+1e-9<skills.get(c.skillId).hitAt)continue;this.skillHits.add(c.id);
+     for(const c of this.skillCasts){if(this.skillHits.has(c.id))continue;
+      const tracked=c.targetId&&this.actors.get(c.targetId);if(skillCombat[c.skillId]?.impact?.trackTarget&&tracked&&tracked.hp>0){c.tx=tracked.x;c.ty=tracked.y}
+      if(this.time-c.startedAt+1e-9<skillImpactTime(c.skillId))continue;this.skillHits.add(c.id);c.resolved=true;
       const a=this.actors.get(c.casterId),b=c.targetId&&this.actors.get(c.targetId),rule=skillCombat[c.skillId];
       if(a&&a.hp>0&&a.teleportSeq===c.epoch&&c.mapId===this.p.id&&b&&b.kind==='mob'&&b.hp>0&&rule&&Math.hypot(b.x-a.x,b.y-a.y)<=skills.get(c.skillId).range&&this.clearLine(a,b))this.hit(a,b,rule.damage);
      }

@@ -7,11 +7,29 @@
     },
     "kiem_lai": {
       "damage": 100,
-      "target": "single_mob"
+      "target": "single_mob",
+      "impact": {
+        "eventId": "event_1",
+        "frameIndex": 17,
+        "point": {
+          "x": 128,
+          "y": 220
+        },
+        "trackTarget": true
+      }
     },
     "co_than_chi_lo": {
       "damage": 100,
-      "target": "single_mob"
+      "target": "single_mob",
+      "impact": {
+        "eventId": "event_1",
+        "frameIndex": 21,
+        "point": {
+          "x": 156,
+          "y": 170
+        },
+        "trackTarget": true
+      }
     }
   }
 }

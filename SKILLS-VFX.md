@@ -53,8 +53,19 @@ Hai file mới đều xuất `project.id=my_skills`, `skillId=skill_1`. Gộp tr
 
 Nguồn `kiem-lai.skill-pack.json` và `co-than-chi-lo.skill-pack.json` đã thêm vào source-index SHA256. Runtime nhúng của cả hai khớp chính xác runtime MJS hiện dùng; không thực thi chuỗi source trong JSON. Tổng ảnh cache dùng chung là71, không giải mã lại cho từng người/cast.
 
-Cả ba dùng cùng **100 damage**, mốc hit0.4s, cooldown1s, range300, cost0 và animation `attack`. Chỉ một hit server mỗi lần cast; cooldown riêng từng ID. Giữ đúng khoảng trống cuối timeline của Kiếm lai (~0.667s) và Cổ thần chi lộ (0.5s), không kéo VFX cho khớp toàn skill hoặc sửa thời gian frame. Hình Cổ thần trong PNG là lớp VFX, không thay ngoại hình nhân vật đang chơi; scale2/offset lớn có thể vươn ngoài viewport và được giữ theo Studio.
+Cả ba dùng cùng **100 damage**, cooldown1s, range300, cost0 và animation `attack`. Mốc va chạm riêng được mô tả bên dưới. Chỉ một hit server mỗi lần cast; cooldown riêng từng ID. Giữ đúng khoảng trống cuối timeline của Kiếm lai (~0.667s) và Cổ thần chi lộ (0.5s), không kéo VFX cho khớp toàn skill hoặc sửa thời gian frame. Hình Cổ thần trong PNG là lớp VFX, không thay ngoại hình nhân vật đang chơi; scale2/offset lớn có thể vươn ngoài viewport và được giữ theo Studio.
 
 Offline tự bổ sung đúng hai demo vào ô trống1/3; giữ ô2, HP/ví/cảnh giới, các learned ID và cooldown cũ. Không chiếm ô đã có binding khác. Online không tự cấp thêm quyền học: server phải lưu learned ID của từng món; UI khóa món chưa học. Mọi kiểm tra/đồng bộ và giới hạn backend trong phần trên tiếp tục áp dụng. Ô4 còn trống, Phi kiếm giữ vị trí cũ.
 
 Kiểm thêm: `tests/skills-additional.test.ts`, `node tests/skills2-harness.cjs` (Vite5173), `node tests/skills2-browser.cjs` (dist4173), `node tests/skills2-online.cjs` (hai lượt, mỗi lượt hai Chromium riêng/local Node cho từng skill mới).
+
+## Tự ngắm và va chạm (cập nhật 07/11/2026)
+
+- Server tự chọn quái sống gần nhất trong range300 và không bị che bởi vật cản. Client không gửi tọa độ hay sát thương để server tin.
+- `combat.json.skills.*.impact` là adapter của game, giữ nguyên byte các pack Studio. `frameIndex` tính từ0; thời gian = event.at + event.duration × tổng thời lượng các frame trước / tổng thời lượng frame. Không lấy toàn skill.duration làm thời lượng sprite.
+- Kiếm lai: frame17/24, **1,4167s**, khi cả5 kiếm đã chạm đất; điểm pixel **(128,220)** là chân thanh kiếm thứ3 ở giữa.
+- Cổ thần chi lộ: frame21/32, **0,984375s**, trượng chạm đất; điểm pixel **(156,170)** là tâm vòng dưới đất.
+- Cổ thần chỉ cũ giữ hitAt0,4s. Sát thương được xử lý ở tick20Hz đầu tiên đạt mốc, tối đa trễ50ms, đúng100 một lần/cast.
+- Hai chiêu mới bám chân mục tiêu đã chọn đến va chạm, sau đó khóa điểm hiệu ứng. Snapshot cập nhật tx/ty và resolved; client dùng vị trí chân đã nội suy khi chờ, dùng điểm server khi đã xử lý. Không đổi sang quái khác giữa chiêu.
+- Adapter bù điểm tiếp xúc qua anchor/scale/rotation/offset gốc, trước camera/DPR, không crop/fit ảnh hay sửa frame gốc. Client giữ frame trước tiếp xúc đến khi authority xác nhận để tránh hình chạm trước sát thương. Vẫn update SkillPlayer đúng1 lần/RAF.
+- Tại va chạm, server kiểm lại chủ còn sống, map/epoch, mục tiêu sống, tầm và LOS. Mất mục tiêu/ngoài tầm thì không gây sát thương; không hồi sinh cast hoặc nhận lại hit khi retry.
