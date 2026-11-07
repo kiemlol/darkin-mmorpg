@@ -1,3 +1,5 @@
+import kiemLai from '../../public/game-data/skills/kiem-lai.skill-pack.json';
+import coThanChiLo from '../../public/game-data/skills/co-than-chi-lo.skill-pack.json';
 import combat from '../../public/game-data/skills/combat.json';
 import source from '../../public/game-data/skills/my_skills.skill-pack.json';
 import manifest from '../../public/game-data/skills/index.json';
@@ -5,9 +7,11 @@ import {validateSkillProject,skillId} from '../../public/game-data/skills/skill-
 export class SkillRegistry{
  project:any={format:'darkin-skill-project-v1',id:'game_skills',name:'Game skills',skills:{},effects:{}};
  register(pack:any){if(pack?.format!=='darkin-skill-pack-v1')throw Error('Cần darkin-skill-pack-v1');const p=validateSkillProject(pack),next={...this.project,skills:{...this.project.skills,...structuredClone(p.skills)},effects:{...this.project.effects,...structuredClone(p.effects)}};validateSkillProject(next);this.project=next;return Object.keys(p.skills)}
+ registerMapped(pack:any,sourceId:string,gameId:string){if(!skillId(gameId))throw Error('ID adapter không hợp lệ');const p=validateSkillProject(pack);if(!Object.hasOwn(p.skills,sourceId))throw Error('Thiếu source skillId');const adapted={...p,skills:{[gameId]:{...structuredClone(p.skills[sourceId]),id:gameId}}};return this.register({format:'darkin-skill-pack-v1',project:adapted})}
  get(id:string):any{return Object.hasOwn(this.project.skills,id)?this.project.skills[id]:null}
 }
 export const skills=new SkillRegistry();skills.register(source);
+const imports={'kiem-lai.skill-pack.json':kiemLai,'co-than-chi-lo.skill-pack.json':coThanChiLo};for(const entry of manifest.imports)if(Object.hasOwn(imports,entry.file))skills.registerMapped((imports as any)[entry.file],entry.sourceSkillId,entry.skillId);
 export const skillManifest=manifest;
 export type LearnedSkills={version:1;learned:string[];slots:(string|null)[];readyAt:Record<string,number>};
 export const emptySkills=():LearnedSkills=>({version:1,learned:[],slots:[null,null,null,null],readyAt:{}});

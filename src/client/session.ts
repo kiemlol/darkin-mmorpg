@@ -88,7 +88,7 @@ export class LocalGameSession implements GameSession {
             }
         }
         catch { }
-        const demo=skillManifest.offlineDemo;if(!a.skills?.learned.includes(demo.skillId)){this.world.learnSkill(this.id,demo.skillId);migrate=true}if(!a.skills?.slots[demo.slot-1]){this.world.learnSkill(this.id,demo.skillId,demo.slot-1);migrate=true}
+        for(const demo of skillManifest.offlineDemos){if(!a.skills?.learned.includes(demo.skillId)){this.world.learnSkill(this.id,demo.skillId);migrate=true}if(!a.skills?.slots[demo.slot-1]){this.world.learnSkill(this.id,demo.skillId,demo.slot-1);migrate=true}}
         this.snapshot = this.world.snapshot();
         this.previous = this.snapshot;
         this.exploration.visit(a.x, a.y, this.world.time, a.teleportSeq);

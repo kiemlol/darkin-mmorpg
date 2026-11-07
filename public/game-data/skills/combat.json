@@ -1,1 +1,17 @@
-{"version":1,"skills":{"skill_1":{"damage":100,"target":"single_mob"}}}
+{
+  "version": 1,
+  "skills": {
+    "skill_1": {
+      "damage": 100,
+      "target": "single_mob"
+    },
+    "kiem_lai": {
+      "damage": 100,
+      "target": "single_mob"
+    },
+    "co_than_chi_lo": {
+      "damage": 100,
+      "target": "single_mob"
+    }
+  }
+}

@@ -110,6 +110,6 @@ body.playing .session-card{top:calc(var(--top-hud-bottom,120px) + 48px);right:ma
 #attack,#skill-slots #sword-flight{clip-path:circle(50% at 50% 50%)}
 
 #attack{width:var(--attack-size,82px);height:var(--attack-size,82px)}
-#skill-slots #skill-slot-2.skill-active{pointer-events:auto;touch-action:none;clip-path:circle(50% at 50% 50%);color:#f5dcaa;font-size:22px;cursor:pointer;background:radial-gradient(circle,#754222,#232339);border-color:#d8ba77}
-#skill-slots #skill-slot-2.skill-active:disabled{opacity:.5;cursor:default}
+#skill-slots .skill-placeholder.skill-active{pointer-events:auto;touch-action:none;clip-path:circle(50% at 50% 50%);color:#f5dcaa;font-size:22px;cursor:pointer;background:radial-gradient(circle,#754222,#232339);border-color:#d8ba77}
+#skill-slots .skill-placeholder.skill-active:disabled{opacity:.5;cursor:default}
 #skill-notice{position:fixed;bottom:calc(190px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);padding:8px 14px;background:#18252ded;color:#ffe7ad;z-index:12;pointer-events:none;font-size:12px;max-width:75vw;text-align:center}

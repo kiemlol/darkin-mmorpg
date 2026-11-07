@@ -1,1 +1,51 @@
-{"version":1,"packs":["my_skills.skill-pack.json"],"offlineDemo":{"skillId":"skill_1","slot":2},"labels":{"skill_1":"Cổ thần chỉ"}}
+{
+  "version": 1,
+  "packs": [
+    "my_skills.skill-pack.json",
+    "kiem-lai.skill-pack.json",
+    "co-than-chi-lo.skill-pack.json"
+  ],
+  "offlineDemo": {
+    "skillId": "skill_1",
+    "slot": 2
+  },
+  "labels": {
+    "skill_1": "Cổ thần chỉ",
+    "kiem_lai": "Kiếm lai",
+    "co_than_chi_lo": "Cổ thần chi lộ"
+  },
+  "imports": [
+    {
+      "file": "my_skills.skill-pack.json",
+      "sourceSkillId": "skill_1",
+      "skillId": "skill_1",
+      "slot": 2
+    },
+    {
+      "file": "kiem-lai.skill-pack.json",
+      "sourceSkillId": "skill_1",
+      "skillId": "kiem_lai",
+      "slot": 1
+    },
+    {
+      "file": "co-than-chi-lo.skill-pack.json",
+      "sourceSkillId": "skill_1",
+      "skillId": "co_than_chi_lo",
+      "slot": 3
+    }
+  ],
+  "offlineDemos": [
+    {
+      "skillId": "skill_1",
+      "slot": 2
+    },
+    {
+      "skillId": "kiem_lai",
+      "slot": 1
+    },
+    {
+      "skillId": "co_than_chi_lo",
+      "slot": 3
+    }
+  ]
+}

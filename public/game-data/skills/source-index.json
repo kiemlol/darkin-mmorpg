@@ -2,6 +2,8 @@
   "version": 1,
   "sources": {
     "my_skills.skill-pack.json": "30ae1f55b80d37f3ee5066cd9fa0cf8f3072b3922f00d198c2771f784828551e",
-    "skill-runtime.mjs": "8a4e16d3952fb7e06a4eb980da690a2d4be834d4ec0975199ec4298d2a437486"
+    "skill-runtime.mjs": "8a4e16d3952fb7e06a4eb980da690a2d4be834d4ec0975199ec4298d2a437486",
+    "kiem-lai.skill-pack.json": "74d2907c9d1242be94d9a086cf2f4ea616bdc579995e0d03a68000dd9c75af6e",
+    "co-than-chi-lo.skill-pack.json": "a5530f1e7ad39441504a36de707ebea88371902c219c365b5c7da9aba5ca9401"
   }
 }

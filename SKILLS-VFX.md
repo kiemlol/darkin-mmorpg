@@ -40,3 +40,21 @@ Profile lưu `skills: {version:1, learned:[], slots:[null,null,null,null], ready
 - `node tests/skill-online.cjs`: backend Node3002 thật, hai Chromium riêng, profileA học/B chưa học, remote clip/VFX,100damage duy nhất, cooldown/seq/owner/damage giả, effect end và restart/reconnect giữ profile. Test không thêm quyền học vào bản production.
 
 Đổi map được kiểm bằng fixture vì game hiện chỉ phát hành một map; không tuyên bố đã kiểm cổng sang map thứ hai chưa có. Backend công khai WSS chưa được triển khai; Sites chạy Offline và cấu hình kết nối server riêng. Cần nâng backend từ repo mới để có skillProtocol1. Chưa kiểm Safari/iPhone/Android vật lý, độ trễ Internet lớn hoặc tải nhiều người. Gói ảnh nhúng làm tăng dung lượng tải frontend; ảnh dùng chung, không giải mã lại mỗi actor.
+
+## Thêm Kiếm lai và Cổ thần chi lộ — 2026-11-07
+
+| Ô / phím | Tên | ID trong game | ID gốc Studio | PNG frames | Skill / VFX duration | Scale |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Kiếm lai | kiem_lai | skill_1 | 24 | 2.666666667s / 2s | 1 |
+| 2 | Cổ thần chỉ | skill_1 | skill_1 | 15 | 1.3s / 1.3s | 1 |
+| 3 | Cổ thần chi lộ | co_than_chi_lo | skill_1 | 32 | 2s / 1.5s | 2 |
+
+Hai file mới đều xuất `project.id=my_skills`, `skillId=skill_1`. Gộp trực tiếp sẽ ghi đè Cổ thần chỉ; vì yêu cầu là **hai skill mới**, adapter `registerMapped` dùng bảng `index.json.imports` để định danh riêng trong game. File Studio được giữ **nguyên byte**, không sửa ID trong file; event/effect ID, PNG, frame duration, anchor, offset, scale, animation và runtime giữ nguyên. `sourceSkillId` và `skillId` trong bảng import là ánh xạ tường minh, không sinh ID ngẫu nhiên. Cập nhật lại cùng bảng ánh xạ sẽ cập nhật đúng skill đó, không thay skill cũ.
+
+Nguồn `kiem-lai.skill-pack.json` và `co-than-chi-lo.skill-pack.json` đã thêm vào source-index SHA256. Runtime nhúng của cả hai khớp chính xác runtime MJS hiện dùng; không thực thi chuỗi source trong JSON. Tổng ảnh cache dùng chung là71, không giải mã lại cho từng người/cast.
+
+Cả ba dùng cùng **100 damage**, mốc hit0.4s, cooldown1s, range300, cost0 và animation `attack`. Chỉ một hit server mỗi lần cast; cooldown riêng từng ID. Giữ đúng khoảng trống cuối timeline của Kiếm lai (~0.667s) và Cổ thần chi lộ (0.5s), không kéo VFX cho khớp toàn skill hoặc sửa thời gian frame. Hình Cổ thần trong PNG là lớp VFX, không thay ngoại hình nhân vật đang chơi; scale2/offset lớn có thể vươn ngoài viewport và được giữ theo Studio.
+
+Offline tự bổ sung đúng hai demo vào ô trống1/3; giữ ô2, HP/ví/cảnh giới, các learned ID và cooldown cũ. Không chiếm ô đã có binding khác. Online không tự cấp thêm quyền học: server phải lưu learned ID của từng món; UI khóa món chưa học. Mọi kiểm tra/đồng bộ và giới hạn backend trong phần trên tiếp tục áp dụng. Ô4 còn trống, Phi kiếm giữ vị trí cũ.
+
+Kiểm thêm: `tests/skills-additional.test.ts`, `node tests/skills2-harness.cjs` (Vite5173), `node tests/skills2-browser.cjs` (dist4173), `node tests/skills2-online.cjs` (hai lượt, mỗi lượt hai Chromium riêng/local Node cho từng skill mới).
