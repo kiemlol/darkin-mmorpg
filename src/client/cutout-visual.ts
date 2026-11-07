@@ -27,12 +27,24 @@ export class CutoutCharacterVisual implements CharacterVisual{
    if(next.warnings.length)assetWarning(next.warnings.join(' · '));
   }catch(e){if(candidate)assets.release(candidate);if(generation===this.generation&&!this.disposed)assetWarning('Lỗi ngoại hình '+id+': '+String(e)+(this.player?' · Giữ ngoại hình hợp lệ hiện tại.':' · Đang dùng hình tạm, chưa nạp được cutout.'))}
  }
+ skillAnimation:{id:string;token:string;remaining:number;rate:number;face:1|-1}|null=null;
+ cancelSkillAnimation(token:string){if(this.skillAnimation?.token===token)this.skillAnimation=null}
+ castAnimation(reference:string,token:string,direction:number){
+  if(!this.player||!this.loaded)return false;
+  const binding=this.loaded.actions[reference],entry=Object.entries(this.player.spec.clips).find(([key,clip]:[string,any])=>key===reference||clip.name===reference),id=binding?.animationId||(entry?.[1] as any)?.id;
+  if(!id){assetWarning('Skill thiếu clip nhân vật: '+reference);return false}
+  const clip=Object.values(this.player.spec.clips).find((c:any)=>c.id===id) as any;
+  if(!clip){assetWarning('Skill thiếu clip nhân vật: '+reference);return false}
+  this.player.play(id,{restart:true});this.attacking=false;this.lastAttack=this.actor?.attackSeq??0;
+  this.skillAnimation={id,token,remaining:clip.dur/(binding?.rate||1),rate:binding?.rate||1,face:Math.cos(direction)<0?-1:1};return true;
+ }
  missingAnimations=new Set<string>();
  playAnimation(action:string,restart=false){const b=this.loaded?.actions[action];if(!this.player||!this.loaded)return false;try{if(!b?.animationId)throw Error('Chưa đăng ký animationId cho '+action);this.player.play(b.animationId,{restart});return true}catch(e){if(!this.missingAnimations.has(action)){this.missingAnimations.add(action);assetWarning(String(e)+' · Dùng idle.')}this.player.play(this.loaded.actions.idle.animationId);return false}}
  update(a:Actor,dt:number){this.actor=a;this.fallback.update(a,dt);if(a.appearanceId&&assets.key(a.appearanceId,a)!==this.requested)void this.setAppearance(a.appearanceId,a);if(!this.player||!this.loaded)return;
   this.flight.idleAnimationId=this.loaded.actions.idle.animationId!;this.flight.update(a,dt);
   if(Math.abs(Math.cos(a.dir))>.15)this.player.face=Math.cos(a.dir)<0?-1:1;
-  if(a.hp<=0)return; // Demo has no death/hurt clips: retain real rig, no invented animation.
+  if(a.hp<=0){this.skillAnimation=null;return;} // Demo has no death/hurt clips: retain real rig, no invented animation.
+  if(this.skillAnimation){const s=this.skillAnimation;if(!Object.values(this.player.spec.clips).some((c:any)=>c.id===s.id)){assetWarning('Skill thiếu clip sau đổi ngoại hình: '+s.id);this.skillAnimation=null}else if(a.action==='hurt'||a.swordFlight)this.skillAnimation=null;else{this.player.face=s.face;this.player.play(s.id);this.player.update(dt*s.rate,undefined,dt);s.remaining-=dt;if(s.remaining<=0)this.skillAnimation=null;return}}
   if(a.swordFlight&&this.flight.frame){
    this.player.face=this.flight.frame.facing;this.attacking=false;this.lastAttack=a.attackSeq;
    if(this.flight.frame.phase==='jump'){

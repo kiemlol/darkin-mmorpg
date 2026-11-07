@@ -1,3 +1,4 @@
+import {skills,skillCombat,emptySkills,type LearnedSkills,type SkillCast} from './skills';
 import { gameCatalog, allowedAppearance } from './catalog';
 import {defaultEquipment,changeEquipment,resolveInventory,type EquipmentState,type CosmeticCommand} from './equipment';
 import {CLOCK_RATE,initialClock,type ClockState} from './map-state';
@@ -23,7 +24,7 @@ export type Intent = {
     attack: boolean;
 };
 export type Actor = EquipmentState & RealmState & {
-    contentGrants?:string[];
+    contentGrants?:string[];skills?:LearnedSkills;
     swordFlight?:SwordFlight;
     animationPreview?:AnimationPreview;
     wallet:Wallet;
@@ -89,7 +90,7 @@ export class World {
     time = 0;
     clockBaseSeconds=0;
     events: Hit[] = [];
-    projectiles:SoulProjectile[]=[];
+    projectiles:SoulProjectile[]=[];skillCasts:SkillCast[]=[];skillRequests=new Map<string,number>();skillHits=new Set<string>();
     serial = 0;
     constructor(p: any,options:{instanceId?:string;book?:MiningBook;epochSeconds?:number;nowSeconds?:()=>number;random?:()=>number;commit?:(tx:Transaction)=>Receipt|Promise<Receipt>}={}) { this.p = validateMap(p);this.clockBaseSeconds=initialClock(p);this.interactions=new InteractionSystem(this,options.instanceId||'darkin-frontier-v1:'+p.id,options); for (let k = 0; k < 6; k++) {
         const h = this.findSpawn(p.spawn.x + Math.cos(k * 2.4) * (150 + k * 75), p.spawn.y + Math.sin(k * 2.4) * (150 + k * 75),true);
@@ -109,6 +110,23 @@ export class World {
     // Internal simulation operation only. There is deliberately no client message/API for this.
     setRealm(id:string,state:RealmState){if(!validRealmState(state))throw Error('Cảnh giới/bậc không hợp lệ');const a=this.actors.get(id);if(a?.kind==='player'){a.realmId=state.realmId;a.realmStageId=state.realmStageId}}
     inCombat(a:Actor){return a.combatUntil-this.time>1e-9}
+    // Internal authority operation only; no learn/grant WebSocket route.
+    learnSkill(id:string,skillId:string,slot?:number){const a=this.actors.get(id);if(!a||a.kind!=='player'||!skills.get(skillId)||slot!==undefined&&(!Number.isInteger(slot)||slot<0||slot>3))throw Error('Skill/ô chưa đăng ký');a.skills??=emptySkills();if(!a.skills.learned.includes(skillId))a.skills.learned.push(skillId);if(slot!==undefined)a.skills.slots[slot]=skillId}
+    castSkill(id:string,command:any){
+     const a=this.actors.get(id);if(!a||a.kind!=='player'||!command||command.mapId!==this.p.id||!Number.isSafeInteger(command.seq)||command.seq<0||command.seq>=1e12||!Number.isInteger(command.slot)||command.slot<0||command.slot>3)throw Error('Yêu cầu skill không hợp lệ');
+     if(command.seq<=(this.skillRequests.get(id)??-1))return;this.skillRequests.set(id,command.seq);
+     const skillId=a.skills?.slots[command.slot],s=skillId&&skills.get(skillId);if(!s||!a.skills!.learned.includes(skillId!))throw Error('Chưa học hoặc chưa gắn skill vào ô này');
+     if(s.kind==='passive'||a.hp<=0||!this.canStand(a))throw Error('Không thể dùng skill ở trạng thái hiện tại');
+     const now=this.interactions.now();if((a.skills!.readyAt[skillId!]||0)>now+1e-9)throw Error('Skill đang hồi chiêu');if(s.cost>0)throw Error('Năng lượng chưa kích hoạt; không thể trả chi phí skill');
+     if(this.skillCasts.length>=128)throw Error('Quá nhiều hiệu ứng');
+     let target:Actor|undefined;
+     if(command.targetId!==undefined){if(typeof command.targetId!=='string')throw Error('Mục tiêu không hợp lệ');target=this.actors.get(command.targetId);if(!target||target.kind!=='mob'||target.hp<=0)throw Error('Mục tiêu không hợp lệ')}
+     else target=[...this.actors.values()].filter(b=>b.kind==='mob'&&b.hp>0&&Math.hypot(b.x-a.x,b.y-a.y)<=s.range&&this.clearLine(a,b)).sort((b,c)=>Math.hypot(b.x-a.x,b.y-a.y)-Math.hypot(c.x-a.x,c.y-a.y)||b.id.localeCompare(c.id))[0];
+     const t=target||{...a,x:a.x+Math.cos(a.dir)*Math.min(120,s.range),y:a.y+Math.sin(a.dir)*Math.min(120,s.range)};
+     if(Math.hypot(t.x-a.x,t.y-a.y)>s.range+1e-9||!canWalk(this.p,t.x,t.y,2)||!this.clearLine(a,t as Actor))throw Error('Mục tiêu ngoài tầm hoặc bị vật cản');
+     this.cancelAnimationPreview(a);this.cancelSwordFlight(a);this.interactions.cancel(id,'Đang dùng skill');a.dir=Math.atan2(t.y-a.y,t.x-a.x);a.skills!.readyAt[skillId!]=now+s.cooldown;
+     this.skillCasts.push({id:id+':skill:'+command.seq,skillId:skillId!,casterId:id,targetId:target?.id,mapId:this.p.id,instanceId:this.interactions.instanceId,startedAt:this.time,x:a.x,y:a.y,tx:t.x,ty:t.y,direction:a.dir,epoch:a.teleportSeq});
+    }
     nearestAttackTarget(a:Actor){return nearestTarget(a,this.actors.values(),b=>this.clearLine(a,b),combatWeapon(a).range)}
     clearLine(a:Actor,b:Actor){const steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/4));for(let k=1;k<steps;k++){const t=k/steps;if(!canWalk(this.p,a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,2))return false}return true}
     canStand(a:Actor){return canWalk(this.p,a.x,a.y,a.radius)}
@@ -167,7 +185,7 @@ export class World {
     giveItem(id:string,itemId:string,quantity:number){const a=this.actors.get(id);if(a?.kind!=='player')throw Error('Không có nhân vật');a.inventory=addItems(a.inventory,itemId,quantity)}
     join(id: string, name: string) { if ([...this.actors.values()].filter(a => a.kind === 'player').length >= 32)
         throw Error('Map đầy (32 người)'); const a = this.make(id, name, 'player', this.findSpawn(this.p.spawn.x, this.p.spawn.y)); this.actors.set(id, a); return a; }
-    leave(id: string) { this.projectiles=this.projectiles.filter(p=>p.ownerId!==id); this.previewCommands.delete(id);this.flightCommands.delete(id);this.interactions.cancel(id,'Mất kết nối / rời map');this.interactions.errors.delete(id);this.actors.delete(id); this.inputs.delete(id); }
+    leave(id: string) { this.skillRequests.delete(id);this.skillCasts=this.skillCasts.filter(c=>c.casterId!==id); this.projectiles=this.projectiles.filter(p=>p.ownerId!==id); this.previewCommands.delete(id);this.flightCommands.delete(id);this.interactions.cancel(id,'Mất kết nối / rời map');this.interactions.errors.delete(id);this.actors.delete(id); this.inputs.delete(id); }
     input(id: string, i: Intent) { const a = this.actors.get(id); if (!a || !validIntent(i) || i.seq <= Math.max(a.ack, this.inputs.get(id)?.i.seq ?? -1))
         return false; if(Math.hypot(i.dx,i.dy)>.01||i.attack){this.cancelAnimationPreview(a);this.interactions.cancel(id);}this.inputs.set(id, { i, time: this.time }); return true; }
     respawn(id: string) { const a = this.actors.get(id); if (a && a.hp <= 0) {this.projectiles=this.projectiles.filter(p=>p.ownerId!==id);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);
@@ -198,6 +216,13 @@ export class World {
        if(victim){p.x+=(x-p.x)*first;p.y+=(y-p.y)*first;p.travelled+=distance*first;if(this.time-p.bornAt+1e-9>=w.minFlightSeconds!){this.hit(owner,victim,w.damage);this.events.at(-1)!.projectileId=p.id;continue}}
        else{p.x=x;p.y=y;p.travelled+=distance}if(p.travelled<=w.range)next.push(p);
       }this.projectiles=next;
+    }
+    private advanceSkills(){
+     for(const c of this.skillCasts){if(this.skillHits.has(c.id)||this.time-c.startedAt+1e-9<skills.get(c.skillId).hitAt)continue;this.skillHits.add(c.id);
+      const a=this.actors.get(c.casterId),b=c.targetId&&this.actors.get(c.targetId),rule=skillCombat[c.skillId];
+      if(a&&a.hp>0&&a.teleportSeq===c.epoch&&c.mapId===this.p.id&&b&&b.kind==='mob'&&b.hp>0&&rule&&Math.hypot(b.x-a.x,b.y-a.y)<=skills.get(c.skillId).range&&this.clearLine(a,b))this.hit(a,b,rule.damage);
+     }
+     const live=new Set(this.skillCasts.map(c=>c.id));for(const id of this.skillHits)if(!live.has(id))this.skillHits.delete(id);
     }
     step(dt = .05) { this.time += dt; for (const a of this.actors.values()) {
         if(a.animationPreview){const preview=a.animationPreview;preview.elapsed+=dt;if(a.hp<=0||this.inCombat(a)||preview.elapsed>=previewDefinition(preview.actionId,a.appearanceId)!.dur)this.cancelAnimationPreview(a)}
@@ -245,7 +270,7 @@ export class World {
         if (i.attack)
             this.attack(a);
         if(a.swordFlight){a.swordFlight.heading=a.dir;if(Math.abs(Math.cos(a.dir))>.15)a.swordFlight.facing=Math.cos(a.dir)<0?-1:1;a.action='idle'}
-    }this.advanceSouls(dt);this.interactions.step();for(const a of this.actors.values())if(a.kind==='player'){const c=this.interactions.channels.get(a.id),d=c?this.interactions.definitions.get(c.intent.objectId):this.interactions.nearest(a);a.interactionTarget=d?{objectId:d.objectId,actionId:d.actionId,type:d.type,label:d.label,cycle:this.interactions.states.get(d.objectId)!.cycle}:undefined;a.toolId=d&&a.hp>0?this.interactions.presentation(d).toolId:'combat'} this.events = this.events.filter(e => this.time - e.time < 1.2); }
-    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;projectiles?:SoulProjectile[];nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { projectiles:this.projectiles.map(p=>({...p})),nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, inventory:structuredClone(a.inventory),animationPreview:a.animationPreview?{...a.animationPreview}:undefined,swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
+    }this.advanceSkills();this.skillCasts=this.skillCasts.filter(c=>{const a=this.actors.get(c.casterId);return a&&a.hp>0&&a.teleportSeq===c.epoch&&c.mapId===this.p.id&&this.time-c.startedAt<skills.get(c.skillId).duration});this.advanceSouls(dt);this.interactions.step();for(const a of this.actors.values())if(a.kind==='player'){const c=this.interactions.channels.get(a.id),d=c?this.interactions.definitions.get(c.intent.objectId):this.interactions.nearest(a);a.interactionTarget=d?{objectId:d.objectId,actionId:d.actionId,type:d.type,label:d.label,cycle:this.interactions.states.get(d.objectId)!.cycle}:undefined;a.toolId=d&&a.hp>0?this.interactions.presentation(d).toolId:'combat'} this.events = this.events.filter(e => this.time - e.time < 1.2); }
+    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;skillCasts?:SkillCast[];skillClock?:number;projectiles?:SoulProjectile[];nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { skillCasts:this.skillCasts.map(c=>({...c})),skillClock:this.interactions.now(),projectiles:this.projectiles.map(p=>({...p})),nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, skills:a.skills?structuredClone(a.skills):undefined,inventory:structuredClone(a.inventory),animationPreview:a.animationPreview?{...a.animationPreview}:undefined,swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
 }
 export type Snapshot = ReturnType<World['snapshot']>;

@@ -1,3 +1,4 @@
+import {skillManifest,validSkillCasts,normalizeSkills} from '../shared/skills';
 import {validSoulProjectiles} from '../shared/weapons';
 import {SOUL_BANNER_ID} from '../shared/inventory';
 import { STEP, interpolateSnapshot, PredictedPresentation, SnapshotTimeline } from './presentation';
@@ -13,6 +14,8 @@ import {validAnimationPreview} from '../shared/animation-previews';
 import {normalizeCharacterProfile,profileRecord} from '../shared/character-profile';
 import {validInventory,type InventoryMove} from '../shared/inventory';
 export interface GameSession {
+    skillMessage?:string;
+    castSkill(slot:number,targetId?:string):void;
     id: string;
     characterId: string;
     exploration: ExplorationStore | null;
@@ -39,6 +42,8 @@ export interface GameSession {
 }
 const SAVE = 'darkin-frontier-mvp:offline:v1';
 export class LocalGameSession implements GameSession {
+    skillMessage='';skillSeq=0;
+    castSkill(slot:number,targetId?:string){try{this.world.castSkill(this.id,{slot,targetId,mapId:this.world.p.id,seq:++this.skillSeq});this.skillMessage='';this.snapshot=this.world.snapshot();this.save()}catch(e){this.skillMessage=String(e)}}
     id = 'local';
     status = 'Offline';
     dataWarnings:string[]=[];
@@ -83,6 +88,7 @@ export class LocalGameSession implements GameSession {
             }
         }
         catch { }
+        const demo=skillManifest.offlineDemo;if(!a.skills?.learned.includes(demo.skillId)){this.world.learnSkill(this.id,demo.skillId);migrate=true}if(!a.skills?.slots[demo.slot-1]){this.world.learnSkill(this.id,demo.skillId,demo.slot-1);migrate=true}
         this.snapshot = this.world.snapshot();
         this.previous = this.snapshot;
         this.exploration.visit(a.x, a.y, this.world.time, a.teleportSeq);
@@ -137,6 +143,8 @@ export class NetworkGameSession implements GameSession {
     interactionMessage='';
     inventoryMessage='';
     previewMessage='';previewSeq=0;
+    skillMessage='';skillSeq=0;skillsSupported=false;
+    castSkill(slot:number,targetId?:string){if(!this.skillsSupported){this.skillMessage='Backend cần cập nhật Skill & VFX';return}if(this.socket.readyState===1){this.skillMessage='';this.socket.send(JSON.stringify({type:'castSkill',command:{slot,targetId,mapId:this.p.id,seq:++this.skillSeq}}))}}
     flightMessage='';flightSeq=0;flightSupported=false;previewSupported=false;allWeaponFlightSupported=false;inventorySupported=false;rangedCombatSupported=false;
     snapshot: Snapshot = { time: 0, actors: [], events: [] };
     socket: WebSocket;
@@ -161,7 +169,7 @@ export class NetworkGameSession implements GameSession {
         throw Error('Trang HTTPS yêu cầu địa chỉ wss://');this.tokenKey='darkin-frontier:online-guest:v1:'+encodeURIComponent(u.href)+':'+encodeURIComponent(name);try{const tabToken=sessionStorage.getItem(this.tokenKey);this.resumeSession=!!tabToken;this.resumeToken=tabToken||localStorage.getItem(this.tokenKey)||''}catch{} this.socket = new WebSocket(u); this.socket.onopen = () => this.socket.send(JSON.stringify({ type: 'join', name,resumeToken:this.resumeToken,resume:this.resumeSession })); this.socket.onmessage = e => { try {
         const m = JSON.parse(e.data);
         if (m.type === 'welcome') {
-            this.allWeaponFlightSupported=m.weaponFlightProtocol===1;this.rangedCombatSupported=m.rangedCombatProtocol===1;this.inventorySupported=m.inventoryProtocol===1;this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
+            this.skillsSupported=m.skillProtocol===1;this.allWeaponFlightSupported=m.weaponFlightProtocol===1;this.rangedCombatSupported=m.rangedCombatProtocol===1;this.inventorySupported=m.inventoryProtocol===1;this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
             if(m.interactionProtocol!==1){this.status='Server cần cập nhật tương tác/ví';this.socket.close();return}
             if (m.map !== p.id) {
                 this.status = 'Server dùng map khác';
@@ -178,11 +186,14 @@ export class NetworkGameSession implements GameSession {
         if (m.type === 'error')
             this.status = m.message;
         if(m.type==='interactionError')this.interactionMessage=m.message;
+        if(m.type==='skillError')this.skillMessage=String(m.message);
         if(m.type==='inventoryError')this.inventoryMessage=String(m.message);
         if(m.type==='previewError')this.previewMessage=String(m.message);
         if(m.type==='flightError')this.flightMessage=String(m.message);
         if(m.type==='exploration'&&this.exploration)this.exploration.restore(m.record);
         if (m.type === 'snapshot') {
+            if(Array.isArray(m.actors))for(const a of m.actors)if(a.kind==='player')normalizeSkills(a.skills);
+            if(m.skillCasts!==undefined&&!validSkillCasts(m.skillCasts)){this.status='Server gửi skill không hợp lệ';this.socket.close();return}
             if(m.projectiles!==undefined&&!validSoulProjectiles(m.projectiles)){this.status='Server gửi linh hồn không hợp lệ';this.socket.close();return}
             if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.kind==='player'&&a.inventory!==undefined&&!validInventory(a.inventory))){this.status='Server gửi túi đồ không hợp lệ';this.socket.close();return}
             if(Array.isArray(m.actors)&&m.actors.some((a:any)=>a.animationPreview!==undefined&&!validAnimationPreview(a.animationPreview))){this.status='Server gửi dữ liệu hoạt ảnh không hợp lệ';this.socket.close();return}

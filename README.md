@@ -63,3 +63,5 @@ MVP một map, sáu quái tạm, không phải MMORPG hoàn chỉnh hoặc đã 
 Tôn Hồn Phiên: [cách đeo, dữ liệu/neo Studio, cấu hình đòn đánh, migration và kiểm thử](TON-HON-PHIEN.md). Vũ khí có sẵn trong túi, không thay kiếm đang đeo tự động; chọn món → Đeo. Online cần backend mới có `rangedCombatProtocol:1`; hiện chưa có WSS công khai.
 
 Map7 + runtime Studio8, occlusionMask theo chân và phi kiếm mọi vũ khí đã đăng ký (gồm Tôn Hồn Phiên): [hướng dẫn và kiểm thử](MAP7-UPDATE.md). Runtime nguồn được giữ nguyên byte, adapter giữ multiplayer/quặng; không xóa cache ánh sáng theo giờ. Backend Online cần bản mới có `weaponFlightProtocol:1`.
+
+Skill & VFX — [Cổ thần chỉ ở ô skill2](SKILLS-VFX.md): Offline học/gắn sẵn demo, nút2 hoặc phím2;100 damage server tại hitAt0.4s, cooldown1s. Online chỉ cast skill đã học trong profile server; không tự cấp cho người mới. Backend cần `skillProtocol:1`.

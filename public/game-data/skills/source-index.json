@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "sources": {
+    "my_skills.skill-pack.json": "30ae1f55b80d37f3ee5066cd9fa0cf8f3072b3922f00d198c2771f784828551e",
+    "skill-runtime.mjs": "8a4e16d3952fb7e06a4eb980da690a2d4be834d4ec0975199ec4298d2a437486"
+  }
+}
