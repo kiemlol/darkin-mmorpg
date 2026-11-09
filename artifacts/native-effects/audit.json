@@ -7,7 +7,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "phong_nhan",
@@ -16,7 +18,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "bang_thau",
@@ -25,7 +29,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "dia_thich",
@@ -34,7 +40,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "xich_chan",
@@ -43,7 +51,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "kim_mang",
@@ -52,7 +62,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thanh_dang",
@@ -61,7 +73,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thuy_tien",
@@ -70,7 +84,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "loi_xa",
@@ -79,7 +95,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ngu_kiem_thuat",
@@ -88,7 +106,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "dinh_than",
@@ -97,7 +117,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "kim_chung_trao",
@@ -106,7 +128,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "su_tu_hong",
@@ -115,7 +139,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ngu_kiem_sat",
@@ -124,7 +150,9 @@
       "imageCalls": 70,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_kiem_tran",
@@ -133,7 +161,9 @@
       "imageCalls": 56,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "van_kiem_quy_tong",
@@ -142,7 +172,9 @@
       "imageCalls": 2017,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "cuu_huyet_kiem_tran",
@@ -151,7 +183,9 @@
       "imageCalls": 171,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "kim_thuong_giang_the",
@@ -160,7 +194,9 @@
       "imageCalls": 1367,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "loi_thuong_quan_dia",
@@ -169,7 +205,9 @@
       "imageCalls": 211,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ngu_loi_thuong_vu",
@@ -178,7 +216,9 @@
       "imageCalls": 505,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ngu_hoa_thuong_vu",
@@ -187,7 +227,9 @@
       "imageCalls": 3276,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "tieu_canh_kiem_tran",
@@ -196,7 +238,9 @@
       "imageCalls": 376,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_nguyet_luan_liem",
@@ -205,7 +249,9 @@
       "imageCalls": 597,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "anh_dao_phong_tran",
@@ -214,7 +260,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "kim_long_phap_tuong",
@@ -223,7 +271,9 @@
       "imageCalls": 6414,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thanh_lam_kiem_tru",
@@ -232,7 +282,9 @@
       "imageCalls": 11,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "anh_ky_phu",
@@ -241,7 +293,9 @@
       "imageCalls": 72,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "bang_kiem_tran",
@@ -250,7 +304,9 @@
       "imageCalls": 30,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "bang_kiem_luan",
@@ -259,7 +315,9 @@
       "imageCalls": 160,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "tien_vu",
@@ -268,7 +326,9 @@
       "imageCalls": 1110,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "tram_ma",
@@ -277,7 +337,9 @@
       "imageCalls": 90,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ma_bao_an",
@@ -286,7 +348,9 @@
       "imageCalls": 308,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ma_hon_phe",
@@ -295,7 +359,9 @@
       "imageCalls": 1928,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "cuu_u_ma_trao",
@@ -304,7 +370,9 @@
       "imageCalls": 322,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "phi_long_tai_thien",
@@ -313,7 +381,9 @@
       "imageCalls": 536,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "hoanh_tao_mac_ngan",
@@ -322,7 +392,9 @@
       "imageCalls": 467,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "son_ha_nhap_hoa",
@@ -331,7 +403,9 @@
       "imageCalls": 97,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "tu_van_cuong_phong",
@@ -340,7 +414,9 @@
       "imageCalls": 248,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "tu_van_ma_vuc",
@@ -349,7 +425,9 @@
       "imageCalls": 470,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "cuu_u_hac_trao",
@@ -358,7 +436,9 @@
       "imageCalls": 65,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "hac_vu_xuyen_tam",
@@ -367,7 +447,9 @@
       "imageCalls": 187,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thanh_long_ngam",
@@ -376,7 +458,9 @@
       "imageCalls": 1709,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "cuu_thien_lien_am",
@@ -385,7 +469,9 @@
       "imageCalls": 507,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "bich_nguc_giang_dao",
@@ -394,7 +480,9 @@
       "imageCalls": 54,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ngoc_luu_chan_am",
@@ -403,7 +491,9 @@
       "imageCalls": 113,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_mau_xuyen_tam",
@@ -412,7 +502,9 @@
       "imageCalls": 471,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_hai_phien_thien",
@@ -421,7 +513,9 @@
       "imageCalls": 281,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_chu_phe_mach",
@@ -430,7 +524,9 @@
       "imageCalls": 84,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_te_ma_dong",
@@ -439,7 +535,9 @@
       "imageCalls": 316,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_co_phe_tam",
@@ -448,7 +546,9 @@
       "imageCalls": 244,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_anh_tam_cham",
@@ -457,7 +557,9 @@
       "imageCalls": 179,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_ti_trien_than",
@@ -466,7 +568,9 @@
       "imageCalls": 247,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "nguyet_quang",
@@ -475,7 +579,9 @@
       "imageCalls": 665,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_nguyet_am_thuc",
@@ -484,7 +590,9 @@
       "imageCalls": 196,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "kim_quang_cu_kiem",
@@ -493,7 +601,9 @@
       "imageCalls": 227,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ngu_sac_than_chuong",
@@ -502,7 +612,9 @@
       "imageCalls": 539,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "am_huyet_ma_chuong",
@@ -511,7 +623,9 @@
       "imageCalls": 308,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thanh_an_ho_the",
@@ -520,7 +634,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thien_thu_giang_the",
@@ -529,7 +645,41 @@
       "imageCalls": 378,
       "error": null,
       "logs": [],
-      "targetMutated": true
+      "targetMutated": true,
+      "gameplayMutated": false,
+      "targetChanges": [
+        {
+          "before": {
+            "id": "target",
+            "x": 1545,
+            "y": 1120,
+            "hp": 10000,
+            "hpMax": 10000,
+            "dead": false,
+            "def": {
+              "barY": 54
+            }
+          },
+          "after": {
+            "id": "target",
+            "x": 1545,
+            "y": 1120,
+            "hp": 10000,
+            "hpMax": 10000,
+            "dead": false,
+            "def": {
+              "barY": 54
+            },
+            "_nhoThan": {
+              "id": "nho1",
+              "x": 1545,
+              "y": 1120,
+              "hp": 10000,
+              "dead": false
+            }
+          }
+        }
+      ]
     },
     {
       "id": "truc_gian_tam_tinh",
@@ -538,7 +688,9 @@
       "imageCalls": 634,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "chu_phe_dinh_toi",
@@ -547,7 +699,9 @@
       "imageCalls": 127,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "hao_nhien_thuan",
@@ -556,7 +710,9 @@
       "imageCalls": 340,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thien_dia_vi_ky",
@@ -565,7 +721,9 @@
       "imageCalls": 661,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "hoa_dia_vi_lao",
@@ -574,7 +732,9 @@
       "imageCalls": 555,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "mac_truc_binh_phong",
@@ -583,7 +743,9 @@
       "imageCalls": 649,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thanh_long_ngam_nho",
@@ -592,7 +754,9 @@
       "imageCalls": 694,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "son_ha_nhap_hoa_nho",
@@ -601,7 +765,9 @@
       "imageCalls": 185,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_buc_chuong",
@@ -610,7 +776,9 @@
       "imageCalls": 8,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_liem_tram",
@@ -619,7 +787,9 @@
       "imageCalls": 16,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "tu_anh_phuoc_tien",
@@ -628,7 +798,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "xich_ma_hoa_than",
@@ -637,7 +809,9 @@
       "imageCalls": 1542,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "kim_cuong_hoa_than",
@@ -646,7 +820,9 @@
       "imageCalls": 300,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "man_tuong_phap_than",
@@ -655,7 +831,9 @@
       "imageCalls": 2700,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "bang_son_quyen",
@@ -664,7 +842,9 @@
       "imageCalls": 1095,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thien_quan_truy",
@@ -673,7 +853,9 @@
       "imageCalls": 578,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ham_thien_thu",
@@ -682,7 +864,9 @@
       "imageCalls": 424,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "toai_nhac_chuy",
@@ -691,7 +875,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "lien_hoan_bach_quyen",
@@ -700,7 +886,9 @@
       "imageCalls": 553,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "toan_phong_thoi",
@@ -709,7 +897,9 @@
       "imageCalls": 433,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "cu_thach_thien_giang",
@@ -718,7 +908,9 @@
       "imageCalls": 798,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "xich_nhat_quyen_an",
@@ -727,7 +919,9 @@
       "imageCalls": 731,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "khai_bi_chuong",
@@ -736,7 +930,9 @@
       "imageCalls": 155,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "kinh_hoa_thuy_nguyet",
@@ -745,7 +941,9 @@
       "imageCalls": 2400,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "hong_tu_doat_menh",
@@ -754,7 +952,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "mong_diep_me_tran",
@@ -763,7 +963,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "thien_ma_lien_vu",
@@ -772,7 +974,9 @@
       "imageCalls": 22,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_lien_ky",
@@ -781,7 +985,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "to_hong_phuoc",
@@ -790,7 +996,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "nhiep_hon_linh",
@@ -799,7 +1007,9 @@
       "imageCalls": 64,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "mi_huong_dan",
@@ -808,7 +1018,9 @@
       "imageCalls": 0,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "ho_diep_phe_tam",
@@ -817,7 +1029,9 @@
       "imageCalls": 461,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "diep_anh_bo",
@@ -826,7 +1040,9 @@
       "imageCalls": 386,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "xich_ma_hoa_than_huyet",
@@ -835,7 +1051,9 @@
       "imageCalls": 300,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_nguyet_am_thuc_huyet",
@@ -844,7 +1062,9 @@
       "imageCalls": 898,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "am_huyet_ma_chuong_huyet",
@@ -853,7 +1073,9 @@
       "imageCalls": 1113,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     },
     {
       "id": "huyet_nguyet_luan_liem_huyet",
@@ -862,7 +1084,9 @@
       "imageCalls": 284,
       "error": null,
       "logs": [],
-      "targetMutated": false
+      "targetMutated": false,
+      "gameplayMutated": false,
+      "targetChanges": []
     }
   ],
   "missing": [],

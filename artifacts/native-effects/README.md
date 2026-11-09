@@ -4,4 +4,4 @@
 
 Each skill is sampled across 15 seconds. PNGs show a representative non-fullscreen-flash frame. `audit.json` retains painted pixel counts, drawImage calls, errors, missing assets, image dependencies and a check that visual ghost casts did not mutate target HP/state.
 
-Result: 96/96 painted, zero errors, zero missing image references, zero target mutations. This is a headless Canvas rendering check, not an iPhone browser test. `contact-sheet.png` shows twelve representative native effects.
+Result: 96/96 painted, zero errors, zero missing image references, zero gameplay-state changes. Thiên Thư adds a private `_nhoThan` visual cache to its detached target facade; HP, position and death state stay unchanged. This is a headless Canvas rendering check, not an iPhone browser test. `contact-sheet.png` shows twelve representative native effects.

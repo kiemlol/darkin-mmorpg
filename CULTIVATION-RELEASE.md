@@ -56,4 +56,4 @@ Thay bộ dựng thủ công bằng dispatcher `Skills.cast/update/draw` gốc v
 
 Tàng Kinh Các hiện mở 96 định nghĩa kỹ năng gốc cùng 4 kỹ năng Darkin; có tìm theo tên/ID, hình tham khảo, nút chọn ô và khôi phục MP/hồi chiêu.
 
-`npm run test:effects` chạy mô phỏng hiệu ứng gốc qua bộ điều hợp Darkin, xuất PNG và `artifacts/native-effects/audit.json`. Lần kiểm tra này: 96/96 có pixel được vẽ, không lỗi, không thiếu ảnh tham chiếu, không đổi HP mục tiêu trong mô phỏng ghost. 70 chiêu có lệnh vẽ ảnh/atlas, 26 chiêu là hình vẽ Canvas gốc. Kiểm tra này không thay thế việc chạy trên iPhone thật.
+`npm run test:effects` chạy mô phỏng hiệu ứng gốc qua bộ điều hợp Darkin, xuất PNG và `artifacts/native-effects/audit.json`. Lần kiểm tra này: 96/96 có pixel được vẽ, không lỗi, không thiếu ảnh tham chiếu, không đổi HP/vị trí/trạng thái chết của mục tiêu trong mô phỏng ghost (Thiên Thư có thêm cache hình `_nhoThan` vào bản sao mục tiêu). 70 chiêu có lệnh vẽ ảnh/atlas, 26 chiêu là hình vẽ Canvas gốc. Kiểm tra này không thay thế việc chạy trên iPhone thật.
