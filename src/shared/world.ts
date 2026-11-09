@@ -1,3 +1,5 @@
+import {cultSkill,cultivationStats,type Cultivation,type CultCommand} from './cultivation';
+import {initializeCultivator,cultivationCommand,tickCultivation,rewardCultivation} from './cultivation-world';
 import {advanceVolley,advanceSkillMissiles,type SkillMissile} from './skill-missiles';
 import {skills,skillCombat,skillImpactTime,emptySkills,type LearnedSkills,type SkillCast} from './skills';
 import { gameCatalog, allowedAppearance } from './catalog';
@@ -25,6 +27,7 @@ export type Intent = {
     attack: boolean;
 };
 export type Actor = EquipmentState & RealmState & {
+    cultivation?:Cultivation;mp?:number;maxMp?:number;professionName?:string;mobLevel?:number;boss?:boolean;statusUntil?:number;burnUntil?:number;burnBy?:string;burnTick?:number;
     contentGrants?:string[];skills?:LearnedSkills;
     swordFlight?:SwordFlight;
     animationPreview?:AnimationPreview;
@@ -80,6 +83,7 @@ export function movement(p: any, a: Actor, i: Intent, dt: number) { if (a.hp <= 
     if(distance>0){const x=Math.max(b.x0,Math.min(b.x1,a.x+i.dx/len*distance)),y=Math.max(b.y0,Math.min(b.y1,a.y+i.dy/len*distance));moveActor(p,a,(x-a.x)/distance,(y-a.y)/distance,t,speed)} if (Math.hypot(i.dx, i.dy) > .01)
     a.dir = Math.atan2(i.dy, i.dx); }
 export class World {
+    safeSpawn?:{x:number;y:number};
     flightCommands=new Map<string,{seq:number;time:number}>();
     interactions:InteractionSystem;
     p: any;
@@ -108,6 +112,9 @@ export class World {
         x: number;
         y: number;
     }): Actor { return { contentGrants:kind==='player'?[SOUL_RELEASE]:[],inventory:kind==='player'?starterInventory():emptyInventory(),potentialPoints:0,wallet:normalizeWallet(null).wallet,combatUntil:0,toolId:'combat',...DEFAULT_REALM,teleportSeq:0,...(kind==='player'?defaultEquipment(gameCatalog.defaults.appearance):{headId:'',bodyId:'',accessories:[]}),equipmentWarnings:[],appearanceId: kind === 'player' ? gameCatalog.defaults.appearance : '', attackSeq: 0, id, name, kind, ...h, radius: 12, hp: kind === 'mob' ? 60 : 100, maxHp: kind === 'mob' ? 60 : 100, dir: Math.PI / 2, action: 'idle', color: kind === 'mob' ? '#c08bda' : ['#e7ba6b', '#7ecfce', '#b4a1ee', '#e7958c'][this.serial++ % 4], ack: -1, cooldown: 0, anim: 0, deadAt: 0, home: { ...h }, kills: 0 }; }
+    populateCultivation(){if(this.actors.has('guardian'))return;this.safeSpawn=this.findSpawn(this.p.spawn.x,this.p.spawn.y);for(const [i,m]of [...this.actors.values()].filter(a=>a.kind==='mob').entries()){m.name=['Thanh Lang','Xích Hồ','Thạch Yêu','U Linh','Huyết Bức','Mộc Tinh'][i%6];m.mobLevel=1+i%3;m.maxHp=60+m.mobLevel*25;m.hp=m.maxHp;}const p=this.findSpawn(this.p.spawn.x+500,this.p.spawn.y+200);const boss=this.make('guardian','Sơn Quân · Thủ lĩnh','mob',p);boss.boss=true;boss.mobLevel=4;boss.maxHp=700;boss.hp=700;boss.color='#d69065';this.actors.set(boss.id,boss);}
+    initializeCultivator(id:string){const a=this.actors.get(id);if(a)initializeCultivator(this,a)}
+    cultivate(id:string,command:CultCommand){cultivationCommand(this,id,command)}
     // Internal simulation operation only. There is deliberately no client message/API for this.
     setRealm(id:string,state:RealmState){if(!validRealmState(state))throw Error('Cảnh giới/bậc không hợp lệ');const a=this.actors.get(id);if(a?.kind==='player'){a.realmId=state.realmId;a.realmStageId=state.realmStageId}}
     inCombat(a:Actor){return a.combatUntil-this.time>1e-9}
@@ -119,14 +126,16 @@ export class World {
      const skillId=a.skills?.slots[command.slot],s=skillId&&skills.get(skillId);if(!s||!a.skills!.learned.includes(skillId!))throw Error('Chưa học hoặc chưa gắn skill vào ô này');
      if(s.kind==='passive'||a.hp<=0||!this.canStand(a))throw Error('Không thể dùng skill ở trạng thái hiện tại');
      skillImpactTime(skillId!); // Require a published contact profile before spending cooldown or starting a cast.
-     const now=this.interactions.now();if((a.skills!.readyAt[skillId!]||0)>now+1e-9)throw Error('Skill đang hồi chiêu');if(s.cost>0)throw Error('Năng lượng chưa kích hoạt; không thể trả chi phí skill');
+     const now=this.interactions.now();if((a.skills!.readyAt[skillId!]||0)>now+1e-9)throw Error('Skill đang hồi chiêu');if(s.cost>0&&(!a.cultivation||a.cultivation.mp<s.cost))throw Error('Năng lượng: không đủ linh lực');
      if(this.skillCasts.length>=128)throw Error('Quá nhiều hiệu ứng');
+     const cultivationSkill=cultSkill(skillId!);
      let target:Actor|undefined;
      if(command.targetId!==undefined){if(typeof command.targetId!=='string')throw Error('Mục tiêu không hợp lệ');target=this.actors.get(command.targetId);if(!target||target.kind!=='mob'||target.hp<=0)throw Error('Mục tiêu không hợp lệ')}
-     else target=[...this.actors.values()].filter(b=>b.kind==='mob'&&b.hp>0&&Math.hypot(b.x-a.x,b.y-a.y)<=s.range&&this.clearLine(a,b)).sort((b,c)=>Math.hypot(b.x-a.x,b.y-a.y)-Math.hypot(c.x-a.x,c.y-a.y)||b.id.localeCompare(c.id))[0];
+     else if(!cultivationSkill||cultivationSkill.range>0)target=[...this.actors.values()].filter(b=>b.kind==='mob'&&b.hp>0&&Math.hypot(b.x-a.x,b.y-a.y)<=s.range&&this.clearLine(a,b)).sort((b,c)=>Math.hypot(b.x-a.x,b.y-a.y)-Math.hypot(c.x-a.x,c.y-a.y)||b.id.localeCompare(c.id))[0];
      if(skillCombat[skillId!]?.volley&&(!target||this.skillCasts.filter(c=>skillCombat[c.skillId]?.volley).length>=16))throw Error(!target?'Không có quái hợp lệ trong tầm':'Quá nhiều sách đang thi triển');
      const t=target||{...a,x:a.x+Math.cos(a.dir)*Math.min(120,s.range),y:a.y+Math.sin(a.dir)*Math.min(120,s.range)};
      if(Math.hypot(t.x-a.x,t.y-a.y)>s.range+1e-9||!canWalk(this.p,t.x,t.y,2)||!this.clearLine(a,t as Actor))throw Error('Mục tiêu ngoài tầm hoặc bị vật cản');
+     if(a.cultivation){a.cultivation.mp-=s.cost;a.cultivation.meditating=false;a.cultivation.gatherUntil=0;a.mp=a.cultivation.mp}
      this.cancelSkillVolleys(id);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);this.interactions.cancel(id,'Đang dùng skill');a.dir=Math.atan2(t.y-a.y,t.x-a.x);a.skills!.readyAt[skillId!]=now+s.cooldown;
      this.skillCasts.push({id:id+':skill:'+command.seq,skillId:skillId!,casterId:id,targetId:target?.id,mapId:this.p.id,instanceId:this.interactions.instanceId,startedAt:this.time,x:a.x,y:a.y,tx:t.x,ty:t.y,direction:a.dir,epoch:a.teleportSeq});
     }
@@ -197,8 +206,11 @@ export class World {
         this.inputs.delete(id);
     } }
     hit(a: Actor, b: Actor, damage: number) { if (b.hp <= 0||!Number.isFinite(damage)||damage<=0)
-        return; this.cancelAnimationPreview(a);this.cancelAnimationPreview(b);this.cancelSwordFlight(a);this.cancelSwordFlight(b);a.combatUntil=b.combatUntil=this.time+COMBAT_SECONDS;this.interactions.cancel(a.id,'Đang giao chiến');this.interactions.cancel(b.id,'Bị tấn công');b.hp = Math.max(0, b.hp - damage); b.action = b.hp ? 'hurt' : 'death'; b.anim = b.hp ? .22 : 0; b.deadAt = this.time; if (!b.hp && a.kind === 'player')
-        a.kills++; this.events.push({ id: ++this.serial, x: b.x, y: b.y - 50, damage, target: b.id, time: this.time }); }
+        return; this.cancelAnimationPreview(a);this.cancelAnimationPreview(b);this.cancelSwordFlight(a);this.cancelSwordFlight(b);a.combatUntil=b.combatUntil=this.time+COMBAT_SECONDS;this.interactions.cancel(a.id,'Đang giao chiến');this.interactions.cancel(b.id,'Bị tấn công');if(a.kind==='mob'&&a.mobLevel)damage*=a.boss?2:1+a.mobLevel*.12;
+        if(a.cultivation&&damage===PLAYER_DAMAGE)damage=cultivationStats(a.cultivation).power;
+        if(b.cultivation){damage*=1-cultivationStats(b.cultivation).defense;if(b.cultivation.guardUntil>this.interactions.now())damage*=.6;if(b.cultivation.shieldUntil>this.interactions.now()){const blocked=Math.min(damage,b.cultivation.shield);b.cultivation.shield-=blocked;damage-=blocked}}damage=Math.max(0,Math.round(damage));
+        b.hp = Math.max(0, b.hp - damage); b.action = b.hp ? 'hurt' : 'death'; b.anim = b.hp ? .22 : 0; b.deadAt = this.time; if (!b.hp && a.kind === 'player')
+        {a.kills++;if(b.kind==='mob')rewardCultivation(a,b);} this.events.push({ id: ++this.serial, x: b.x, y: b.y - 50, damage, target: b.id, time: this.time }); }
     attack(a: Actor) { if (a.cooldown > 0 || a.hp <= 0)
         return; if(a.kind==='player')this.cancelSkillVolleys(a.id);const weapon=combatWeapon(a);this.cancelAnimationPreview(a);this.cancelSwordFlight(a);this.interactions.cancel(a.id,'Đang đánh');const target=this.nearestAttackTarget(a);a.attackTargetId=target?.id;if(target)a.dir=Math.atan2(target.y-a.y,target.x-a.x);a.attackDir=a.dir;a.attackSeq++; a.cooldown = a.kind === 'mob' ? .95 : weapon.cooldown; a.action = 'attack'; a.anim = .24; if(a.kind==='player'&&weapon.kind==='soul'){if(this.projectiles.filter(p=>p.ownerId===a.id).length<4&&this.projectiles.length<128)this.projectiles.push({id:'soul:'+a.id+':'+a.attackSeq,ownerId:a.id,weaponId:weapon.accessoryId!,attackSeq:a.attackSeq,targetId:target?.id,x:a.x,y:a.y,startX:a.x,startY:a.y,angle:a.dir,travelled:0,launchDistance:target?Math.max(1,Math.hypot(target.x-a.x,target.y-a.y)):weapon.range,bornAt:this.time,epoch:a.teleportSeq});return} for (const b of this.actors.values()) {
         if (b.kind === a.kind || b.hp <= 0)
@@ -226,6 +238,7 @@ export class World {
       const tracked=c.targetId&&this.actors.get(c.targetId);if(skillCombat[c.skillId]?.impact?.trackTarget&&tracked&&tracked.hp>0){c.tx=tracked.x;c.ty=tracked.y}
       if(this.time-c.startedAt+1e-9<skillImpactTime(c.skillId))continue;this.skillHits.add(c.id);c.resolved=true;
       const a=this.actors.get(c.casterId),b=c.targetId&&this.actors.get(c.targetId),rule=skillCombat[c.skillId];
+      const cs=cultSkill(c.skillId);if(a&&a.hp>0&&a.teleportSeq===c.epoch&&c.mapId===this.p.id&&a.cultivation&&cs){const state=a.cultivation;if(cs.effect==='heal')a.hp=Math.min(a.maxHp,a.hp+a.maxHp*.38);else if(cs.effect==='shield'){state.shield=60+cultivationStats(state).power*2;state.shieldUntil=this.interactions.now()+10}else if(cs.effect==='guard')state.guardUntil=this.interactions.now()+12;else{const victims=[...this.actors.values()].filter(v=>v.kind==='mob'&&v.hp>0&&(cs.radius?Math.hypot(v.x-c.tx,v.y-c.ty)<=cs.radius:v.id===c.targetId)&&Math.hypot(v.x-a.x,v.y-a.y)<=cs.range+cs.radius&&this.clearLine(a,v));for(const v of victims){const before=v.hp;this.hit(a,v,Math.round(cultivationStats(state).power*cs.coefficient));if(['freeze','root','stun'].includes(cs.effect||''))v.statusUntil=this.time+(cs.effect==='root'?2.5:1.5);if(cs.effect==='burn'){v.burnUntil=this.time+4;v.burnBy=a.id;v.burnTick=this.time+1}if(cs.effect==='drain')a.hp=Math.min(a.maxHp,a.hp+(before-v.hp)*.2)}}continue;}
       if(a&&a.hp>0&&a.teleportSeq===c.epoch&&c.mapId===this.p.id&&b&&b.kind==='mob'&&b.hp>0&&rule&&Math.hypot(b.x-a.x,b.y-a.y)<=skills.get(c.skillId).range&&this.clearLine(a,b))this.hit(a,b,rule.damage);
      }
      const live=new Set(this.skillCasts.map(c=>c.id));for(const id of this.skillHits)if(!live.has(id))this.skillHits.delete(id);
@@ -234,10 +247,12 @@ export class World {
         if(a.animationPreview){const preview=a.animationPreview;preview.elapsed+=dt;if(a.hp<=0||this.inCombat(a)||preview.elapsed>=previewDefinition(preview.actionId,a.appearanceId)!.dur)this.cancelAnimationPreview(a)}
         a.cooldown = Math.max(0, a.cooldown - dt);
         a.anim = Math.max(0, a.anim - dt);
+        tickCultivation(this,a,dt);
+        if(a.burnUntil&&a.burnUntil>this.time&&this.time>=(a.burnTick||0)){a.burnTick=this.time+1;const owner=this.actors.get(a.burnBy||'');if(owner&&a.hp>0)this.hit(owner,a,Math.max(1,Math.round((owner.cultivation?cultivationStats(owner.cultivation).power:22)*.18)))}
         if (a.hp <= 0) {
             this.cancelSwordFlight(a);a.action = 'death';
-            if (a.kind === 'mob' && this.time - a.deadAt >= MOB_RESPAWN_SECONDS)
-                Object.assign(a, this.findSpawn(a.home.x, a.home.y), { hp: a.maxHp, action: 'idle', cooldown: 0, anim: 0 });
+            if (a.kind === 'mob' && this.time - a.deadAt >= (a.boss?120:a.mobLevel?18:MOB_RESPAWN_SECONDS))
+                Object.assign(a, this.findSpawn(a.home.x, a.home.y), { hp: a.maxHp, action: 'idle', cooldown: 0, anim: 0,burnUntil:0,statusUntil:0 });
             continue;
         }
         let i: Intent = { seq: 0, dx: 0, dy: 0, run: false, attack: false };
@@ -252,7 +267,7 @@ export class World {
             const targets = [...this.actors.values()].filter(b => b.kind === 'player' && b.hp > 0).sort((b, c) => Math.hypot(b.x - a.x, b.y - a.y) - Math.hypot(c.x - a.x, c.y - a.y));
             const b = targets[0];
             let tx = a.home.x, ty = a.home.y;
-            if (b && Math.hypot(b.x - a.x, b.y - a.y) < 300 && Math.hypot(b.x - a.home.x, b.y - a.home.y) < 430) {
+            if (b && (!a.mobLevel||!this.safeSpawn||Math.hypot(b.x-this.safeSpawn.x,b.y-this.safeSpawn.y)>180) && Math.hypot(b.x - a.x, b.y - a.y) < 300 && Math.hypot(b.x - a.home.x, b.y - a.home.y) < 430) {
                 tx = b.x;
                 ty = b.y;
                 if (Math.hypot(tx - a.x, ty - a.y) < 62) {
@@ -270,6 +285,8 @@ export class World {
         }
         if(this.advanceSwordFlight(a,i,dt))continue;
         if(this.interactions.channels.has(a.id)){a.action=this.interactions.presentation(this.interactions.definitions.get(this.interactions.channels.get(a.id)!.intent.objectId)!).action;continue}
+        if((a.statusUntil||0)>this.time) i={...i,dx:0,dy:0,attack:false};
+        if(a.cultivation?.meditating||a.cultivation?.gatherUntil)i={...i,dx:0,dy:0,attack:false};
         movement(this.p, a, i, dt);
         if (!a.anim)
             a.action = Math.hypot(i.dx, i.dy) > .01 ? (i.run ? 'run' : 'walk') : 'idle';
@@ -277,6 +294,6 @@ export class World {
             this.attack(a);
         if(a.swordFlight){a.swordFlight.heading=a.dir;if(Math.abs(Math.cos(a.dir))>.15)a.swordFlight.facing=Math.cos(a.dir)<0?-1:1;a.action='idle'}
     }this.advanceSkills();advanceSkillMissiles(this,dt);this.skillCasts=this.skillCasts.filter(c=>{const a=this.actors.get(c.casterId);return a&&a.hp>0&&a.teleportSeq===c.epoch&&c.mapId===this.p.id&&this.time-c.startedAt<skills.get(c.skillId).duration&&(c.closeAt===undefined||this.time-c.closeAt<skillCombat[c.skillId].volley!.closeSeconds)});this.advanceSouls(dt);this.interactions.step();for(const a of this.actors.values())if(a.kind==='player'){const c=this.interactions.channels.get(a.id),d=c?this.interactions.definitions.get(c.intent.objectId):this.interactions.nearest(a);a.interactionTarget=d?{objectId:d.objectId,actionId:d.actionId,type:d.type,label:d.label,cycle:this.interactions.states.get(d.objectId)!.cycle}:undefined;a.toolId=d&&a.hp>0?this.interactions.presentation(d).toolId:'combat'} this.events = this.events.filter(e => this.time - e.time < 1.2); }
-    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;skillCasts?:SkillCast[];skillMissiles?:SkillMissile[];skillClock?:number;projectiles?:SoulProjectile[];nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { skillMissiles:this.skillMissiles.map(p=>({...p})),skillCasts:this.skillCasts.map(c=>({...c})),skillClock:this.interactions.now(),projectiles:this.projectiles.map(p=>({...p})),nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, skills:a.skills?structuredClone(a.skills):undefined,inventory:structuredClone(a.inventory),animationPreview:a.animationPreview?{...a.animationPreview}:undefined,swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
+    snapshot(): {time:number;actors:Actor[];events:Hit[];clock?:ClockState;skillCasts?:SkillCast[];skillMissiles?:SkillMissile[];skillClock?:number;projectiles?:SoulProjectile[];nodes?:ReturnType<InteractionSystem['publicStates']>;instanceId?:string} { return { skillMissiles:this.skillMissiles.map(p=>({...p})),skillCasts:this.skillCasts.map(c=>({...c})),skillClock:this.interactions.now(),projectiles:this.projectiles.map(p=>({...p})),nodes:this.interactions.publicStates(),instanceId:this.interactions.instanceId,clock:{gameSeconds:this.clockBaseSeconds+this.time*CLOCK_RATE,rate:CLOCK_RATE},time: this.time, actors: [...this.actors.values()].filter(a => a.kind !== 'mob' || a.hp > 0 || this.time - a.deadAt < CORPSE_SECONDS).map(a => ({ ...a, cultivation:a.cultivation?structuredClone(a.cultivation):undefined,skills:a.skills?structuredClone(a.skills):undefined,inventory:structuredClone(a.inventory),animationPreview:a.animationPreview?{...a.animationPreview}:undefined,swordFlight:a.swordFlight?{...a.swordFlight}:undefined,corpseOpacity: a.kind === 'mob' && a.hp <= 0 ? Math.max(0, 1 - (this.time - a.deadAt) / CORPSE_SECONDS) : 1 })), events: this.events }; }
 }
 export type Snapshot = ReturnType<World['snapshot']>;

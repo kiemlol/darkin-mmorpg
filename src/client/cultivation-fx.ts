@@ -1,0 +1,26 @@
+import {cultSkill} from '../shared/cultivation';
+import type {Actor,Snapshot} from '../shared/world';
+/** Adapter for the original Tu Tiên JavaScript effect modules; never grants combat authority. */
+export class CultivationFX{
+ p:any;seen=new Set<string>();impacts=new Set<string>();actors=new Map<string,any>();loaded=false;errors:string[]=[];
+ async load(){
+  const images=new Map<string,HTMLImageElement>();const pending=new Map<string,Promise<any>>();
+  const loadImage=(path:string)=>{if(images.has(path))return Promise.resolve(images.get(path));if(pending.has(path))return pending.get(path)!;const task=new Promise(ok=>{const img=new Image();img.onload=()=>{images.set(path,img);ok(img)};img.onerror=()=>ok(null);img.src='/'+path});pending.set(path,task);return task};
+  this.p={CONFIG:{FLY:{HOVER:24}},Quality:{tier:2,keepVfx:()=>true,vfxCap:()=>180,isDecor:()=>false,veNguoiKhac:()=>{},detail:()=>2},Renderer:{w:0,h:0,view:()=>({step:0})},Camera:{x:0,y:0},Player:{drawPhiKiem:(c:CanvasRenderingContext2D,s:any)=>{c.save();c.translate(s.x,s.y);c.rotate(s.angle||0);c.fillStyle='#ffe7a1';c.beginPath();c.moveTo(-3,4);c.lineTo(0,-32);c.lineTo(3,4);c.closePath();c.fill();c.fillRect(-7,4,14,3);c.restore()}},Assets:{get:(id:string)=>images.get(id),loadImage,PRIO:{PREFETCH:2}},SceneWorld:{}};
+  (window as any).PNTT=this.p;
+  const modules=await fetch('/game-data/cultivation/modules.json').then(r=>r.json());
+  for(const stem of ['utils.','pixel.','vfx.','so_cap_nguyen_to.','phi_long.','kim_quang_cu_kiem.','van_kiem_quy_tong.','huyet_liem_tram.','huyet_mau.','huyet_nguyet.','thanh_an.','audio.']){const file=modules.find((n:string)=>n.startsWith(stem));if(file)await new Promise<void>((ok,no)=>{const script=document.createElement('script');script.src='/game-data/cultivation/modules/'+file;script.onload=()=>ok();script.onerror=()=>no(Error('Không tải được module '+file));document.head.append(script)})}
+  await Promise.all(['assets/sprites/fx/phi_long.png','assets/sprites/fx/kim_quang_cu_kiem.png'].map(loadImage));this.p.Audio?.init();this.loaded=true;
+ }
+ clear(){this.seen.clear();this.impacts.clear();this.actors.clear();if(this.p?.VFX)this.p.VFX.clear()}
+ update(snapshot:Snapshot|null,actors:Actor[],dt:number){if(!this.loaded||!snapshot){this.clear();return}const p=this.p;
+  for(const a of actors){let v=this.actors.get(a.id);if(!v){v={};this.actors.set(a.id,v)}Object.assign(v,a,{dead:a.hp<=0,dir:Math.cos(a.dir)<0?1:2,cfg:{weapon:'kim_quang_kiem'},def:{barY:a.boss?65:40}})}
+  const live=new Set<string>();for(const c of snapshot.skillCasts||[]){live.add(c.id);const skill=cultSkill(c.skillId);if(!skill)continue;const owner=this.actors.get(c.casterId)||{x:c.x,y:c.y},target=this.actors.get(c.targetId||'');const colors={core:'#fffbe4',mid:skill.color,edge:skill.color,glow:skill.color};
+   if(!this.seen.has(c.id)){this.seen.add(c.id);p.Audio?.playSkill({id:c.skillId});if(c.skillId==='huyet_liem_tram')p.VFX.spawnHuyetLiem(owner,target||{x:c.tx,y:c.ty},{hitDelay:skill.hitAt,ghost:true});else if(c.skillId==='huyet_mau_xuyen_tam')p.HuyetMauFX.spawn(owner,target,{hitDelay:skill.hitAt,x:c.tx,y:c.ty,ghost:true});else if(c.skillId==='huyet_nguyet_am_thuc')p.HuyetNguyetFX.spawn(owner,target,{hitDelay:skill.hitAt,x:c.tx,y:c.ty,ghost:true});else if(c.skillId==='thanh_an_ho_the')p.ThanhAnFX.spawn(owner,owner,{hitDelay:skill.hitAt,ghost:true});else if(skill.fx==='dragon')p.VFX.spawnPhiLong(owner,target?[target]:[],{hitDelay:skill.hitAt,point:{x:c.tx,y:c.ty},ghost:true});else if(skill.fx==='giantsword')p.KimKiemFX.spawn(owner,target||{x:c.tx,y:c.ty},{hitDelay:skill.hitAt,ghost:true});else if(skill.fx==='swords')p.VanKiemFX.spawn(owner,{x:c.tx,y:c.ty,target},skill.hitAt,0);else p.VFX.spawnRing(owner.x,owner.y,skill.color,40);}
+   if(c.resolved&&!this.impacts.has(c.id)){this.impacts.add(c.id);if(p.SoCapFX.coNo(c.skillId))p.SoCapFX.spawnImpact(c.skillId,c.tx,c.ty-14,colors,c.direction,target,skill.radius,target?[target]:[]);else{p.VFX.spawnRing(c.tx,c.ty,skill.color,Math.max(28,skill.radius));for(let k=0;k<12;k++)p.VFX.spawnEmber(c.tx+Math.cos(k)*20,c.ty+Math.sin(k)*12,skill.color,'#fff8d4')}}
+  }
+  for(const id of this.seen)if(!live.has(id)){this.seen.delete(id);this.impacts.delete(id)}
+  p.VFX.update(dt);if(p.VFX.list.length>180)p.VFX.list.splice(0,p.VFX.list.length-180);
+ }
+ draw(c:CanvasRenderingContext2D,layer:'back'|'front'){if(!this.loaded)return;c.save();try{this.p.VFX.draw(c,0,0,layer)}finally{c.restore()};if(layer==='back')for(const a of this.actors.values())if(a.cultivation?.meditating||a.cultivation?.shield>0){c.save();c.translate(a.x,a.y);c.strokeStyle=a.cultivation.meditating?'#9de4cf':'#efcf77';c.globalAlpha=.55;c.lineWidth=2;c.beginPath();c.ellipse(0,-3,32,14,performance.now()/3000,0,Math.PI*2);c.stroke();if(a.cultivation.shield>0){c.beginPath();c.ellipse(0,-35,28,49,0,0,Math.PI*2);c.stroke()}c.restore()}}
+}

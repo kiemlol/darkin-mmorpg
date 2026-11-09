@@ -13,11 +13,11 @@ export const itemDefinition=(id:string)=>itemDefinitions.find(i=>i.id===id);
 export function emptyInventory():Inventory{return{version:1,capacity:BAG_CAPACITY,revision:0,slots:Array(BAG_CAPACITY).fill(null)}}
 export function starterInventory():Inventory{let bag=emptyInventory();for(const id of manifest.starterItems)bag=addItems(bag,id,1);bag.revision=0;return bag}
 export function validInventory(b:any):b is Inventory{
- return b?.version===1&&b.capacity===BAG_CAPACITY&&Number.isSafeInteger(b.revision)&&b.revision>=0&&b.revision<1e12&&Array.isArray(b.slots)&&b.slots.length===BAG_CAPACITY&&b.slots.every((s:any)=>s===null||!!s&&typeof s.itemId==='string'&&!!itemDefinition(s.itemId)&&Number.isSafeInteger(s.quantity)&&s.quantity>=1&&s.quantity<=MAX_STACK);
+ return b?.version===1&&[4,8,12,16].includes(b.capacity)&&Number.isSafeInteger(b.revision)&&b.revision>=0&&b.revision<1e12&&Array.isArray(b.slots)&&b.slots.length===b.capacity&&b.slots.every((s:any)=>s===null||!!s&&typeof s.itemId==='string'&&!!itemDefinition(s.itemId)&&Number.isSafeInteger(s.quantity)&&s.quantity>=1&&s.quantity<=MAX_STACK);
 }
 export function ownsItem(b:Inventory,id:string){return b.slots.some(s=>s?.itemId===id&&s.quantity>0)}
 export function addItems(current:Inventory,itemId:string,quantity:number):Inventory{
- if(!validInventory(current)||!itemDefinition(itemId)||!Number.isSafeInteger(quantity)||quantity<1||quantity>MAX_STACK*BAG_CAPACITY)throw Error('Vật phẩm/số lượng không hợp lệ');
+ if(!validInventory(current)||!itemDefinition(itemId)||!Number.isSafeInteger(quantity)||quantity<1||quantity>MAX_STACK*current.capacity)throw Error('Vật phẩm/số lượng không hợp lệ');
  const next=structuredClone(current);let remaining=quantity;
  for(const s of next.slots)if(s?.itemId===itemId){const n=Math.min(remaining,MAX_STACK-s.quantity);s.quantity+=n;remaining-=n}
  for(let i=0;i<next.capacity&&remaining;i++)if(!next.slots[i]){const n=Math.min(MAX_STACK,remaining);next.slots[i]={itemId,quantity:n};remaining-=n}

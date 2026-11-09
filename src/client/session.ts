@@ -1,3 +1,4 @@
+import type {CultCommand} from '../shared/cultivation';
 import {validSkillMissiles} from '../shared/skill-missiles';
 import {skillManifest,validSkillCasts,normalizeSkills} from '../shared/skills';
 import {validSoulProjectiles} from '../shared/weapons';
@@ -15,6 +16,7 @@ import {validAnimationPreview} from '../shared/animation-previews';
 import {normalizeCharacterProfile,profileRecord} from '../shared/character-profile';
 import {validInventory,type InventoryMove} from '../shared/inventory';
 export interface GameSession {
+    cultivate(command:CultCommand):void;cultivationMessage?:string;
     skillMessage?:string;
     castSkill(slot:number,targetId?:string):void;
     id: string;
@@ -43,6 +45,7 @@ export interface GameSession {
 }
 const SAVE = 'darkin-frontier-mvp:offline:v1';
 export class LocalGameSession implements GameSession {
+    cultivationMessage='';cultivate(command:CultCommand){const actor=this.world.actors.get(this.id)!,prior=structuredClone(actor);try{this.world.cultivate(this.id,command);this.cultivationMessage='';this.snapshot=this.world.snapshot();this.previous=this.snapshot;if(!this.save()){Object.assign(actor,prior);this.snapshot=this.world.snapshot();this.previous=this.snapshot;throw Error('Bộ nhớ thiết bị đầy; thao tác chưa được lưu và đã hoàn lại.')}}catch(e){this.cultivationMessage=String(e)}}
     skillMessage='';skillSeq=0;
     castSkill(slot:number,targetId?:string){try{this.world.castSkill(this.id,{slot,targetId,mapId:this.world.p.id,seq:++this.skillSeq});this.skillMessage='';this.snapshot=this.world.snapshot();this.save()}catch(e){this.skillMessage=String(e)}}
     id = 'local';
@@ -89,7 +92,7 @@ export class LocalGameSession implements GameSession {
             }
         }
         catch { }
-        for(const demo of skillManifest.offlineDemos){if(!a.skills?.learned.includes(demo.skillId)){this.world.learnSkill(this.id,demo.skillId);migrate=true}if(!a.skills?.slots[demo.slot-1]){this.world.learnSkill(this.id,demo.skillId,demo.slot-1);migrate=true}}
+        this.world.initializeCultivator(this.id);this.world.populateCultivation();
         this.snapshot = this.world.snapshot();
         this.previous = this.snapshot;
         this.exploration.visit(a.x, a.y, this.world.time, a.teleportSeq);
@@ -118,9 +121,9 @@ export class LocalGameSession implements GameSession {
     private record(wallet?:Wallet,book?:MiningBook){const a=this.world.actors.get(this.id)!;return{...this.savedExtras,version:3,...profileRecord(a),characterId:this.characterId,realmId:a.realmId,realmStageId:a.realmStageId,wallet:wallet||a.wallet,map:this.world.p.id,x:a.x,y:a.y,hp:a.hp,kills:a.kills,clockSeconds:this.clock().gameSeconds,interactionMaps:{...this.interactionMaps,[this.world.p.id]:book||this.world.interactions.durable()}}}
     private commitMining(tx:Transaction){const a=this.world.actors.get(this.id)!,book=this.world.interactions.durable();if(book.ledger[tx.key])return{wallet:structuredClone(a.wallet)};const wallet=tx.resourceId?addReward(a.wallet,tx.resourceId,tx.amount):structuredClone(a.wallet);book.nodes[tx.objectId]=structuredClone(tx.node);book.ledger[tx.key]=structuredClone(tx);localStorage.setItem(SAVE+':'+this.characterId,JSON.stringify(this.record(wallet,book)));return{wallet}}
     save() { saveExploration(this.exploration); try {
-        localStorage.setItem(SAVE + ':' + this.characterId, JSON.stringify(this.record()));
+        localStorage.setItem(SAVE + ':' + this.characterId, JSON.stringify(this.record()));return true;
     }
-    catch { } }
+    catch {this.dataWarnings=['Không lưu được hành trình. Hãy giải phóng bộ nhớ thiết bị trước khi thoát.'];return false;} }
     setAppearance(id: string) { this.world.setAppearance(this.id, id); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; this.save(); }
     moveInventory(command:InventoryMove){try{this.world.moveInventory(this.id,command);this.inventoryMessage='';this.snapshot=this.world.snapshot();this.previous=this.snapshot;this.save()}catch(e){this.inventoryMessage=String(e)}}
     cosmetic(command: CosmeticCommand) { this.world.cosmetic(this.id, command); this.snapshot = this.world.snapshot(); this.previous = this.snapshot; this.save(); }
@@ -138,6 +141,7 @@ export class LocalGameSession implements GameSession {
     } }
 }
 export class NetworkGameSession implements GameSession {
+    cultivationMessage='';cultivate(command:CultCommand){if(this.socket.readyState===1)this.socket.send(JSON.stringify({type:'cultivate',command}))}
     id = '';
     status = 'Đang kết nối…';
     dataWarnings:string[]=[];
@@ -170,6 +174,7 @@ export class NetworkGameSession implements GameSession {
         throw Error('Trang HTTPS yêu cầu địa chỉ wss://');this.tokenKey='darkin-frontier:online-guest:v1:'+encodeURIComponent(u.href)+':'+encodeURIComponent(name);try{const tabToken=sessionStorage.getItem(this.tokenKey);this.resumeSession=!!tabToken;this.resumeToken=tabToken||localStorage.getItem(this.tokenKey)||''}catch{} this.socket = new WebSocket(u); this.socket.onopen = () => this.socket.send(JSON.stringify({ type: 'join', name,resumeToken:this.resumeToken,resume:this.resumeSession })); this.socket.onmessage = e => { try {
         const m = JSON.parse(e.data);
         if (m.type === 'welcome') {
+            if(m.cultivationProtocol!==1){this.status='Server chưa hỗ trợ thế giới tu tiên';this.socket.close();return}
             this.skillsSupported=m.skillProtocol===1;this.allWeaponFlightSupported=m.weaponFlightProtocol===1;this.rangedCombatSupported=m.rangedCombatProtocol===1;this.inventorySupported=m.inventoryProtocol===1;this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
             if(m.interactionProtocol!==1){this.status='Server cần cập nhật tương tác/ví';this.socket.close();return}
             if (m.map !== p.id) {
@@ -186,6 +191,7 @@ export class NetworkGameSession implements GameSession {
         }
         if (m.type === 'error')
             this.status = m.message;
+        if(m.type==='cultivationError')this.cultivationMessage=String(m.message);
         if(m.type==='interactionError')this.interactionMessage=m.message;
         if(m.type==='skillError')this.skillMessage=String(m.message);
         if(m.type==='inventoryError')this.inventoryMessage=String(m.message);

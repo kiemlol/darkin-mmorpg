@@ -1,9 +1,10 @@
+import {normalizeCultivation,type Cultivation} from './cultivation';
 import {normalizeSkills,type LearnedSkills} from './skills';
 import {gameCatalog,allowedAppearance} from './catalog';
 import {defaultEquipment,characterMount,accessoryItems,type EquipmentState} from './equipment';
 import {starterInventory,validInventory,ownsItem,addItems,SOUL_BANNER_ID,SOUL_RELEASE,type Inventory} from './inventory';
 
-export type CharacterProfile=EquipmentState&{appearanceId:string;inventory:Inventory;potentialPoints:number;contentGrants?:string[];skills?:LearnedSkills};
+export type CharacterProfile=EquipmentState&{cultivation?:Cultivation;appearanceId:string;inventory:Inventory;potentialPoints:number;contentGrants?:string[];skills?:LearnedSkills};
 export function normalizeCharacterProfile(raw:any){
  const warnings:string[]=[];let migrated=false;let learned=normalizeSkills(undefined);try{learned=normalizeSkills(raw?.skills)}catch(e){warnings.push(String(e));migrated=true}if(raw?.skills===undefined)migrated=true;
  if(raw?.inventory!==undefined&&!validInventory(raw.inventory))throw Error('Dữ liệu túi đồ không hợp lệ');
@@ -16,6 +17,6 @@ export function normalizeCharacterProfile(raw:any){
  if(stored){try{characterMount(stored);if(!Array.isArray(stored.accessories)||stored.accessories.length>accessoryItems.length||new Set(stored.accessories.map((a:any)=>a.accessoryId)).size!==stored.accessories.length||stored.accessories.some((a:any)=>typeof a.visible!=='boolean'||!accessoryItems.some(i=>i.accessoryId===a.accessoryId)))throw Error('Phụ kiện chưa được phát hành');equipment={headId:stored.headId,bodyId:stored.bodyId,accessories:accessoryItems.map(item=>({accessoryId:item.accessoryId,visible:stored.accessories.find((a:any)=>a.accessoryId===item.accessoryId)?.visible??false}))}}catch{warnings.push('Trang bị lưu không hợp lệ; dùng ngoại hình mặc định.');migrated=true}}else migrated=true;
  equipment.accessories=equipment.accessories.map(a=>a.visible&&!ownsItem(inventory,a.accessoryId)?{...a,visible:false}:a);
  const potentialPoints=Number.isSafeInteger(raw?.potentialPoints)&&raw.potentialPoints>=0?raw.potentialPoints:0;if(raw?.potentialPoints!==potentialPoints){migrated=true;if(raw?.potentialPoints!==undefined)warnings.push('Điểm tiềm năng không hợp lệ; dùng 0.')} 
- return{state:{...equipment,appearanceId,inventory,potentialPoints,contentGrants,skills:learned} as CharacterProfile,warnings,migrated};
+ return{state:{cultivation:normalizeCultivation(raw?.cultivation),...equipment,appearanceId,inventory,potentialPoints,contentGrants,skills:learned} as CharacterProfile,warnings,migrated};
 }
-export function profileRecord(a:CharacterProfile){return{skills:normalizeSkills(a.skills),contentGrants:[...(a.contentGrants||[])],inventory:structuredClone(a.inventory),potentialPoints:a.potentialPoints,equipment:{appearanceId:a.appearanceId,headId:a.headId,bodyId:a.bodyId,accessories:structuredClone(a.accessories)}}}
+export function profileRecord(a:CharacterProfile){return{cultivation:normalizeCultivation(a.cultivation),skills:normalizeSkills(a.skills),contentGrants:[...(a.contentGrants||[])],inventory:structuredClone(a.inventory),potentialPoints:a.potentialPoints,equipment:{appearanceId:a.appearanceId,headId:a.headId,bodyId:a.bodyId,accessories:structuredClone(a.accessories)}}}

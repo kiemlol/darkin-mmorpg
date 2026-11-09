@@ -1,3 +1,8 @@
+import {CultivationMobVisual} from './cultivation-mob';
+import {AdaptiveGameSession} from './adaptive-session';
+import {CultivationUI} from './cultivation-ui';
+import {CultivationFX} from './cultivation-fx';
+import './cultivation.css';
 import {SkillVisuals} from './skill-visuals';
 import {SkillUI} from './skill-ui';
 import './style.css';
@@ -23,9 +28,13 @@ const canvas = $('game') as HTMLCanvasElement, c = canvas.getContext('2d')!;
 let player: any, session: GameSession | null = null, input: Input | null = null, zoom = DEFAULT_ZOOM, seq = 0, acc = 0, last = performance.now(), mode = 'offline', visuals = new Map<string, CharacterVisual>(), bounds = { x0: -180, y0: -180, x1: 3300, y1: 2300 };
 let currentIntent: Omit<Intent, 'seq'> = { dx: 0, dy: 0, run: false, attack: false };
 const camera = new Camera2D();
-const soulEffects=new SoulEffects(),skillVisuals=new SkillVisuals();
-const skillUI=new SkillUI(()=>session,()=>!!session&&!dialog.open&&!mapHUD.panel.open&&!inventoryUI.open&&!document.hidden);
+const soulEffects=new SoulEffects(),skillVisuals=new SkillVisuals(),cultivationFX=new CultivationFX();
+const cultivationUI=new CultivationUI(()=>session,()=>{input?.clear();stop()});
+const simulation=()=>session instanceof AdaptiveGameSession?session.active:session;
+const skillUI=new SkillUI(()=>session,()=>!!session&&!dialog.open&&!mapHUD.panel.open&&!inventoryUI.open&&!cultivationUI.open&&!document.hidden);
 let ready = false;
+$('error').textContent='Đang nạp sơn hà và bí pháp…';
+($('offline') as HTMLButtonElement).disabled=true;($('online') as HTMLButtonElement).disabled=true;
 const equipmentUI=new EquipmentUI(()=>session);
 const inventoryUI=new InventoryUI(()=>session,equipmentUI,()=>{mapHUD.close();input?.clear();stop();session?.cancelInteraction()});
 const mapHUD=new MinimapHUD(()=>{input?.clear();stop()});
@@ -39,12 +48,14 @@ function setZoom(f: number) { zoom = camera.fitZoom(Math.max(.35, Math.min(2, zo
 $('plus').onclick = () => setZoom(1.15);
 $('minus').onclick = () => setZoom(1 / 1.15);
 function stop() { interactionUI.release();currentIntent = { dx: 0, dy: 0, run: false, attack: false }; session?.input({ ...currentIntent, seq: ++seq }, false); }
-function cleanup() { skillVisuals.clear();skillUI.reset(); soulEffects.reset();inventoryUI.reset(); $('preview-notice').hidden=true;flightUI.reset();mapHUD.close();interactionUI.reset();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
+function cleanup() { cultivationUI.close();cultivationFX.clear(); skillVisuals.clear();skillUI.reset(); soulEffects.reset();inventoryUI.reset(); $('preview-notice').hidden=true;flightUI.reset();mapHUD.close();interactionUI.reset();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
     v.destroy(); visuals.clear(); acc = 0; seq = 0; currentIntent = { dx: 0, dy: 0, run: false, attack: false }; }
 async function start(m: string) { if (!ready)
     return; cleanup(); mode = m;zoom=DEFAULT_ZOOM;setZoom(1); try {
     const name = ($('name') as HTMLInputElement).value.trim() || 'Lữ khách';
-    session = m === 'offline' ? new LocalGameSession(player.sourceProject||player.project, name) : new NetworkGameSession(player.sourceProject||player.project, name, ($('server') as HTMLInputElement).value.trim());
+    localStorage.setItem('tien-do:name',name);localStorage.setItem('tien-do:server',($('server') as HTMLInputElement).value.trim());
+    let offlineName=name;try{offlineName=localStorage.getItem('tien-do:branch:'+encodeURIComponent(($('server') as HTMLInputElement).value.trim())+':'+name)||name}catch{}
+    session = m === 'offline' ? new LocalGameSession(player.sourceProject||player.project, offlineName) : new AdaptiveGameSession(player.sourceProject||player.project, name, ($('server') as HTMLInputElement).value.trim());
     const initial=session.renderActors().find(a=>a.id===session!.id);camera.reset(initial?.x??player.project.spawn.x,initial?.y??player.project.spawn.y);playerHUD.update(initial||null,true);
     input = new Input(canvas, setZoom, stop);
     $('lobby').hidden = true;
@@ -56,6 +67,7 @@ async function start(m: string) { if (!ready)
 catch (e) {
     $('error').textContent = String(e);
 } }
+try{($('name') as HTMLInputElement).value=localStorage.getItem('tien-do:name')||'Đạo Hữu';($('server') as HTMLInputElement).value=localStorage.getItem('tien-do:server')||''}catch{}
 const appearanceSelect = $('appearance') as HTMLSelectElement;
 appearanceSelect.onchange = () => {equipmentUI.reset();session?.setAppearance(appearanceSelect.value)};
 $('offline').onclick = () => start('offline');
@@ -74,7 +86,7 @@ $('preview-bow').onclick=()=>{if(session){input?.clear();session.previewAnimatio
 $('exit').onclick = () => { dialog.close(); cleanup(); document.body.classList.remove('playing'); $('lobby').hidden = false; $('hud').hidden = true; $('controls').hidden = true; };
 $('reset').onclick = () => { dialog.close(); cleanup(); LocalGameSession.reset(($('name') as HTMLInputElement).value.trim()||'Lữ khách'); start('offline'); };
 try {
-    const loaded = await loadMap();await skillVisuals.load();
+    const loaded = await loadMap();await skillVisuals.load();await cultivationFX.load();
     try {
         await assets.init();
         await assets.load(assets.catalog.defaults.appearance);
@@ -92,7 +104,7 @@ try {
             o.textContent = a.name;
             appearanceSelect.append(o);
         }
-    ready = true;
+    $('error').textContent='';ready = true;($('offline') as HTMLButtonElement).disabled=false;($('online') as HTMLButtonElement).disabled=false;
 }
 catch (e) {
     $('error').textContent = 'Không tải được map: ' + e;
@@ -106,8 +118,8 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
     let actors = session?.renderActors() || [];
     if (session) {
         const flightPressed=input!.consumeFlightPress();
-        if(flightPressed&&!dialog.open&&!mapHUD.panel.open&&!inventoryUI.open&&!document.hidden){input!.clear();flightUI.toggle(session,actors.find(a=>a.id===session!.id))}
-        if (!dialog.open && !mapHUD.panel.open && !inventoryUI.open && !document.hidden)
+        if(flightPressed&&!dialog.open&&!mapHUD.panel.open&&!inventoryUI.open&&!cultivationUI.open&&!document.hidden){input!.clear();flightUI.toggle(session,actors.find(a=>a.id===session!.id))}
+        if (!dialog.open && !mapHUD.panel.open && !inventoryUI.open && !cultivationUI.open && !document.hidden)
             currentIntent = interactionUI.intent(session,actors.find(a=>a.id===session!.id),input!.sample(),input!.consumeActionPress(),()=>session!.input({seq:++seq,dx:0,dy:0,run:false,attack:false},false));
         else
             currentIntent = { dx: 0, dy: 0, run: false, attack: false };
@@ -117,7 +129,7 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
             interactionUI.sent();
             acc = Math.max(0, acc - .05);
         }
-        if (!(session instanceof LocalGameSession && (dialog.open || inventoryUI.open || document.hidden)))
+        if (!(simulation() instanceof LocalGameSession && (dialog.open || inventoryUI.open || cultivationUI.open || document.hidden)))
             session.update(dt);
         actors = session.renderActors();
         const me = actors.find(a => a.id === session!.id);
@@ -128,7 +140,8 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
             document.body.classList.toggle('is-dead', me.hp <= 0);
             $('stats').textContent = `${me.kills} quái hạ gục${mode === 'online' ? ' · ' + actors.filter(a => a.kind === 'player').length + ' người chơi' : ''}`;
         }
-        $('status').textContent = session.status;
+        $('status').textContent = session.status==='Online'?'Tiên giới · Online':'Vân du · Offline';
+        cultivationUI.update(dt,session instanceof AdaptiveGameSession?session.notice:'Tiến trình lưu trên thiết bị');
         const previewNote=$('preview-notice');previewNote.textContent=session.previewMessage;previewNote.hidden=!session.previewMessage;
         const notice=$('profile-notice');notice.hidden=!session.dataWarnings?.length;notice.textContent=session.dataWarnings?.join(' ')||'';
         $('retry').hidden = mode !== 'online' || session.status === 'Online' || session.status === 'Đang kết nối…';
@@ -137,7 +150,7 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
     for (const a of actors) {
         let v = visuals.get(a.id);
         if (!v) {
-            v = a.kind === 'player' ? new CutoutCharacterVisual() : new PlaceholderCharacterVisual();
+            v = a.kind === 'player' ? new CutoutCharacterVisual() : new CultivationMobVisual();
             void v.load({ appearanceId: a.appearanceId,equipment:a });
             visuals.set(a.id, v);
         }
@@ -150,11 +163,12 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
             visuals.delete(id);
         }
     if(session){sceneHour=clockHour(session.clock());player.project.lighting??={};player.project.lighting.mode='time';player.project.lighting.hour=sceneHour;}
-    const skillSnapshot=session instanceof NetworkGameSession&&session.socket.readyState!==WebSocket.OPEN?null:session?.snapshot||null;
-    skillVisuals.update(skillSnapshot,actors,visuals,session instanceof LocalGameSession&&(dialog.open||inventoryUI.open||document.hidden)?0:dt);
+    const skillSnapshot=simulation() instanceof NetworkGameSession&&(simulation() as NetworkGameSession).socket.readyState!==WebSocket.OPEN?null:session?.snapshot||null;
+    skillVisuals.update(skillSnapshot,actors,visuals,simulation() instanceof LocalGameSession&&(dialog.open||inventoryUI.open||document.hidden)?0:dt);
+    cultivationFX.update(session?.snapshot||null,actors,dt);
     const occlusionActor=actors.find(a=>a.id===session?.id),occlusionVisual=occlusionActor&&visuals.get(occlusionActor.id);const bodyHeight=occlusionVisual instanceof CutoutCharacterVisual?160*(occlusionVisual.loaded?.appearance.scale||.7452)+(occlusionVisual.flight.frame?.riderHeight||0):32;const focus=occlusionActor?{...occlusionActor,occlusionHeight:bodyHeight}:null;
-    const souls=soulEffects.update(session instanceof NetworkGameSession&&session.socket.readyState!==WebSocket.OPEN?null:session?.snapshot||null,actors,visuals,dt)||[];
-    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: focus, dt, beforeEntities:(ctx:CanvasRenderingContext2D)=>skillVisuals.draw(ctx,'low'),afterEntities:(ctx:CanvasRenderingContext2D)=>{skillVisuals.draw(ctx,'high');skillVisuals.draw(ctx,'glow')}, actors:[...actors,...souls,...skillVisuals.missileFrame], objectState:(id:string)=>{const n=session?.snapshot.nodes?.find(n=>n.objectId===id);return n?{hidden:n.hidden,shakeX:n.status==='mining'?Math.sin(now/1000*36)*1.5:0,shakeAngle:n.status==='mining'?Math.sin(now/1000*31)*.008:0}:undefined},drawActor: (ctx: CanvasRenderingContext2D,a:any) => {if(a.kind==='soul')soulEffects.draw(ctx,a);else if(a.kind==='skill_soul')skillVisuals.drawMissile(ctx,a);else{visuals.get(a.id)?.draw(ctx);skillVisuals.drawCaster(ctx,a.id)}} } as any);
+    const souls=soulEffects.update(simulation() instanceof NetworkGameSession&&(simulation() as NetworkGameSession).socket.readyState!==WebSocket.OPEN?null:session?.snapshot||null,actors,visuals,dt)||[];
+    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: focus, dt, beforeEntities:(ctx:CanvasRenderingContext2D)=>{skillVisuals.draw(ctx,'low');cultivationFX.draw(ctx,'back')},afterEntities:(ctx:CanvasRenderingContext2D)=>{skillVisuals.draw(ctx,'high');skillVisuals.draw(ctx,'glow');cultivationFX.draw(ctx,'front')}, actors:[...actors,...souls,...skillVisuals.missileFrame], objectState:(id:string)=>{const n=session?.snapshot.nodes?.find(n=>n.objectId===id);return n?{hidden:n.hidden,shakeX:n.status==='mining'?Math.sin(now/1000*36)*1.5:0,shakeAngle:n.status==='mining'?Math.sin(now/1000*31)*.008:0}:undefined},drawActor: (ctx: CanvasRenderingContext2D,a:any) => {if(a.kind==='soul')soulEffects.draw(ctx,a);else if(a.kind==='skill_soul')skillVisuals.drawMissile(ctx,a);else{visuals.get(a.id)?.draw(ctx);skillVisuals.drawCaster(ctx,a.id)}} } as any);
     if (session) {
         c.save();
         c.scale(zoom, zoom);
@@ -176,4 +190,6 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
 } requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
 // Read-only diagnostics for acceptance tests; no gameplay authority.
-Object.defineProperty(window, 'darkinDebug', { get: () => ({ skillVFX:skillVisuals.debug(),souls:soulEffects.frame.map(s=>({...s})),lighting:player?.renderer?.diagnostics?.(),inventoryUI:inventoryUI.debug(),playerUI:playerHUD.debug(),mapUI:mapHUD.debug(),exploration:session?.exploration?{scope:session.exploration.scope,count:session.exploration.count(),version:session.exploration.version,seen:Array.from(session.exploration.seen)}:null,characterId:session?.characterId,input: input?.sample(), mode, status: session?.status, id: session?.id, snapshot: session?.snapshot, zoom, camera: { x: camera.x, y: camera.y }, map: player?.project.id, visuals: [...visuals.entries()].map(([id, v]) => ({ id, ...(v instanceof CutoutCharacterVisual ? v.debug() : { type: 'placeholder' }) })) }) });
+Object.defineProperty(window, 'darkinDebug', { get: () => ({ skillVFX:skillVisuals.debug(),souls:soulEffects.frame.map(s=>({...s})),lighting:player?.renderer?.diagnostics?.(),inventoryUI:inventoryUI.debug(),playerUI:playerHUD.debug(),mapUI:mapHUD.debug(),exploration:session?.exploration?{scope:session.exploration.scope,count:session.exploration.count(),version:session.exploration.version,seen:Array.from(session.exploration.seen)}:null,characterId:session?.characterId,input: input?.sample(), mode, connection:session instanceof AdaptiveGameSession?session.notice:null, status: session?.status, id: session?.id, snapshot: session?.snapshot, zoom, camera: { x: camera.x, y: camera.y }, map: player?.project.id, visuals: [...visuals.entries()].map(([id, v]) => ({ id, ...(v instanceof CutoutCharacterVisual ? v.debug() : { type: 'placeholder' }) })) }) });
+
+if(import.meta.env.PROD&&'serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{$('cache-status').textContent='Chưa thể chuẩn bị bộ nhớ ngoại tuyến.'});navigator.serviceWorker.addEventListener('message',e=>{if(e.data.type==='CACHE_PROGRESS'||e.data.type==='CACHE_READY')$('cache-status').textContent=e.data.type==='CACHE_READY'?(e.data.failed?'Còn '+e.data.failed+' tài nguyên chưa tải. Hãy thử lại.':'Đã lưu thế giới, có thể mở lại khi mất mạng.'):'Đang lưu '+e.data.count+'/'+e.data.total+' tài nguyên…'});$('cache-world').onclick=async()=>{const reg=await navigator.serviceWorker.ready;reg.active?.postMessage('CACHE_WORLD');$('cache-status').textContent='Đang chuẩn bị lưu thế giới…'}}else $('cache-world').hidden=true;

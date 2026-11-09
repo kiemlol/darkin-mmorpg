@@ -1,3 +1,19 @@
+# Thanh Vân Tiên Đồ
+
+Phiên bản tu tiên phát triển tiếp từ Darkin Frontier. Hướng dẫn chơi, kiến trúc online/offline, nội dung và giới hạn hiện tại: [CULTIVATION-RELEASE.md](CULTIVATION-RELEASE.md).
+
+```sh
+npm ci
+npm run build
+npm start
+```
+
+Mở http://localhost:3000. Chọn đạo phái tại Tiên đồ; tu luyện, săn yêu, học bí pháp và theo nghề. Menu có chức năng lưu tài nguyên để mở lại game khi mất mạng.
+
+Phần dưới giữ ghi chép kỹ thuật của nền Darkin trước đợt phát triển tu tiên này; các mô tả “MVP”, “chưa kích hoạt MP”, “không tự chuyển offline” tại đó là lịch sử và đã được thay thế theo tài liệu phát hành ở trên.
+
+---
+
 # Darkin Frontier — MMORPG foundation MVP
 
 Game riêng, không thay đổi Studio. Nhân vật hiện dùng parts từ bundle Studio, bộ phát/bốn clip từ cutout-demo. Xem [MAP-UI.md](MAP-UI.md) để dùng minimap/đồng hồ/bản đồ khám phá; [STUDIO-ACCESSORIES.md](STUDIO-ACCESSORIES.md) để thử kính, đổi đầu/thân và kiểm tra cấu hình; [ASSETS.md](ASSETS.md) ghi API và clip mapping. TypeScript + Vite + Canvas 2D, Node.js + ws.

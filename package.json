@@ -1,11 +1,11 @@
 {
-  "name": "darkin-frontier",
-  "version": "0.1.0",
+  "name": "thanh-van-tien-do",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "server": "tsx src/server/index.ts",
-    "build": "tsc --noEmit && npm run check:assets && vite build",
+    "build": "tsc --noEmit && npm run check:assets && vite build && node scripts/build-offline.mjs",
     "start": "tsx src/server/index.ts",
     "test": "tsx --test tests/*.test.ts",
     "check:assets": "tsx scripts/merge-patchwork.ts --check && tsx scripts/check-skills.ts && tsx scripts/check-map7.ts && tsx scripts/check-soul-banner.ts && tsx scripts/check-assets.ts",

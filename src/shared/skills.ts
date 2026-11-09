@@ -1,3 +1,4 @@
+import {CULT_SKILLS,cultSkill} from './cultivation';
 import spiritBook from '../../public/game-data/skills/spirit-book.skill-pack.json';
 import kiemLai from '../../public/game-data/skills/kiem-lai.skill-pack.json';
 import coThanChiLo from '../../public/game-data/skills/co-than-chi-lo.skill-pack.json';
@@ -27,6 +28,7 @@ export const skillCombat:Record<string,SkillCombatRule>=combat.skills as Record<
 // Combat metadata belongs to the game, never to an untrusted client or visual marker.
 // Every damaging skill needs an explicit contact frame and point; no hitAt fallback.
 export function validateSkillCombat(id:string,rule:any,project:any=skills.project):asserts rule is SkillCombatRule{
+ const moduleSkill=cultSkill(id);if(moduleSkill){if(!project.skills[id]||!Number.isSafeInteger(rule?.damage)||rule.damage!==Math.round(22*moduleSkill.coefficient)&&rule.damage!==1||rule.target!=='single_mob'||rule.impact?.eventId!=='module'||rule.impact?.frameIndex!==0||rule.impact?.trackTarget!==true||!Number.isFinite(moduleSkill.hitAt)||moduleSkill.hitAt<=0||moduleSkill.hitAt>=project.skills[id].duration)throw Error('Thiếu hoặc sai cấu hình va chạm module: '+id);return;}
  const s=project.skills[id],i=rule?.impact,e=s?.events.find((e:any)=>e.id===i?.eventId),frames=e&&project.effects[e.effectId]?.frames;
  if(!s||!Number.isSafeInteger(rule?.damage)||rule.damage<=0||rule.damage>1000000||rule.target!=='single_mob'||!i||i.trackTarget!==true||!frames||!Number.isInteger(i.frameIndex)||i.frameIndex<0||i.frameIndex>=frames.length||!i.point||![i.point.x,i.point.y].every(Number.isFinite)||e.anchor!==(rule.volley?'caster':'target')||e.motion!=='still')throw Error('Thiếu hoặc sai cấu hình va chạm skill: '+id);
  if(rule.volley){const v=rule.volley;if(v.waves!==2||v.count!==4||!Array.isArray(v.lanes)||v.lanes.length!==v.count||!v.lanes.every((n:number)=>Number.isFinite(n)&&Math.abs(n)<=24)||![v.interval,v.speed,v.lifetime,v.minFlight,v.closeSeconds,v.holdTime,v.scale,v.impactHeight].every(n=>Number.isFinite(n)&&n>0)||v.speed>600||v.lifetime>3||v.minFlight>v.lifetime||v.holdTime>=e.duration||v.closeSeconds>e.duration-v.holdTime+1e-8||!project.effects[v.soulEffectId]?.frames)throw Error('Cấu hình đợt linh hồn không hợp lệ: '+id)}
@@ -42,9 +44,10 @@ function contactDefinition(id:string){
  if(!s||!impact)throw Error('Skill chưa có cấu hình va chạm: '+id);
  const e=s.events.find((e:any)=>e.id===impact.eventId);return {impact,e,frames:skills.project.effects[e.effectId].frames};
 }
-export function skillImpactTime(id:string):number{const {impact,e,frames}=contactDefinition(id);return contactTime(e,frames,impact.frameIndex)}
+export function skillImpactTime(id:string):number{const c=cultSkill(id);if(c){validateSkillCombat(id,skillCombat[id]);return c.hitAt;}const {impact,e,frames}=contactDefinition(id);return contactTime(e,frames,impact.frameIndex)}
 // Frame pixels before native anchor, scale, rotation and offset; camera is applied later.
 export function skillVisualTarget(id:string,foot:{x:number;y:number}){
+ if(cultSkill(id))return {...foot};
  if(skillCombat[id]?.volley)return {...foot};const {impact,e,frames}=contactDefinition(id),f=frames[impact.frameIndex];
  const x=(impact.point.x-f.ax*f.w)*e.scale,y=(impact.point.y-f.ay*f.h)*e.scale,r=e.rotation*Math.PI/180;
  return {x:foot.x-e.x-(x*Math.cos(r)-y*Math.sin(r)),y:foot.y-e.y-(x*Math.sin(r)+y*Math.cos(r))};
@@ -59,3 +62,6 @@ export function skillPlaybackProject(){
  if(playbackSource!==skills.project){playback={...skills.project,skills:Object.fromEntries(Object.entries(skills.project.skills).map(([id,s]:[string,any])=>[id,{...s,...(skillCombat[id]?{hitAt:skillImpactTime(id)}:{})}]))};playbackSource=skills.project}
  return playback;
 }
+
+// Cultivation skills use their original JavaScript effect modules, not Studio frame markers.
+for(const s of CULT_SKILLS){skills.register({format:'darkin-skill-pack-v1',project:{format:'darkin-skill-project-v1',id:'cultivation_'+s.id,name:s.name,skills:{[s.id]:{id:s.id,name:s.name,kind:'active',duration:s.duration,cooldown:s.cooldown,cost:s.cost,range:s.range,hitAt:s.hitAt,animation:'attack',events:[]}},effects:{}}});skillCombat[s.id]={damage:Math.round(22*s.coefficient)||1,target:'single_mob',impact:{eventId:'module',frameIndex:0,point:{x:0,y:0},trackTarget:true}};}

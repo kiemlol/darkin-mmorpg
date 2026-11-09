@@ -19,12 +19,13 @@ const instanceId=WORLD_ID+':'+b.project.id;
 const world = new World(b.project,{instanceId,book:persistence.maps[instanceId],nowSeconds:()=>Date.now()/1000,random:()=>randomInt(0,4294967296)/4294967296,commit:tx=>persistence.commitMining(tx)});
 if(persistence.clockSeconds!==null)world.clockBaseSeconds=persistence.clockSeconds;
 if(persistence.dirty)await persistence.flush(world.clockBaseSeconds);
+world.populateCultivation();
 const revision=mapRevision(b.project);
 const server = createServer(async (req, res) => { try {
     const path = decodeURIComponent(new URL(req.url || '/', 'http://local').pathname);
     if (path === '/health') {
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ ok: true, map: b.project.id }));
+        res.end(JSON.stringify({ ok: true, cultivationProtocol:1, map: b.project.id }));
         return;
     }
     const f = resolve(root, '.' + (path === '/' ? '/index.html' : path));
@@ -48,7 +49,7 @@ const peers = new Map<WebSocket, {
     guest:any;
     sentVersion:number;
 }>();
-function detachPeer(ws:WebSocket){const q=peers.get(ws);if(q?.joined){if(q.exploration)persistence.capture(q.guest,q.exploration);const actor=world.actors.get(q.id);if(actor)persistence.captureCharacter(q.guest,actor);world.leave(q.id);q.joined=false}peers.delete(ws)}
+function detachPeer(ws:WebSocket){const q=peers.get(ws);if(q?.joined){if(q.exploration)persistence.capture(q.guest,q.exploration);const actor=world.actors.get(q.id);if(actor)persistence.captureCharacter(q.guest,{...actor,mapId:b.project.id} as any);world.leave(q.id);q.joined=false}peers.delete(ws)}
 wss.on('connection', ws => { ws.on('error', () => { }); if (peers.size >= 64) {
     ws.close(1013, 'Server full');
     return;
@@ -65,12 +66,13 @@ wss.on('connection', ws => { ws.on('error', () => { }); if (peers.size >= 64) {
             throw Error('Tên 1–24 ký tự');
         if(m.resume===true){const guest=persistence.findGuest(m.resumeToken);if(guest)for(const [oldSocket,oldPeer]of peers)if(oldSocket!==ws&&oldPeer.joined&&oldPeer.id===guest.id){detachPeer(oldSocket);oldSocket.close(1000,'Phiên đã kết nối lại')}}
         const name=m.name.replace(/[<>\x00-\x1f]/g,'').slice(0,24),identity=persistence.identify(m.resumeToken,name,id=>world.actors.has(id));q.id=identity.guest.id;q.guest=identity.guest;
-        const actor=world.join(q.id,name);world.setRealm(q.id,q.guest);actor.wallet=structuredClone(q.guest.wallet);Object.assign(actor,normalizeCharacterProfile(q.guest).state);q.exploration=persistence.exploration(q.guest,b.project);q.exploration.visit(actor.x,actor.y,world.time,actor.teleportSeq);persistence.capture(q.guest,q.exploration);
+        const actor=world.join(q.id,name);world.setRealm(q.id,q.guest);actor.wallet=structuredClone(q.guest.wallet);Object.assign(actor,normalizeCharacterProfile(q.guest).state);world.initializeCultivator(q.id);const saved=q.guest.position;if(saved?.map===b.project.id&&Number.isFinite(saved.x)&&Number.isFinite(saved.y))Object.assign(actor,world.findSpawn(saved.x,saved.y),{hp:Math.max(1,Math.min(actor.maxHp,saved.hp||actor.maxHp))});q.exploration=persistence.exploration(q.guest,b.project);q.exploration.visit(actor.x,actor.y,world.time,actor.teleportSeq);persistence.capture(q.guest,q.exploration);
         q.joined = true;
-        ws.send(JSON.stringify({ type: 'welcome',skillProtocol:1,rangedCombatProtocol:1,interactionProtocol:1,swordFlightProtocol:1,weaponFlightProtocol:1,animationPreviewProtocol:1,inventoryProtocol:1,profileWarnings:identity.warnings, id: q.id,characterId:q.id,resumeToken:identity.resumeToken,worldId:WORLD_ID,mapRevision:revision, map: b.project.id,exploration:q.exploration.record() }));q.sentVersion=q.exploration.version;
+        ws.send(JSON.stringify({ type: 'welcome',cultivationProtocol:1,skillProtocol:1,rangedCombatProtocol:1,interactionProtocol:1,swordFlightProtocol:1,weaponFlightProtocol:1,animationPreviewProtocol:1,inventoryProtocol:1,profileWarnings:identity.warnings, id: q.id,characterId:q.id,resumeToken:identity.resumeToken,worldId:WORLD_ID,mapRevision:revision, map: b.project.id,exploration:q.exploration.record() }));q.sentVersion=q.exploration.version;
     }
-    else if(q.joined&&m.type==='castSkill'){try{world.castSkill(q.id,m.command);persistence.captureCharacter(q.guest,world.actors.get(q.id)!)}catch(e){ws.send(JSON.stringify({type:'skillError',message:String(e)}))}}
-    else if(q.joined&&m.type==='inventoryMove'){try{world.moveInventory(q.id,m.command);persistence.captureCharacter(q.guest,world.actors.get(q.id)!)}catch(e){ws.send(JSON.stringify({type:'inventoryError',message:String(e)}))}}
+    else if(q.joined&&m.type==='cultivate'){try{world.cultivate(q.id,m.command);persistence.captureCharacter(q.guest,{...world.actors.get(q.id)!,mapId:b.project.id} as any)}catch(e){ws.send(JSON.stringify({type:'cultivationError',message:String(e)}))}}
+    else if(q.joined&&m.type==='castSkill'){try{world.castSkill(q.id,m.command);persistence.captureCharacter(q.guest,{...world.actors.get(q.id)!,mapId:b.project.id} as any)}catch(e){ws.send(JSON.stringify({type:'skillError',message:String(e)}))}}
+    else if(q.joined&&m.type==='inventoryMove'){try{world.moveInventory(q.id,m.command);persistence.captureCharacter(q.guest,{...world.actors.get(q.id)!,mapId:b.project.id} as any)}catch(e){ws.send(JSON.stringify({type:'inventoryError',message:String(e)}))}}
     else if(q.joined&&m.type==='animationPreview'){try{world.previewAnimation(q.id,m.actionId,m.seq)}catch(e){ws.send(JSON.stringify({type:'previewError',message:String(e)}))}}
     else if(q.joined&&m.type==='swordFlight'){try{world.swordFlight(q.id,m.enabled,m.seq)}catch(e){ws.send(JSON.stringify({type:'flightError',message:String(e)}))}}
     else if(q.joined&&m.type==='interact'){try{world.interactions.start(q.id,m.intent)}catch(e){ws.send(JSON.stringify({type:'interactionError',message:String(e)}))}}
@@ -90,13 +92,13 @@ wss.on('connection', ws => { ws.on('error', () => { }); if (peers.size >= 64) {
         world.respawn(q.id);
     else
         throw Error('Message không hợp lệ');
-    if(q.joined){const actor=world.actors.get(q.id);if(actor)persistence.captureCharacter(q.guest,actor)}
+    if(q.joined){const actor=world.actors.get(q.id);if(actor)persistence.captureCharacter(q.guest,{...actor,mapId:b.project.id} as any)}
 }
 catch (e) {
     ws.send(JSON.stringify({ type: 'error', message: String(e) }));
 } }); ws.on('close', () => detachPeer(ws)); });
 let ticks = 0;
-const tickTimer=setInterval(() => { world.step(.05);persistence.captureReady(instanceId,world.interactions.publicStates());for(const q of peers.values()){const a=world.actors.get(q.id);if(q.joined&&a){persistence.captureCharacter(q.guest,a);if(q.exploration&&q.exploration.visit(a.x,a.y,world.time,a.teleportSeq))persistence.capture(q.guest,q.exploration)}} if (++ticks % 2 === 0) {
+const tickTimer=setInterval(() => { world.step(.05);persistence.captureReady(instanceId,world.interactions.publicStates());for(const q of peers.values()){const a=world.actors.get(q.id);if(q.joined&&a){persistence.captureCharacter(q.guest,{...a,mapId:b.project.id} as any);if(q.exploration&&q.exploration.visit(a.x,a.y,world.time,a.teleportSeq))persistence.capture(q.guest,q.exploration)}} if (++ticks % 2 === 0) {
     const s = JSON.stringify({ type: 'snapshot', ...world.snapshot() });
     for (const [ws, q] of peers)
         if (q.joined && ws.readyState === 1) {
