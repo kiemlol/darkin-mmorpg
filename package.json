@@ -10,16 +10,18 @@
     "test": "tsx --test tests/*.test.ts",
     "check:assets": "tsx scripts/merge-patchwork.ts --check && tsx scripts/check-skills.ts && tsx scripts/check-map7.ts && tsx scripts/check-soul-banner.ts && tsx scripts/check-assets.ts",
     "register:character": "tsx scripts/register-character.ts",
-    "merge:patchwork": "tsx scripts/merge-patchwork.ts"
+    "merge:patchwork": "tsx scripts/merge-patchwork.ts",
+    "test:effects": "node scripts/audit-native-effects.cjs"
   },
   "dependencies": {
-    "ws": "^8.18.0",
-    "tsx": "^4.20.0"
+    "tsx": "^4.20.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.0",
-    "vite": "^6.4.0",
+    "@napi-rs/canvas": "^1.1.0",
     "@types/node": "^22.0.0",
-    "@types/ws": "^8.18.0"
+    "@types/ws": "^8.18.0",
+    "typescript": "^5.9.0",
+    "vite": "^6.4.0"
   }
 }

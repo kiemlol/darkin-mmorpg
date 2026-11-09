@@ -4,7 +4,7 @@ Phát triển tiếp từ Darkin Frontier, giữ bản đồ Studio, nhân vật
 
 ## Nội dung chơi
 
-- 5 đạo phái: Kiếm, Pháp, Thể, Huyết, Linh. Mỗi phái có 4 bí pháp có chi phí, tầm, hồi chiêu, hệ số và tác dụng riêng. 4 kỹ năng Studio cũ vẫn đăng ký trong registry, không tự cấp như demo.
+- 5 đạo phái: Kiếm, Pháp, Thể, Huyết, Linh. Tích hợp 96 kỹ năng gốc có chi phí, tầm, hồi chiêu, hệ số và tác dụng riêng; hiện mở tất cả để thử. 4 kỹ năng Studio cũ vẫn đăng ký trong registry, không tự cấp như demo.
 - 3 nghề: Đan Sư (đan hồi HP/MP và đan đột phá), Khí Sư (cường hóa +10), Phù Sư (hộ thân, tăng tu vi).
 - 17 nấc tu luyện từ phàm nhân tới Nguyên Anh Viên mãn. Tọa thiền, đột phá tiêu tu vi/linh thạch/đan tại đại cảnh giới. Nâng cấp tăng HP, MP, uy lực.
 - 6 yêu thú và thủ lĩnh Sơn Quân, dùng sprite chuyển động thay placeholder; kinh nghiệm, vật liệu và linh thạch khi hạ quái. Thủ lĩnh hồi sau 120 giây, quái thường 18 giây. Khu xuất phát có bán kính an toàn.
@@ -49,3 +49,11 @@ Bản phát triển này chưa phải dịch vụ MMORPG đã vận hành thươ
 ## Bản sửa hiệu ứng & mở bí pháp
 
 Bật đủ lớp vẽ `back/base/front` của module Tu Tiên, thêm đạn bay trước mốc trúng đòn và tải trước ảnh của các module được dùng để lần thi triển đầu không phải chờ ảnh. Toàn bộ 24 kỹ năng được mở trên nhân vật cũ/mới để thử; Tàng Kinh Các hiển thị cả kỹ năng khác phái và 4 bí pháp Darkin. Có nút nạp linh lực/xóa hồi chiêu để thử tiếp, không đổi ví/vật phẩm/cảnh giới. Nhân vật vẫn trả chi phí và hồi chiêu bình thường khi thi triển.
+
+## Tích hợp trọn bộ hiệu ứng gốc (96 kỹ năng)
+
+Thay bộ dựng thủ công bằng dispatcher `Skills.cast/update/draw` gốc và 348 tệp phụ thuộc gốc đóng thành một runtime. Chế độ ghost chỉ dựng hình; sát thương vẫn do World Darkin quyết định. Nạp đầy đủ `ASSET_TRIM`, ảnh vũ khí và atlas, dùng dịch vụ Assets gốc; xử lý riêng hình biến thân qua SpriteFactory/Player gốc. Camera được truyền đúng hệ tọa độ. Không dùng tia/vòng sáng chung để thay một kỹ năng không được ánh xạ.
+
+Tàng Kinh Các hiện mở 96 định nghĩa kỹ năng gốc cùng 4 kỹ năng Darkin; có tìm theo tên/ID, hình tham khảo, nút chọn ô và khôi phục MP/hồi chiêu.
+
+`npm run test:effects` chạy mô phỏng hiệu ứng gốc qua bộ điều hợp Darkin, xuất PNG và `artifacts/native-effects/audit.json`. Lần kiểm tra này: 96/96 có pixel được vẽ, không lỗi, không thiếu ảnh tham chiếu, không đổi HP mục tiêu trong mô phỏng ghost. 70 chiêu có lệnh vẽ ảnh/atlas, 26 chiêu là hình vẽ Canvas gốc. Kiểm tra này không thay thế việc chạy trên iPhone thật.

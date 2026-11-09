@@ -1,0 +1,927 @@
+{
+  "results": [
+    {
+      "id": "hoa_cau",
+      "name": "Hỏa Cầu Thuật",
+      "pixels": 348,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "phong_nhan",
+      "name": "Phong Nhẫn Thuật",
+      "pixels": 184,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "bang_thau",
+      "name": "Băng Thấu Châm",
+      "pixels": 174,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "dia_thich",
+      "name": "Địa Thích Thuật",
+      "pixels": 414,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "xich_chan",
+      "name": "Sơ Xích Chân",
+      "pixels": 252,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "kim_mang",
+      "name": "Kim Mang Thuật",
+      "pixels": 291,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thanh_dang",
+      "name": "Thanh Đằng Thuật",
+      "pixels": 275,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thuy_tien",
+      "name": "Thủy Tiễn Thuật",
+      "pixels": 343,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "loi_xa",
+      "name": "Lôi Xà Thuật",
+      "pixels": 294,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ngu_kiem_thuat",
+      "name": "Ngự Kiếm Thuật",
+      "pixels": 192,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "dinh_than",
+      "name": "Định Thân Thuật",
+      "pixels": 395,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "kim_chung_trao",
+      "name": "Kim Chung Tráo",
+      "pixels": 739,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "su_tu_hong",
+      "name": "Huyết Quy Nguyên",
+      "pixels": 668,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ngu_kiem_sat",
+      "name": "Ngũ Kiếm Sát",
+      "pixels": 333,
+      "imageCalls": 70,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_kiem_tran",
+      "name": "Huyết Kiếm Trận",
+      "pixels": 805,
+      "imageCalls": 56,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "van_kiem_quy_tong",
+      "name": "Vạn Kiếm Quy Tông",
+      "pixels": 1947,
+      "imageCalls": 2017,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "cuu_huyet_kiem_tran",
+      "name": "Cửu Huyết Kiếm Trận",
+      "pixels": 966,
+      "imageCalls": 171,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "kim_thuong_giang_the",
+      "name": "Kim Thương Giáng Thế",
+      "pixels": 11207,
+      "imageCalls": 1367,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "loi_thuong_quan_dia",
+      "name": "Lôi Thương Quán Địa",
+      "pixels": 3945,
+      "imageCalls": 211,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ngu_loi_thuong_vu",
+      "name": "Ngũ Lôi Thương Vũ",
+      "pixels": 1700,
+      "imageCalls": 505,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ngu_hoa_thuong_vu",
+      "name": "Ngũ Hoả Thương Vũ",
+      "pixels": 5677,
+      "imageCalls": 3276,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "tieu_canh_kiem_tran",
+      "name": "Tiểu Canh Kiếm Trận",
+      "pixels": 6039,
+      "imageCalls": 376,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_nguyet_luan_liem",
+      "name": "Bách Quỷ Dạ Hành",
+      "pixels": 4866,
+      "imageCalls": 597,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "anh_dao_phong_tran",
+      "name": "Anh Đào Phong Trận",
+      "pixels": 16128,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "kim_long_phap_tuong",
+      "name": "Kim Long Pháp Tướng",
+      "pixels": 4826,
+      "imageCalls": 6414,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thanh_lam_kiem_tru",
+      "name": "Thanh Băng Kiếm Trụ",
+      "pixels": 4125,
+      "imageCalls": 11,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "anh_ky_phu",
+      "name": "Ảnh Kỵ",
+      "pixels": 545,
+      "imageCalls": 72,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "bang_kiem_tran",
+      "name": "Băng Kiếm Trận",
+      "pixels": 3267,
+      "imageCalls": 30,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "bang_kiem_luan",
+      "name": "Băng Kiếm Luân",
+      "pixels": 254,
+      "imageCalls": 160,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "tien_vu",
+      "name": "Tiễn Vũ",
+      "pixels": 3218,
+      "imageCalls": 1110,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "tram_ma",
+      "name": "Trầm Ma",
+      "pixels": 1295,
+      "imageCalls": 90,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ma_bao_an",
+      "name": "Ma Bạo Ấn",
+      "pixels": 2868,
+      "imageCalls": 308,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ma_hon_phe",
+      "name": "Ma Hồn Phệ",
+      "pixels": 2704,
+      "imageCalls": 1928,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "cuu_u_ma_trao",
+      "name": "Cửu U Ma Trảo",
+      "pixels": 2497,
+      "imageCalls": 322,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "phi_long_tai_thien",
+      "name": "Ngũ Kiếm Kim Quang",
+      "pixels": 2246,
+      "imageCalls": 536,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "hoanh_tao_mac_ngan",
+      "name": "Hoành Tảo Kiếm Phong",
+      "pixels": 5163,
+      "imageCalls": 467,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "son_ha_nhap_hoa",
+      "name": "Phân Ảnh Nhất Kiếm",
+      "pixels": 69000,
+      "imageCalls": 97,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "tu_van_cuong_phong",
+      "name": "Tử Vân Cuồng Phong",
+      "pixels": 6558,
+      "imageCalls": 248,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "tu_van_ma_vuc",
+      "name": "Tử Vân Ma Vực",
+      "pixels": 7884,
+      "imageCalls": 470,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "cuu_u_hac_trao",
+      "name": "Cửu U Hắc Trảo",
+      "pixels": 1042,
+      "imageCalls": 65,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "hac_vu_xuyen_tam",
+      "name": "Hắc Vũ Xuyên Tâm",
+      "pixels": 677,
+      "imageCalls": 187,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thanh_long_ngam",
+      "name": "Lục Tinh Kiếm Luân",
+      "pixels": 1700,
+      "imageCalls": 1709,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "cuu_thien_lien_am",
+      "name": "Liên Kích Ngũ Sát",
+      "pixels": 697,
+      "imageCalls": 507,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "bich_nguc_giang_dao",
+      "name": "Bích Ngục Giáng Đao",
+      "pixels": 68930,
+      "imageCalls": 54,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ngoc_luu_chan_am",
+      "name": "Soái Kỳ Trấn Hà",
+      "pixels": 3656,
+      "imageCalls": 113,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_mau_xuyen_tam",
+      "name": "Huyết Mâu Xuyên Tâm",
+      "pixels": 671,
+      "imageCalls": 471,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_hai_phien_thien",
+      "name": "Huyết Hải Phiên Thiên",
+      "pixels": 2433,
+      "imageCalls": 281,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_chu_phe_mach",
+      "name": "Huyết Chú Phệ Mạch",
+      "pixels": 2209,
+      "imageCalls": 84,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_te_ma_dong",
+      "name": "Huyết Tế Ma Đồng",
+      "pixels": 5955,
+      "imageCalls": 316,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_co_phe_tam",
+      "name": "Huyết Cổ Phệ Tâm",
+      "pixels": 226,
+      "imageCalls": 244,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_anh_tam_cham",
+      "name": "Huyết Ảnh Tam Châm",
+      "pixels": 123,
+      "imageCalls": 179,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_ti_trien_than",
+      "name": "Huyết Ti Triền Thân",
+      "pixels": 512,
+      "imageCalls": 247,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "nguyet_quang",
+      "name": "Nguyệt Ảnh Nhất Thiểm",
+      "pixels": 69000,
+      "imageCalls": 665,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_nguyet_am_thuc",
+      "name": "Câu Hồn Tỏa",
+      "pixels": 1059,
+      "imageCalls": 196,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "kim_quang_cu_kiem",
+      "name": "Kim Quang Cự Kiếm",
+      "pixels": 5550,
+      "imageCalls": 227,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ngu_sac_than_chuong",
+      "name": "Thiên Kiếm Giáng Thế",
+      "pixels": 69000,
+      "imageCalls": 539,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "am_huyet_ma_chuong",
+      "name": "Quỷ Môn Khai",
+      "pixels": 5196,
+      "imageCalls": 308,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thanh_an_ho_the",
+      "name": "Thánh Ấn Hộ Thế",
+      "pixels": 6456,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thien_thu_giang_the",
+      "name": "Thiên Thư Giáng Thế",
+      "pixels": 11090,
+      "imageCalls": 378,
+      "error": null,
+      "logs": [],
+      "targetMutated": true
+    },
+    {
+      "id": "truc_gian_tam_tinh",
+      "name": "Trúc Giản Tam Tỉnh",
+      "pixels": 4370,
+      "imageCalls": 634,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "chu_phe_dinh_toi",
+      "name": "Chu Phê Định Tội",
+      "pixels": 10619,
+      "imageCalls": 127,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "hao_nhien_thuan",
+      "name": "Hạo Nhiên Thuẫn",
+      "pixels": 4460,
+      "imageCalls": 340,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thien_dia_vi_ky",
+      "name": "Thiên Địa Vi Kỳ",
+      "pixels": 14891,
+      "imageCalls": 661,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "hoa_dia_vi_lao",
+      "name": "Hoạ Địa Vi Lao",
+      "pixels": 6853,
+      "imageCalls": 555,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "mac_truc_binh_phong",
+      "name": "Mặc Trúc Bình Phong",
+      "pixels": 1969,
+      "imageCalls": 649,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thanh_long_ngam_nho",
+      "name": "Mặc Long Ngâm",
+      "pixels": 743,
+      "imageCalls": 694,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "son_ha_nhap_hoa_nho",
+      "name": "Sơn Hà Nhập Hoạ",
+      "pixels": 69000,
+      "imageCalls": 185,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_buc_chuong",
+      "name": "Huyết Bức Chưởng",
+      "pixels": 117,
+      "imageCalls": 8,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_liem_tram",
+      "name": "Huyết Liêm Trảm",
+      "pixels": 623,
+      "imageCalls": 16,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "tu_anh_phuoc_tien",
+      "name": "Tứ Ảnh Phược Tiên",
+      "pixels": 1340,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "xich_ma_hoa_than",
+      "name": "U Minh Quỷ Thân",
+      "pixels": 789,
+      "imageCalls": 1542,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "kim_cuong_hoa_than",
+      "name": "Kim Cương Hóa Thân",
+      "pixels": 1179,
+      "imageCalls": 300,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "man_tuong_phap_than",
+      "name": "Man Tượng Pháp Thân",
+      "pixels": 619,
+      "imageCalls": 2700,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "bang_son_quyen",
+      "name": "Băng Sơn Quyền",
+      "pixels": 4016,
+      "imageCalls": 1095,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thien_quan_truy",
+      "name": "Thiên Quân Trụy",
+      "pixels": 1022,
+      "imageCalls": 578,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ham_thien_thu",
+      "name": "Hám Thiên Thủ",
+      "pixels": 2195,
+      "imageCalls": 424,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "toai_nhac_chuy",
+      "name": "Bàn Thạch Hộ Thể",
+      "pixels": 531,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "lien_hoan_bach_quyen",
+      "name": "Liên Hoàn Bách Quyền",
+      "pixels": 4008,
+      "imageCalls": 553,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "toan_phong_thoi",
+      "name": "Toàn Phong Thối",
+      "pixels": 11310,
+      "imageCalls": 433,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "cu_thach_thien_giang",
+      "name": "Cự Thạch Thiên Giáng",
+      "pixels": 5113,
+      "imageCalls": 798,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "xich_nhat_quyen_an",
+      "name": "Dung Nham Quyền Vũ",
+      "pixels": 8053,
+      "imageCalls": 731,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "khai_bi_chuong",
+      "name": "Khai Bi Chưởng",
+      "pixels": 5768,
+      "imageCalls": 155,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "kinh_hoa_thuy_nguyet",
+      "name": "Kính Hoa Thủy Nguyệt",
+      "pixels": 1349,
+      "imageCalls": 2400,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "hong_tu_doat_menh",
+      "name": "Hồng Tụ Đoạt Mệnh",
+      "pixels": 2704,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "mong_diep_me_tran",
+      "name": "Mộng Điệp Mê Trận",
+      "pixels": 2284,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "thien_ma_lien_vu",
+      "name": "Thiên Ma Liên Vũ",
+      "pixels": 6137,
+      "imageCalls": 22,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_lien_ky",
+      "name": "Huyết Liên Ký",
+      "pixels": 398,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "to_hong_phuoc",
+      "name": "Tơ Hồng Phược",
+      "pixels": 482,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "nhiep_hon_linh",
+      "name": "Nhiếp Hồn Linh",
+      "pixels": 3591,
+      "imageCalls": 64,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "mi_huong_dan",
+      "name": "Mị Hương Dẫn",
+      "pixels": 1329,
+      "imageCalls": 0,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "ho_diep_phe_tam",
+      "name": "Hồ Điệp Phệ Tâm",
+      "pixels": 818,
+      "imageCalls": 461,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "diep_anh_bo",
+      "name": "Điệp Ảnh Bộ",
+      "pixels": 2433,
+      "imageCalls": 386,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "xich_ma_hoa_than_huyet",
+      "name": "Xích Ma Hóa Thân",
+      "pixels": 591,
+      "imageCalls": 300,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_nguyet_am_thuc_huyet",
+      "name": "Huyết Nguyệt Ám Thực",
+      "pixels": 69000,
+      "imageCalls": 898,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "am_huyet_ma_chuong_huyet",
+      "name": "Ám Huyết Ma Chưởng",
+      "pixels": 69000,
+      "imageCalls": 1113,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    },
+    {
+      "id": "huyet_nguyet_luan_liem_huyet",
+      "name": "Huyết Nguyệt Luân Liêm",
+      "pixels": 11706,
+      "imageCalls": 284,
+      "error": null,
+      "logs": [],
+      "targetMutated": false
+    }
+  ],
+  "missing": [],
+  "usedAssets": [
+    "assets/sprites/fx/tram_ma.png",
+    "assets/sprites/fx/tram_ma_add.png",
+    "assets/sprites/fx/bang_kiem_tran.png",
+    "assets/sprites/fx/bang_kiem_tran_add.png",
+    "assets/sprites/fx/thanh_bang_kiem_tru.png",
+    "assets/sprites/fx/thanh_bang_kiem_tru_add.png",
+    "assets/sprites/fx/ma_bao_an.png",
+    "assets/sprites/fx/ma_bao_an_add.png",
+    "assets/sprites/fx/cat_tuong.png",
+    "assets/sprites/fx/cat_tuong_add.png",
+    "assets/sprites/fx/thao_duoc.png",
+    "assets/sprites/fx/thao_duoc_add.png",
+    "assets/sprites/fx/kim_o_phu.png",
+    "assets/sprites/fx/kim_o_phu_add.png",
+    "assets/sprites/fx/kim_long_phu.png",
+    "assets/sprites/fx/kim_long_phu_add.png",
+    "assets/weapons/huyet-kiem.png",
+    "assets/weapons/hoa-kim-thuong-lon.png",
+    "assets/weapons/hoang-loi-thuong.png",
+    "assets/weapons/hoang-loi-thuong-lon.png",
+    "assets/sprites/fx/hoang_loi_long_vu.png",
+    "assets/sprites/fx/loi_thuong_quan_dia_no_add.png",
+    "assets/sprites/fx/loi_thuong_quan_dia_nut_add.png",
+    "assets/sprites/fx/ngu_loi_thuong_vu_no_add.png",
+    "assets/sprites/fx/ngu_loi_thuong_vu_nut_add.png",
+    "assets/weapons/luc-tinh-kiem.png",
+    "assets/sprites/fx/bach-quy/demon-six-poses.png",
+    "assets/sprites/fx/kim_long_phap_tuong_guardian.png",
+    "assets/sprites/fx/kim_long_phap_tuong_dragons.png",
+    "assets/sprites/fx/anh_ky_pixel.png",
+    "assets/sprites/fx/loi_nhap_nhay_114.png",
+    "assets/sprites/fx/bang_kiem_luan_bf.png",
+    "assets/sprites/fx/bang_kiem_luan_jz.png",
+    "assets/sprites/fx/bang_kiem_luan_sword.png",
+    "assets/sprites/fx/phi_long_sword.png",
+    "assets/weapons/bich-nguc-ta-dao.png",
+    "assets/sprites/fx/huyet_co_animated.png",
+    "assets/sprites/fx/nguyet_anh_kiem.png",
+    "assets/sprites/fx/kim_quang_tran_add.png",
+    "assets/sprites/fx/kim_quang_no_add.png",
+    "assets/sprites/fx/kim_quang_cu_kiem.png",
+    "assets/sprites/fx/thien_kiem.png",
+    "assets/sprites/fx/quy-mon/gate.png",
+    "assets/sprites/fx/quy-mon/demon-upper.png",
+    "assets/sprites/fx/quy-mon/demon-jaw.png",
+    "assets/sprites/fx/thanh_tieu.png",
+    "assets/sprites/fx/ma_tri_mac_son_ha.png",
+    "assets/sprites/fx/huyet_buc_chuong.png",
+    "assets/sprites/fx/huyet_liem_tram.png",
+    "assets/sprites/fx/huyet_liem_tram_add.png",
+    "assets/sprites/fx/huyet_nguyet.png",
+    "assets/sprites/fx/ma_chuong.png",
+    "assets/sprites/fx/ma_chuong_add.png",
+    "assets/sprites/fx/huyet_ma_liem_daoguang.png",
+    "assets/sprites/fx/huyet_ma_liem_fore.png"
+  ],
+  "decodedBytes": 93101336
+}
