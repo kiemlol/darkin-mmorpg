@@ -29,4 +29,4 @@ export function normalizeCultivation(raw:any):Cultivation{const v=freshCultivati
 export function expRequired(tier:number){return Math.round(70*Math.pow(1.47,tier))}
 export function cultivationStats(c:Cultivation){return{maxHp:100+c.tier*22+(c.attributes?.vigor||0)*10+(c.path==='the'?30:0),maxMp:100+c.tier*16+(c.attributes?.spirit||0)*8+(c.path==='phap'?25:0),power:22+c.tier*5+(c.attributes?.power||0)*2+c.weaponLevel*7,defense:c.tier*.018+(c.path==='the'?.08:0)}}
 export function realmAtTier(tier:number){return tier===0?{realmId:'mortal' as const,realmStageId:'early' as const}:{realmId:REALMS[Math.min(4,1+Math.floor((tier-1)/4))].id,realmStageId:REALM_STAGES[(tier-1)%4].id}}
-export type CultCommand={action:'expand_bag'|'attribute'|'path'|'profession'|'meditate'|'breakthrough'|'learn'|'slot'|'gather'|'craft'|'buy'|'sell'|'use'|'forge'|'quest';id?:string;slot?:number};
+export type CultCommand={action:'practice_restore'|'expand_bag'|'attribute'|'path'|'profession'|'meditate'|'breakthrough'|'learn'|'slot'|'gather'|'craft'|'buy'|'sell'|'use'|'forge'|'quest';id?:string;slot?:number};

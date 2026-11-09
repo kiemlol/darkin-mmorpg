@@ -45,3 +45,7 @@ Thư mục `artifacts/` chứa ảnh kiểm tra desktop/mobile và hiệu ứng.
 ## Giới hạn còn lại
 
 Bản phát triển này chưa phải dịch vụ MMORPG đã vận hành thương mại. Chưa có tài khoản email/mật khẩu, PvP, giao dịch giữa người chơi, bang hội, nhiều bản đồ, chống gian lận cho server phân tán, đồng bộ tài sản offline lên online hay kiểm thử tải lớn. Danh tính online hiện là token khách của nền Darkin. Server Node vẫn cần host riêng nếu frontend được đặt trên Sites tĩnh. Chưa xác minh trên iPhone/iOS thật; kiểm tra mobile dùng viewport/touch Chromium.
+
+## Bản sửa hiệu ứng & mở bí pháp
+
+Bật đủ lớp vẽ `back/base/front` của module Tu Tiên, thêm đạn bay trước mốc trúng đòn và tải trước ảnh của các module được dùng để lần thi triển đầu không phải chờ ảnh. Toàn bộ 24 kỹ năng được mở trên nhân vật cũ/mới để thử; Tàng Kinh Các hiển thị cả kỹ năng khác phái và 4 bí pháp Darkin. Có nút nạp linh lực/xóa hồi chiêu để thử tiếp, không đổi ví/vật phẩm/cảnh giới. Nhân vật vẫn trả chi phí và hồi chiêu bình thường khi thi triển.
