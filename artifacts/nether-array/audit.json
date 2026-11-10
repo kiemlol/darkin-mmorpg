@@ -1,0 +1,40 @@
+{
+  "samples": [
+    {
+      "age": 0.42,
+      "pixels": 8857
+    },
+    {
+      "age": 1.25,
+      "pixels": 12889
+    },
+    {
+      "age": 2.42,
+      "pixels": 47413
+    },
+    {
+      "age": 2.92,
+      "pixels": 60102
+    },
+    {
+      "age": 3.62,
+      "pixels": 81768
+    },
+    {
+      "age": 4.85,
+      "pixels": 83230
+    },
+    {
+      "age": 5.4,
+      "pixels": 91333
+    },
+    {
+      "age": 8.85,
+      "pixels": 69502
+    }
+  ],
+  "flags": 6,
+  "waves": 4,
+  "clearsAt": 9.6,
+  "browserVerified": false
+}

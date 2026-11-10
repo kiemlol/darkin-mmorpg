@@ -1,3 +1,5 @@
+import {advanceNetherArray} from './nether-array-world';
+import {NETHER_SKILL} from './nether-array';
 import {settlement} from './adventure-world';
 import {cultSkill,cultivationStats,type Cultivation,type CultCommand} from './cultivation';
 import {initializeCultivator,cultivationCommand,tickCultivation,rewardCultivation} from './cultivation-world';
@@ -28,7 +30,7 @@ export type Intent = {
     attack: boolean;
 };
 export type Actor = EquipmentState & RealmState & {
-    companionAttack?:{targetId:string;at:number};cultivation?:Cultivation;mp?:number;maxMp?:number;professionName?:string;mobLevel?:number;boss?:boolean;statusUntil?:number;burnUntil?:number;burnBy?:string;burnTick?:number;
+    prisonUntil?:number;companionAttack?:{targetId:string;at:number};cultivation?:Cultivation;mp?:number;maxMp?:number;professionName?:string;mobLevel?:number;boss?:boolean;statusUntil?:number;burnUntil?:number;burnBy?:string;burnTick?:number;
     contentGrants?:string[];skills?:LearnedSkills;
     swordFlight?:SwordFlight;
     animationPreview?:AnimationPreview;
@@ -235,7 +237,7 @@ export class World {
       }this.projectiles=next;
     }
     private advanceSkills(){
-     for(const c of this.skillCasts){if(skillCombat[c.skillId]?.volley){advanceVolley(this,c);continue}if(this.skillHits.has(c.id))continue;
+     for(const c of this.skillCasts){if(c.skillId===NETHER_SKILL.id){advanceNetherArray(this,c);continue}if(skillCombat[c.skillId]?.volley){advanceVolley(this,c);continue}if(this.skillHits.has(c.id))continue;
       const tracked=c.targetId&&this.actors.get(c.targetId);if(skillCombat[c.skillId]?.impact?.trackTarget&&tracked&&tracked.hp>0&&this.time-c.startedAt<=(cultSkill(c.skillId)?.lockAt??Infinity)){c.tx=tracked.x;c.ty=tracked.y}
       if(this.time-c.startedAt+1e-9<skillImpactTime(c.skillId))continue;this.skillHits.add(c.id);c.resolved=true;
       const a=this.actors.get(c.casterId),b=c.targetId&&this.actors.get(c.targetId),rule=skillCombat[c.skillId];
@@ -253,7 +255,7 @@ export class World {
         if (a.hp <= 0) {
             this.cancelSwordFlight(a);a.action = 'death';
             if (a.kind === 'mob' && this.time - a.deadAt >= (a.boss?120:a.mobLevel?18:MOB_RESPAWN_SECONDS))
-                Object.assign(a, this.findSpawn(a.home.x, a.home.y), { hp: a.maxHp, action: 'idle', cooldown: 0, anim: 0,burnUntil:0,statusUntil:0 });
+                Object.assign(a, this.findSpawn(a.home.x, a.home.y), { hp: a.maxHp, action: 'idle', cooldown: 0, anim: 0,burnUntil:0,statusUntil:0,prisonUntil:0 });
             continue;
         }
         let i: Intent = { seq: 0, dx: 0, dy: 0, run: false, attack: false };
@@ -286,7 +288,7 @@ export class World {
         }
         if(this.advanceSwordFlight(a,i,dt))continue;
         if(this.interactions.channels.has(a.id)){a.action=this.interactions.presentation(this.interactions.definitions.get(this.interactions.channels.get(a.id)!.intent.objectId)!).action;continue}
-        if((a.statusUntil||0)>this.time) i={...i,dx:0,dy:0,attack:false};
+        if(Math.max(a.statusUntil||0,a.prisonUntil||0)>this.time) i={...i,dx:0,dy:0,attack:false};
         if(a.cultivation?.meditating||a.cultivation?.gatherUntil)i={...i,dx:0,dy:0,attack:false};
         movement(this.p, a, i, dt);
         if (!a.anim)

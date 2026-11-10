@@ -65,3 +65,7 @@ Thêm chính tuyến 9 bước với NPC nhận/trả, 4 ủy thác UTC hằng n
 ## Như Ý Định Hải
 
 Thêm kỹ năng `nhu_y_dinh_hai` với gậy đỏ/vàng bay lên, hóa lớn, lao xuống mục tiêu; sát thương diện rộng, choáng, sóng va chạm và đất đá/bụi mờ dần. Kỹ năng mở sẵn ở đầu Bí pháp. Chi tiết timeline và điều kiện: `RUYI-STAFF.md`. Asset preview tạo từ renderer thực; bộ 96 hiệu ứng gốc giữ nguyên.
+
+## U Đô Lục Kỳ Trận
+
+Thêm kỹ năng `u_do_luc_ky_tran`: sáu trận kỳ cắm tuần tự, kết trận giam yêu thú, hai ma thủ xé hư không và đầu quỷ phóng bốn đợt vong linh. World quản lý khóa vùng và sát thương riêng từng đợt; client có module hoạt ảnh riêng. Mở sẵn ở đầu Bí pháp. Timeline, thông số và giới hạn ở `NETHER-ARRAY.md`.
