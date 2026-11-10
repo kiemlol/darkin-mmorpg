@@ -14,7 +14,7 @@ ID `u_do_luc_ky_tran`, mở sẵn cho mọi nhân vật; đứng đầu Bí phá
 
 ## Authority và giới hạn
 
-Mã client chỉ vẽ. `src/shared/nether-array-world.ts` quyết định danh sách bị bắt và bốn lần sát thương. Có thể thoát trước khi kết ấn; yêu thú đi vào sau khi danh sách đã chốt không bị bắt. Mỗi lần đánh kiểm tra lại mục tiêu còn sống, vị trí trong vòng, tầm và vật cản. Không đánh người chơi hoặc cảnh vật trang trí (game hiện không có hệ HP cho cảnh vật).
+Mã client chỉ vẽ. `src/shared/nether-array-world.ts` quyết định danh sách bị bắt và bốn lần sát thương. Trong lúc cờ triển khai, tâm trận bám mục tiêu chính còn sống, trong tầm 360 và có đường nhìn; tới lúc kết ấn 2,4s mới chốt vị trí và danh sách yêu thú. Nếu mục tiêu chính chết hoặc chạy ngoài tầm, trận giữ vị trí hợp lệ cuối. Các yêu thú khác ngoài vòng lúc kết ấn hoặc đi vào sau khi danh sách chốt không bị bắt. Mỗi lần đánh kiểm tra lại mục tiêu còn sống, vị trí trong vòng, tầm và vật cản. Không đánh người chơi hoặc cảnh vật trang trí (game hiện không có hệ HP cho cảnh vật).
 
 Giam giữ dùng `prisonUntil` riêng, không ghi đè choáng của kỹ năng khác. Caster chết hoặc dịch chuyển sẽ hủy các đợt tiếp theo, khóa di chuyển tự hết trong 0,12s; không để lại quái bị trói vĩnh viễn. Các kỹ năng chồng nhau giữ thời gian khóa dài nhất. Danh sách mục tiêu và số đợt nằm trong snapshot có kiểm tra định dạng. Hạ quái chỉ trả thưởng một lần.
 
@@ -27,3 +27,7 @@ Sáu cờ, vòng trận và vong linh tiếp tục do module Canvas `src/client/
 ## Kiểm tra
 
 Năm kiểm thử riêng cho khóa vùng và bốn lần đánh, bỏ qua người chơi/mục tiêu vào muộn, tránh trước kết ấn, thưởng hạ quái, tử trận/dịch chuyển, giữ choáng khác, adapter/camera và xóa hiệu ứng, snapshot sai định dạng. Audit Node Canvas kiểm tra tám pha, xóa hết pixel ở 9,6s. Chưa kiểm tra trực tiếp trên iPhone hoặc trình duyệt vì môi trường không có công cụ preview được hỗ trợ.
+
+## Điều chỉnh kích thước và bám mục tiêu
+
+Cổng/ma thủ hiển thị 220×220 (trước 340×340), đầu quỷ 170×170 (trước 260×260), giảm khoảng 35%. Chỉnh tâm sprite và điểm miệng tương ứng. Pháp trận và vòng sáu cờ giữ bán kính 165. Kiểm thử bổ sung kiểm tra bám mục tiêu di chuyển, chốt tâm tại kết ấn, không đuổi mục tiêu sai trạng thái/ngoài tầm và giữ nguyên kích thước trận.

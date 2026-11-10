@@ -14,23 +14,23 @@
     },
     {
       "age": 2.92,
-      "pixels": 72335
+      "pixels": 57713
     },
     {
       "age": 3.62,
-      "pixels": 110860
+      "pixels": 72800
     },
     {
       "age": 4.85,
-      "pixels": 112311
+      "pixels": 73490
     },
     {
       "age": 5.4,
-      "pixels": 115353
+      "pixels": 79044
     },
     {
       "age": 8.85,
-      "pixels": 64679
+      "pixels": 46799
     }
   ],
   "spriteSheets": 2,

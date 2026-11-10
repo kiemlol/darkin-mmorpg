@@ -73,3 +73,7 @@ Thêm kỹ năng `u_do_luc_ky_tran`: sáu trận kỳ cắm tuần tự, kết t
 ### Sprite sheet U Đô do người dùng cung cấp
 
 Thay hình vẽ code của hư không/ma thủ và đầu quỷ bằng đúng hai JPEG đính kèm, 12 + 16 khung. Nạp và loại nền trắng một lần, ghép vào timeline hiện có, chỉnh vị trí miệng phóng vong linh. Cờ, trận, giam giữ và bốn đợt sát thương giữ nguyên luật. Preview và video được xuất lại từ renderer dùng hai ảnh thật.
+
+### Thu nhỏ U Đô và bắt mục tiêu đang di chuyển
+
+Giảm khoảng 35% cổng và đầu quỷ; pháp trận giữ nguyên bán kính 165. Tâm trận bám mục tiêu chính hợp lệ trong lúc cờ triển khai, rồi chốt tại 2,4s để giam các quái trong vòng. Tâm trận không tiếp tục chạy theo quái sau khi kết ấn. Điểm miệng phóng vong linh tính theo kích thước mới.

@@ -1,4 +1,22 @@
 {
-  "portal": {"src":"/assets/sprites/fx/nether/portal.jpg","columns":4,"rows":3,"frames":12,"width":340,"height":340,"centerY":-285},
-  "demon": {"src":"/assets/sprites/fx/nether/demon.jpg","columns":4,"rows":4,"frames":16,"width":260,"height":260,"centerY":-285,"mouthX":0.5,"mouthY":0.62}
+  "portal": {
+    "src": "/assets/sprites/fx/nether/portal.jpg",
+    "columns": 4,
+    "rows": 3,
+    "frames": 12,
+    "width": 220,
+    "height": 220,
+    "centerY": -225
+  },
+  "demon": {
+    "src": "/assets/sprites/fx/nether/demon.jpg",
+    "columns": 4,
+    "rows": 4,
+    "frames": 16,
+    "width": 170,
+    "height": 170,
+    "centerY": -225,
+    "mouthX": 0.5,
+    "mouthY": 0.62
+  }
 }
