@@ -1,0 +1,11 @@
+{
+  "width": 400,
+  "height": 730,
+  "pages": [
+    "character",
+    "stats"
+  ],
+  "frameSource": "original Darkin inventory atlas",
+  "browserVerified": false,
+  "rigPreviewVerified": false
+}

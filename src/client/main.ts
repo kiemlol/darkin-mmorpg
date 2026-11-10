@@ -70,8 +70,6 @@ catch (e) {
     $('error').textContent = String(e);
 } }
 try{($('name') as HTMLInputElement).value=localStorage.getItem('tien-do:name')||'Đạo Hữu';($('server') as HTMLInputElement).value=localStorage.getItem('tien-do:server')||''}catch{}
-const appearanceSelect = $('appearance') as HTMLSelectElement;
-appearanceSelect.onchange = () => {equipmentUI.reset();session?.setAppearance(appearanceSelect.value)};
 $('offline').onclick = () => start('offline');
 $('online').onclick = () => start('online');
 $('retry').onclick = () => start('online');
@@ -84,9 +82,8 @@ $('menu').onclick = () => { if (session) {
     dialog.showModal();
 } };
 $('resume').onclick = () => dialog.close();
-$('preview-bow').onclick=()=>{if(session){input?.clear();session.previewAnimation('bow_shoot');dialog.close()}};
-$('exit').onclick = () => { dialog.close(); cleanup(); document.body.classList.remove('playing'); $('lobby').hidden = false; $('hud').hidden = true; $('controls').hidden = true; };
-$('reset').onclick = () => { dialog.close(); cleanup(); LocalGameSession.reset(($('name') as HTMLInputElement).value.trim()||'Lữ khách'); start('offline'); };
+
+
 try {
     const loaded = await loadMap();await skillVisuals.load();await cultivationFX.load();
     try {
@@ -99,13 +96,6 @@ try {
     player = loaded.player;
     bounds = loaded.bounds;
     camera.reset(player.project.spawn.x, player.project.spawn.y);
-    if (assets.catalog)
-        for (const a of assets.catalog.appearances) {
-            const o = document.createElement('option');
-            o.value = a.id;
-            o.textContent = a.name;
-            appearanceSelect.append(o);
-        }
     $('error').textContent='';ready = true;($('offline') as HTMLButtonElement).disabled=false;($('online') as HTMLButtonElement).disabled=false;
 }
 catch (e) {
@@ -145,7 +135,7 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
         $('status').textContent = session.status==='Online'?'Tiên giới · Online':'Vân du · Offline';
         cultivationUI.update(dt,session instanceof AdaptiveGameSession?session.notice:'Tiến trình lưu trên thiết bị');
         const previewNote=$('preview-notice');previewNote.textContent=session.previewMessage;previewNote.hidden=!session.previewMessage;
-        const notice=$('profile-notice');notice.hidden=!session.dataWarnings?.length;notice.textContent=session.dataWarnings?.join(' ')||'';
+
         $('retry').hidden = mode !== 'online' || session.status === 'Online' || session.status === 'Đang kết nối…';
     }
     const { x, y } = camera.viewport(w, h, zoom, bounds);
@@ -196,4 +186,4 @@ requestAnimationFrame(frame);
 // Read-only diagnostics for acceptance tests; no gameplay authority.
 Object.defineProperty(window, 'darkinDebug', { get: () => ({ nativeVFX:cultivationFX.debug(),skillVFX:skillVisuals.debug(),souls:soulEffects.frame.map(s=>({...s})),lighting:player?.renderer?.diagnostics?.(),inventoryUI:inventoryUI.debug(),playerUI:playerHUD.debug(),mapUI:mapHUD.debug(),exploration:session?.exploration?{scope:session.exploration.scope,count:session.exploration.count(),version:session.exploration.version,seen:Array.from(session.exploration.seen)}:null,characterId:session?.characterId,input: input?.sample(), mode, connection:session instanceof AdaptiveGameSession?session.notice:null, status: session?.status, id: session?.id, snapshot: session?.snapshot, zoom, camera: { x: camera.x, y: camera.y }, map: player?.project.id, visuals: [...visuals.entries()].map(([id, v]) => ({ id, ...(v instanceof CutoutCharacterVisual ? v.debug() : { type: 'placeholder' }) })) }) });
 
-if(import.meta.env.PROD&&'serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{$('cache-status').textContent='Chưa thể chuẩn bị bộ nhớ ngoại tuyến.'});navigator.serviceWorker.addEventListener('message',e=>{if(e.data.type==='CACHE_PROGRESS'||e.data.type==='CACHE_READY')$('cache-status').textContent=e.data.type==='CACHE_READY'?(e.data.failed?'Còn '+e.data.failed+' tài nguyên chưa tải. Hãy thử lại.':'Đã lưu thế giới, có thể mở lại khi mất mạng.'):'Đang lưu '+e.data.count+'/'+e.data.total+' tài nguyên…'});$('cache-world').onclick=async()=>{const reg=await navigator.serviceWorker.ready;reg.active?.postMessage('CACHE_WORLD');$('cache-status').textContent='Đang chuẩn bị lưu thế giới…'}}else $('cache-world').hidden=true;
+if(import.meta.env.PROD&&'serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{$('cache-status').textContent='Chưa thể chuẩn bị bộ nhớ ngoại tuyến.'});navigator.serviceWorker.addEventListener('message',e=>{if(e.data.type==='CACHE_PROGRESS'||e.data.type==='CACHE_READY')$('cache-status').textContent=e.data.type==='CACHE_READY'?(e.data.failed?'Còn '+e.data.failed+' tài nguyên chưa tải. Hãy thử lại.':'Đã lưu thế giới, có thể mở lại khi mất mạng.'):'Đang lưu '+e.data.count+'/'+e.data.total+' tài nguyên…'});document.addEventListener('click',async e=>{if(!(e.target as HTMLElement).closest('[data-cache-world]'))return;const reg=await navigator.serviceWorker.ready;reg.active?.postMessage('CACHE_WORLD');$('cache-status').textContent='Đang chuẩn bị lưu thế giới…'})}

@@ -7,5 +7,5 @@ export class InventoryArt{
  draw(c:CanvasRenderingContext2D,id:keyof typeof atlas.sprites,x:number,y:number,width:number,height?:number){if(!this.ready)return;const sprite=this.sprites.get(id)!;c.drawImage(sprite,x,y,width,height??width*sprite.height/sprite.width)}
  frame(c:CanvasRenderingContext2D){if(!this.ready)return;this.draw(c,'frame',0,0,1280);c.save();c.beginPath();c.rect(143,75,275,310);c.rect(847,110,305,276);c.clip();c.fillStyle='#2c1e22';c.fillRect(155,126,248,248);c.fillRect(858,117,282,257);c.restore()}
  categories(c:CanvasRenderingContext2D,selected:number){CATEGORY_SPRITES.forEach((ids,i)=>this.draw(c,ids[i===selected?1:0],L.categories.x+i*L.categories.step,L.categories.y,L.categories.width))}
- footer(c:CanvasRenderingContext2D){const p=L.pager;c.save();c.globalAlpha=.45;this.draw(c,'pagePrevious',p.left,p.y,p.width);this.draw(c,'pageNext',p.right,p.y,p.width);c.restore();for(let i=0;i<4;i++)this.draw(c,i===0?'pageActive':'pageIdle',p.dotX+i*p.dotStep,p.y+8,p.dotSize)}
+ footer(c:CanvasRenderingContext2D,page=0,pages=1){const p=L.pager;c.save();c.globalAlpha=pages>1?1:.45;this.draw(c,'pagePrevious',p.left,p.y,p.width);this.draw(c,'pageNext',p.right,p.y,p.width);c.restore();for(let i=0;i<4;i++)this.draw(c,i===page%4?'pageActive':'pageIdle',p.dotX+i*p.dotStep,p.y+8,p.dotSize)}
 }

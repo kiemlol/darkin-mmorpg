@@ -77,3 +77,7 @@ Thay hình vẽ code của hư không/ma thủ và đầu quỷ bằng đúng ha
 ### Thu nhỏ U Đô và bắt mục tiêu đang di chuyển
 
 Giảm khoảng 35% cổng và đầu quỷ; pháp trận giữ nguyên bán kính 165. Tâm trận bám mục tiêu chính hợp lệ trong lúc cờ triển khai, rồi chốt tại 2,4s để giam các quái trong vòng. Tâm trận không tiếp tục chạy theo quái sau khi kết ấn. Điểm miệng phóng vong linh tính theo kích thước mới.
+
+## Túi Darkin trên màn hình dọc và menu hành trình
+
+Gỡ túi tu tiên riêng; vật phẩm tu tiên được xem/dùng/bán trong cửa sổ túi Darkin, giữ dữ liệu cũ. Dọc: ghép nhân vật phía trên và túi phía dưới, mũi tên chuyển sang chỉ số; ngang giữ khung cũ. Có nút túi ngoài màn hình. Đưa các mục tu tiên vào menu ba gạch và gỡ các mục cũ/UI thử phụ kiện. Chi tiết và giới hạn xác minh ở `INVENTORY-MOBILE.md`.
