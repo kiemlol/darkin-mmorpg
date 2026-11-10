@@ -174,7 +174,7 @@ export class NetworkGameSession implements GameSession {
         throw Error('Trang HTTPS yêu cầu địa chỉ wss://');this.tokenKey='darkin-frontier:online-guest:v1:'+encodeURIComponent(u.href)+':'+encodeURIComponent(name);try{const tabToken=sessionStorage.getItem(this.tokenKey);this.resumeSession=!!tabToken;this.resumeToken=tabToken||localStorage.getItem(this.tokenKey)||''}catch{} this.socket = new WebSocket(u); this.socket.onopen = () => this.socket.send(JSON.stringify({ type: 'join', name,resumeToken:this.resumeToken,resume:this.resumeSession })); this.socket.onmessage = e => { try {
         const m = JSON.parse(e.data);
         if (m.type === 'welcome') {
-            if(m.cultivationProtocol!==1){this.status='Server chưa hỗ trợ thế giới tu tiên';this.socket.close();return}
+            if(m.cultivationProtocol!==1||m.adventureProtocol!==1){this.status='Server chưa hỗ trợ thế giới tu tiên';this.socket.close();return}
             this.skillsSupported=m.skillProtocol===1;this.allWeaponFlightSupported=m.weaponFlightProtocol===1;this.rangedCombatSupported=m.rangedCombatProtocol===1;this.inventorySupported=m.inventoryProtocol===1;this.flightSupported=m.swordFlightProtocol===1;this.previewSupported=m.animationPreviewProtocol===1;
             if(m.interactionProtocol!==1){this.status='Server cần cập nhật tương tác/ví';this.socket.close();return}
             if (m.map !== p.id) {

@@ -1,3 +1,4 @@
+import {AdventureScene} from './adventure-scene';
 import {CultivationMobVisual} from './cultivation-mob';
 import {AdaptiveGameSession} from './adaptive-session';
 import {CultivationUI} from './cultivation-ui';
@@ -30,6 +31,7 @@ let currentIntent: Omit<Intent, 'seq'> = { dx: 0, dy: 0, run: false, attack: fal
 const camera = new Camera2D();
 const soulEffects=new SoulEffects(),skillVisuals=new SkillVisuals(),cultivationFX=new CultivationFX();
 const cultivationUI=new CultivationUI(()=>session,()=>{input?.clear();stop()});
+const adventureScene=new AdventureScene(tab=>cultivationUI.show(tab));
 const simulation=()=>session instanceof AdaptiveGameSession?session.active:session;
 const skillUI=new SkillUI(()=>session,()=>!!session&&!dialog.open&&!mapHUD.panel.open&&!inventoryUI.open&&!cultivationUI.open&&!document.hidden);
 let ready = false;
@@ -48,7 +50,7 @@ function setZoom(f: number) { zoom = camera.fitZoom(Math.max(.35, Math.min(2, zo
 $('plus').onclick = () => setZoom(1.15);
 $('minus').onclick = () => setZoom(1 / 1.15);
 function stop() { interactionUI.release();currentIntent = { dx: 0, dy: 0, run: false, attack: false }; session?.input({ ...currentIntent, seq: ++seq }, false); }
-function cleanup() { cultivationUI.close();cultivationFX.clear(); skillVisuals.clear();skillUI.reset(); soulEffects.reset();inventoryUI.reset(); $('preview-notice').hidden=true;flightUI.reset();mapHUD.close();interactionUI.reset();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
+function cleanup() { adventureScene.update(null); cultivationUI.close();cultivationFX.clear(); skillVisuals.clear();skillUI.reset(); soulEffects.reset();inventoryUI.reset(); $('preview-notice').hidden=true;flightUI.reset();mapHUD.close();interactionUI.reset();playerHUD.reset();equipmentUI.reset(); $('death-screen').hidden = true; document.body.classList.remove('is-dead'); input?.destroy(); input = null; session?.destroy(); session = null; for (const v of visuals.values())
     v.destroy(); visuals.clear(); acc = 0; seq = 0; currentIntent = { dx: 0, dy: 0, run: false, attack: false }; }
 async function start(m: string) { if (!ready)
     return; cleanup(); mode = m;zoom=DEFAULT_ZOOM;setZoom(1); try {
@@ -167,8 +169,10 @@ function frame(now: number) { const dt = Math.min((now - last) / 1000, .25); las
     skillVisuals.update(skillSnapshot,actors,visuals,simulation() instanceof LocalGameSession&&(dialog.open||inventoryUI.open||document.hidden)?0:dt);
     cultivationFX.update(session?.snapshot||null,actors,simulation() instanceof LocalGameSession&&(dialog.open||inventoryUI.open||cultivationUI.open||document.hidden)?0:dt,{x,y,width:w/zoom,height:h/zoom});
     const occlusionActor=actors.find(a=>a.id===session?.id),occlusionVisual=occlusionActor&&visuals.get(occlusionActor.id);const bodyHeight=occlusionVisual instanceof CutoutCharacterVisual?160*(occlusionVisual.loaded?.appearance.scale||.7452)+(occlusionVisual.flight.frame?.riderHeight||0):32;const focus=occlusionActor?{...occlusionActor,occlusionHeight:bodyHeight}:null;
+    adventureScene.update(session?.snapshot||null,session?.id);
+    const adventureEntities=adventureScene.entities(session?.snapshot||null,actors);
     const souls=soulEffects.update(simulation() instanceof NetworkGameSession&&(simulation() as NetworkGameSession).socket.readyState!==WebSocket.OPEN?null:session?.snapshot||null,actors,visuals,dt)||[];
-    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: focus, dt, beforeEntities:(ctx:CanvasRenderingContext2D)=>{skillVisuals.draw(ctx,'low');cultivationFX.draw(ctx,'back')},afterEntities:(ctx:CanvasRenderingContext2D)=>{skillVisuals.draw(ctx,'high');skillVisuals.draw(ctx,'glow');cultivationFX.draw(ctx,'front')}, actors:[...actors,...souls,...skillVisuals.missileFrame], objectState:(id:string)=>{const n=session?.snapshot.nodes?.find(n=>n.objectId===id);return n?{hidden:n.hidden,shakeX:n.status==='mining'?Math.sin(now/1000*36)*1.5:0,shakeAngle:n.status==='mining'?Math.sin(now/1000*31)*.008:0}:undefined},drawActor: (ctx: CanvasRenderingContext2D,a:any) => {if(a.kind==='soul')soulEffects.draw(ctx,a);else if(a.kind==='skill_soul')skillVisuals.drawMissile(ctx,a);else{if(!cultivationFX.drawForm(ctx,a.id))visuals.get(a.id)?.draw(ctx);skillVisuals.drawCaster(ctx,a.id)}} } as any);
+    player.renderer.draw(c, { width: w, height: h, x, y, zoom, time: now / 1000, actor: focus, dt, beforeEntities:(ctx:CanvasRenderingContext2D)=>{skillVisuals.draw(ctx,'low');cultivationFX.draw(ctx,'back')},afterEntities:(ctx:CanvasRenderingContext2D)=>{skillVisuals.draw(ctx,'high');skillVisuals.draw(ctx,'glow');cultivationFX.draw(ctx,'front')}, actors:[...actors,...adventureEntities,...souls,...skillVisuals.missileFrame], objectState:(id:string)=>{const n=session?.snapshot.nodes?.find(n=>n.objectId===id);return n?{hidden:n.hidden,shakeX:n.status==='mining'?Math.sin(now/1000*36)*1.5:0,shakeAngle:n.status==='mining'?Math.sin(now/1000*31)*.008:0}:undefined},drawActor: (ctx: CanvasRenderingContext2D,a:any) => {if(a.kind==='adventure_npc'||a.kind==='adventure_pet')adventureScene.draw(ctx,a,now/1000,session?.snapshot.skillClock||0);else if(a.kind==='soul')soulEffects.draw(ctx,a);else if(a.kind==='skill_soul')skillVisuals.drawMissile(ctx,a);else{if(!cultivationFX.drawForm(ctx,a.id))visuals.get(a.id)?.draw(ctx);skillVisuals.drawCaster(ctx,a.id)}} } as any);
     if (session) {
         c.save();
         c.scale(zoom, zoom);

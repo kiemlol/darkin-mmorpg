@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "assets": {
+    "npc.guide": {
+      "src": "/assets/sprites/npc/nu_tu_mieu_hoang_south.gif",
+      "width": 112,
+      "height": 112,
+      "anchorX": 56,
+      "anchorY": 101
+    },
+    "npc.elder": {
+      "src": "/assets/sprites/npc/nu_tu_mieu_hoang_south.gif",
+      "width": 112,
+      "height": 112,
+      "anchorX": 56,
+      "anchorY": 101,
+      "filter": "hue-rotate(65deg)"
+    },
+    "npc.keeper": {
+      "src": "/assets/sprites/npc/nu_tu_mieu_hoang_south.gif",
+      "width": 112,
+      "height": 112,
+      "anchorX": 56,
+      "anchorY": 101,
+      "filter": "hue-rotate(180deg)"
+    },
+    "pet.silver_fox": {
+      "src": "/assets/sprites/mob/ngan_mao_hong.png",
+      "frameWidth": 100,
+      "frameHeight": 90,
+      "columns": 3,
+      "frames": 2,
+      "fps": 5,
+      "width": 55,
+      "height": 49.5,
+      "anchorX": 30.8,
+      "anchorY": 48.4
+    },
+    "item.herb": {
+      "src": "/assets/items/icon_herb_tay_ue.png"
+    },
+    "item.ore": {
+      "src": "/assets/items/icon_stone_core.png"
+    },
+    "item.essence": {
+      "src": "/assets/items/icon_yeu_dan_cap_1.png"
+    },
+    "item.paper": {
+      "src": "/assets/items/icon_manh_giay.png"
+    },
+    "item.hp_pill": {
+      "src": "/assets/items/icon_tu_khi_dan.png",
+      "filter": "hue-rotate(110deg)"
+    },
+    "item.mp_pill": {
+      "src": "/assets/items/icon_tu_khi_dan.png"
+    },
+    "item.break_pill": {
+      "src": "/assets/items/icon_dan_ngu_hanh.png"
+    },
+    "item.ward": {
+      "src": "/assets/items/icon_phu_kim_giap.png"
+    },
+    "item.cultivation_talisman": {
+      "src": "/assets/items/icon_phu_thanh_tam.png"
+    }
+  }
+}

@@ -1,10 +1,12 @@
+import {ADVENTURE_ACTIONS,resetDaily,type AdventureAction} from './adventure';
+import {adventureCommand,tickAdventure} from './adventure-world';
 import {REALMS,REALM_STAGES} from './realms';
 import {PATHS,PROFESSIONS,CULT_SKILLS,MATERIALS,RECIPES,QUESTS,cultSkill,freshCultivation,normalizeCultivation,cultivationStats,expRequired,realmAtTier,type CultCommand} from './cultivation';
 import {emptySkills,skills} from './skills';
 import type {World,Actor} from './world';
 const take=(a:Actor,id:string,n:number)=>{const c=a.cultivation!;if((c.materials[id]||0)<n)throw Error('Thiếu '+(MATERIALS[id]?.name||id));c.materials[id]-=n};
 const pay=(a:Actor,n:number)=>{if(a.wallet.spirit_stone<n)throw Error('Không đủ linh thạch');a.wallet.spirit_stone-=n};
-export function initializeCultivator(w:World,a:Actor){a.cultivation=normalizeCultivation(a.cultivation);if(a.cultivation.tier===0&&a.realmId!=='mortal')a.cultivation.tier=1+Math.max(0,REALMS.findIndex(r=>r.id===a.realmId)-1)*4+Math.max(0,REALM_STAGES.findIndex(r=>r.id===a.realmStageId));applyCultivationStats(a);if(!a.skills)a.skills=emptySkills();for(const skill of Object.values(skills.project.skills) as any[])w.learnSkill(a.id,skill.id);const defaults=['hoa_cau','phi_long_tai_thien','kim_quang_cu_kiem','huyet_liem_tram'];for(let slot=0;slot<4;slot++)if(!a.skills.slots[slot])w.learnSkill(a.id,defaults[slot],slot);}
+export function initializeCultivator(w:World,a:Actor){a.cultivation=normalizeCultivation(a.cultivation);if(a.cultivation.tier===0&&a.realmId!=='mortal')a.cultivation.tier=1+Math.max(0,REALMS.findIndex(r=>r.id===a.realmId)-1)*4+Math.max(0,REALM_STAGES.findIndex(r=>r.id===a.realmStageId));resetDaily(a.cultivation,w.interactions.now());applyCultivationStats(a);if(!a.skills)a.skills=emptySkills();for(const skill of Object.values(skills.project.skills) as any[])w.learnSkill(a.id,skill.id);const defaults=['hoa_cau','phi_long_tai_thien','kim_quang_cu_kiem','huyet_liem_tram'];for(let slot=0;slot<4;slot++)if(!a.skills.slots[slot])w.learnSkill(a.id,defaults[slot],slot);}
 export function applyCultivationStats(a:Actor){if(!a.cultivation)return;const stats=cultivationStats(a.cultivation);a.maxHp=stats.maxHp;a.hp=Math.min(a.hp,a.maxHp);a.maxMp=stats.maxMp;a.mp=Math.min(a.cultivation.mp,a.maxMp);a.professionName=(PATHS.find(p=>p.id===a.cultivation?.path)?.name||'Tán Tu')+' · '+(PROFESSIONS.find(p=>p.id===a.cultivation?.profession)?.name||'Chưa chọn nghề');Object.assign(a,realmAtTier(a.cultivation.tier));}
 export function cultivationCommand(w:World,id:string,cmd:CultCommand){const a=w.actors.get(id);if(!a?.cultivation||a.kind!=='player'||!cmd||typeof cmd.action!=='string')throw Error('Không có nhân vật tu luyện');if(a.hp<=0)throw Error('Hãy hồi sinh trước');const c=a.cultivation,now=w.interactions.now();
  // Work on a detached copy so failed recipes or purchases spend nothing.
@@ -26,10 +28,10 @@ export function cultivationCommand(w:World,id:string,cmd:CultCommand){const a=w.
  case 'sell':if(!['herb','ore','essence','paper'].includes(cmd.id!))throw Error('Không thể bán món này');take(a,cmd.id!,1);a.wallet.spirit_stone+=2;break;
  case 'use':{if(now<c.potionAt)throw Error('Đan dược/phù đang hồi');if(!['hp_pill','mp_pill','ward','cultivation_talisman'].includes(cmd.id!))throw Error('Không thể sử dụng');take(a,cmd.id!,1);c.potionAt=now+8;if(cmd.id==='hp_pill')a.hp=Math.min(a.maxHp,a.hp+a.maxHp*.5);if(cmd.id==='mp_pill')c.mp=Math.min(a.maxMp!,c.mp+a.maxMp!*.6);if(cmd.id==='ward'){c.shield=100;c.shieldUntil=now+12}if(cmd.id==='cultivation_talisman')c.buffUntil=now+180;break}
  case 'quest':{const q=QUESTS.find(q=>q.id===cmd.id);if(!q||c.claimed.includes(q.id)||(q.metric==='tier'?c.tier:c.metrics[q.metric]||0)<q.goal)throw Error('Nhiệm vụ chưa hoàn thành hoặc đã nhận');c.claimed.push(q.id);c.exp+=q.exp;a.wallet.spirit_stone+=q.stones;break}
- default:throw Error('Thao tác không được hỗ trợ');
+ default:if(ADVENTURE_ACTIONS.includes(cmd.action))adventureCommand(w,a,cmd.action as AdventureAction,cmd.id);else throw Error('Thao tác không được hỗ trợ');
  }c.revision++;applyCultivationStats(a);if(cmd.action==='path'){a.hp=a.maxHp;c.mp=a.maxMp!;a.mp=c.mp}}catch(e){Object.assign(a,original);throw e}
 }
-export function tickCultivation(w:World,a:Actor,dt:number){const c=a.cultivation;if(!c||a.kind!=='player')return;const now=w.interactions.now();if(a.hp<=0){c.meditating=false;c.gatherUntil=0;return}const i=w.inputs.get(a.id)?.i;const moving=!!i&&(Math.hypot(i.dx,i.dy)>.01||i.attack);
+export function tickCultivation(w:World,a:Actor,dt:number){const c=a.cultivation;if(!c||a.kind!=='player')return;const now=w.interactions.now();tickAdventure(w,a);if(a.hp<=0){c.meditating=false;c.gatherUntil=0;return}const i=w.inputs.get(a.id)?.i;const moving=!!i&&(Math.hypot(i.dx,i.dy)>.01||i.attack);
  if(moving||w.inCombat(a)||a.swordFlight){c.meditating=false;c.gatherUntil=0}
  if(c.meditating){c.exp+=dt*(now<c.buffUntil?2.25:1.5);a.hp=Math.min(a.maxHp,a.hp+dt*3)}
  c.mp=Math.min(a.maxMp||100,c.mp+dt*(c.meditating?9:3));a.mp=c.mp;

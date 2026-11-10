@@ -25,7 +25,7 @@ const server = createServer(async (req, res) => { try {
     const path = decodeURIComponent(new URL(req.url || '/', 'http://local').pathname);
     if (path === '/health') {
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ ok: true, cultivationProtocol:1, map: b.project.id }));
+        res.end(JSON.stringify({ ok: true, cultivationProtocol:1,adventureProtocol:1, map: b.project.id }));
         return;
     }
     const f = resolve(root, '.' + (path === '/' ? '/index.html' : path));
@@ -68,7 +68,7 @@ wss.on('connection', ws => { ws.on('error', () => { }); if (peers.size >= 64) {
         const name=m.name.replace(/[<>\x00-\x1f]/g,'').slice(0,24),identity=persistence.identify(m.resumeToken,name,id=>world.actors.has(id));q.id=identity.guest.id;q.guest=identity.guest;
         const actor=world.join(q.id,name);world.setRealm(q.id,q.guest);actor.wallet=structuredClone(q.guest.wallet);Object.assign(actor,normalizeCharacterProfile(q.guest).state);world.initializeCultivator(q.id);const saved=q.guest.position;if(saved?.map===b.project.id&&Number.isFinite(saved.x)&&Number.isFinite(saved.y))Object.assign(actor,world.findSpawn(saved.x,saved.y),{hp:Math.max(1,Math.min(actor.maxHp,saved.hp||actor.maxHp))});q.exploration=persistence.exploration(q.guest,b.project);q.exploration.visit(actor.x,actor.y,world.time,actor.teleportSeq);persistence.capture(q.guest,q.exploration);
         q.joined = true;
-        ws.send(JSON.stringify({ type: 'welcome',cultivationProtocol:1,skillProtocol:1,rangedCombatProtocol:1,interactionProtocol:1,swordFlightProtocol:1,weaponFlightProtocol:1,animationPreviewProtocol:1,inventoryProtocol:1,profileWarnings:identity.warnings, id: q.id,characterId:q.id,resumeToken:identity.resumeToken,worldId:WORLD_ID,mapRevision:revision, map: b.project.id,exploration:q.exploration.record() }));q.sentVersion=q.exploration.version;
+        ws.send(JSON.stringify({ type: 'welcome',cultivationProtocol:1,adventureProtocol:1,skillProtocol:1,rangedCombatProtocol:1,interactionProtocol:1,swordFlightProtocol:1,weaponFlightProtocol:1,animationPreviewProtocol:1,inventoryProtocol:1,profileWarnings:identity.warnings, id: q.id,characterId:q.id,resumeToken:identity.resumeToken,worldId:WORLD_ID,mapRevision:revision, map: b.project.id,exploration:q.exploration.record() }));q.sentVersion=q.exploration.version;
     }
     else if(q.joined&&m.type==='cultivate'){try{world.cultivate(q.id,m.command);persistence.captureCharacter(q.guest,{...world.actors.get(q.id)!,mapId:b.project.id} as any)}catch(e){ws.send(JSON.stringify({type:'cultivationError',message:String(e)}))}}
     else if(q.joined&&m.type==='castSkill'){try{world.castSkill(q.id,m.command);persistence.captureCharacter(q.guest,{...world.actors.get(q.id)!,mapId:b.project.id} as any)}catch(e){ws.send(JSON.stringify({type:'skillError',message:String(e)}))}}
