@@ -18,7 +18,11 @@ Mã client chỉ vẽ. `src/shared/nether-array-world.ts` quyết định danh s
 
 Giam giữ dùng `prisonUntil` riêng, không ghi đè choáng của kỹ năng khác. Caster chết hoặc dịch chuyển sẽ hủy các đợt tiếp theo, khóa di chuyển tự hết trong 0,12s; không để lại quái bị trói vĩnh viễn. Các kỹ năng chồng nhau giữ thời gian khóa dài nhất. Danh sách mục tiêu và số đợt nằm trong snapshot có kiểm tra định dạng. Hạ quái chỉ trả thưởng một lần.
 
-Artwork được vẽ bằng module Canvas `src/client/nether-array-fx.ts`, không tải thêm ảnh ngoài và không thay file module Tu Tiên gốc. Xem ảnh tám pha, video thực từ renderer và audit trong `artifacts/nether-array/`. Preview trong Bí pháp được tạo từ cùng renderer.
+Phần hư không/bàn tay và đầu quỷ dùng đúng hai sprite sheet người dùng cung cấp: `public/assets/sprites/fx/nether/portal.jpg` (4×3, 12 khung) và `demon.jpg` (4×4, 16 khung). Giữ nguyên byte của JPEG gốc. Canvas loại nền trắng và nhiễu JPEG một lần khi nạp, giữ màu phần ảnh đậm và độ trong suốt của các khung tan biến; không xử lý pixel trong vòng lặp vẽ. Hai ảnh được tải trước khi mở game và nằm trong danh mục offline.
+
+`src/shared/nether-sprites.json` quản lý đường dẫn, lưới, kích thước hiển thị và điểm miệng. Kích thước ảnh không chia hết cho số hàng/cột, nên ranh giới từng ô được tính theo tỉ lệ rồi làm tròn riêng để không cắt nhầm hoặc kéo sang ô kế bên. Cổng chạy các khung xé mở trước khi đầu quỷ hiện; đầu quỷ giữ các khung miệng mở khi tấn công, rồi dùng các khung tan biến ở cuối. Vong linh xuất phát từ điểm miệng trong metadata.
+
+Sáu cờ, vòng trận và vong linh tiếp tục do module Canvas `src/client/nether-array-fx.ts` điều khiển. Không thay file module Tu Tiên gốc. Xem ảnh tám pha, video thực từ renderer và audit trong `artifacts/nether-array/`. Preview trong Bí pháp được tạo từ cùng renderer.
 
 ## Kiểm tra
 

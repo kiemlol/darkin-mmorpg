@@ -69,3 +69,7 @@ Thêm kỹ năng `nhu_y_dinh_hai` với gậy đỏ/vàng bay lên, hóa lớn, 
 ## U Đô Lục Kỳ Trận
 
 Thêm kỹ năng `u_do_luc_ky_tran`: sáu trận kỳ cắm tuần tự, kết trận giam yêu thú, hai ma thủ xé hư không và đầu quỷ phóng bốn đợt vong linh. World quản lý khóa vùng và sát thương riêng từng đợt; client có module hoạt ảnh riêng. Mở sẵn ở đầu Bí pháp. Timeline, thông số và giới hạn ở `NETHER-ARRAY.md`.
+
+### Sprite sheet U Đô do người dùng cung cấp
+
+Thay hình vẽ code của hư không/ma thủ và đầu quỷ bằng đúng hai JPEG đính kèm, 12 + 16 khung. Nạp và loại nền trắng một lần, ghép vào timeline hiện có, chỉnh vị trí miệng phóng vong linh. Cờ, trận, giam giữ và bốn đợt sát thương giữ nguyên luật. Preview và video được xuất lại từ renderer dùng hai ảnh thật.

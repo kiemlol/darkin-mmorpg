@@ -20,6 +20,7 @@ export class CultivationFX{
   Object.assign(p.Assets,{get:(key:string)=>{if(!this.images.has(key))void loadImage(key);return this.images.get(key)||null},loadImage,fxTrim:(key:string)=>trim[key]||null,PRIO:{CRITICAL:0,NORMAL:1,PREFETCH:2},images:{}});
   p.Quality={tier:2,keepVfx:()=>true,vfxCap:()=>600,isDecor:()=>false,veNguoiKhac(){},detail:()=>2};p.Renderer={w:1280,h:720,gfx:1,view:()=>({step:0})};p.Camera={x:0,y:0,shake(){},shakeAt(){}};p.Gateway={connected:false};p.Net={online:false};p.Game={time:0};p.SceneWorld={player:null,enemies:[]};p.Game.scene=p.SceneWorld;
   p.Progress={realmId:p.REALMS[0].id,realm:()=>p.REALMS[0]};p.Inventory={owns:()=>true,count:()=>1,bonus:()=>0,equipped:()=>({id:p.SceneWorld.player?.cfg?.weapon||'kim_quang_kiem'})};
+  const spriteLabel=document.getElementById('error');if(spriteLabel)spriteLabel.textContent='Đang chuẩn bị sprite U Đô…';await this.nether.load();
   p.Audio?.init();p.Audio?.setMusicOn(false);const used:string[]=await fetch('/game-data/cultivation/native/used-assets.json').then(r=>r.json());for(let i=0;i<used.length;i+=4){await Promise.all(used.slice(i,i+4).map(loadImage));const label=document.getElementById('error');if(label)label.textContent='Đang tải hình kỹ năng… '+Math.min(i+4,used.length)+'/'+used.length;}if(this.errors.length)throw Error(this.errors.join(' · '));this.loaded=true;
  }
  clear(){this.nether.clear();this.staff.clear();this.seen.clear();this.actors.clear();this.forms.clear();this.scope='';this.p?.VFX?.clear();this.p?.Skills?.reset()}

@@ -14,25 +14,28 @@
     },
     {
       "age": 2.92,
-      "pixels": 60102
+      "pixels": 72335
     },
     {
       "age": 3.62,
-      "pixels": 81768
+      "pixels": 110860
     },
     {
       "age": 4.85,
-      "pixels": 83230
+      "pixels": 112311
     },
     {
       "age": 5.4,
-      "pixels": 91333
+      "pixels": 115353
     },
     {
       "age": 8.85,
-      "pixels": 69502
+      "pixels": 64679
     }
   ],
+  "spriteSheets": 2,
+  "portalFrames": 12,
+  "demonFrames": 16,
   "flags": 6,
   "waves": 4,
   "clearsAt": 9.6,
