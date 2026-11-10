@@ -1,0 +1,30 @@
+{
+  "samples": [
+    {
+      "age": 0.35,
+      "pixels": 2704
+    },
+    {
+      "age": 1.5,
+      "pixels": 12527
+    },
+    {
+      "age": 1.95,
+      "pixels": 16918
+    },
+    {
+      "age": 2.12,
+      "pixels": 14801
+    },
+    {
+      "age": 2.5,
+      "pixels": 26512
+    },
+    {
+      "age": 4.65,
+      "pixels": 15431
+    }
+  ],
+  "clearsAt": 5.4,
+  "browserVerified": false
+}

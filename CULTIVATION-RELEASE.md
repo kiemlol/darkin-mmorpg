@@ -61,3 +61,7 @@ Tàng Kinh Các hiện mở 96 định nghĩa kỹ năng gốc cùng 4 kỹ năn
 ## Thanh Vân Cốc — mở rộng nội dung
 
 Thêm chính tuyến 9 bước với NPC nhận/trả, 4 ủy thác UTC hằng ngày, tông môn/công lao/bảo khố, Ngân Mao Hồ hỗ trợ chiến đấu/nuôi dưỡng/vân du và icon nguyên liệu gốc. Chi tiết điều kiện, asset thay thế và phạm vi còn thiếu: `ADVENTURE-CONTENT.md`. Kiểm tra 141/141 và build đạt; WebSocket thực + lưu máy chủ được kiểm định; Canvas render NPC/linh thú đạt, chưa kiểm tra trình duyệt/iPhone trong môi trường này.
+
+## Như Ý Định Hải
+
+Thêm kỹ năng `nhu_y_dinh_hai` với gậy đỏ/vàng bay lên, hóa lớn, lao xuống mục tiêu; sát thương diện rộng, choáng, sóng va chạm và đất đá/bụi mờ dần. Kỹ năng mở sẵn ở đầu Bí pháp. Chi tiết timeline và điều kiện: `RUYI-STAFF.md`. Asset preview tạo từ renderer thực; bộ 96 hiệu ứng gốc giữ nguyên.
